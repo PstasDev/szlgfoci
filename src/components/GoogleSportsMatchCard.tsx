@@ -243,7 +243,7 @@ const GoogleSportsMatchCard: React.FC<GoogleSportsMatchCardProps> = ({
             {match.events.slice(-2).map((event) => (
               <Box key={event.id} sx={{ mb: 1 }}>
                 <Typography variant="body2" sx={{ color: '#e8eaed' }}>
-                  {event.minute}' {event.type === 'goal' ? '⚽' : event.type === 'yellow_card' ? '🟨' : '🟥'} {event.player}
+                  {event.minute}&apos; {event.type === 'goal' ? '⚽' : event.type === 'yellow_card' ? '🟨' : '🟥'} {event.player}
                 </Typography>
               </Box>
             ))}

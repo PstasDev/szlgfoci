@@ -46,7 +46,7 @@ export default function MatchesPage() {
                   Jelenleg nincs élő mérkőzés
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontSize: '1.1rem' }}>
-                  A következő meccseket a "Közelgő Meccsek" fülön találja
+                  A következő meccseket a &ldquo;Közelgő Meccsek&rdquo; fülön találja
                 </Typography>
               </Box>
             )}
