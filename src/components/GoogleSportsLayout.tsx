@@ -80,7 +80,7 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
     setAnchorEl(null);
   };
 
-  const handleSeasonChange = (event: any) => {
+  const handleSeasonChange = (event: { target: { value: string } }) => {
     const newSeason = event.target.value;
     setSelectedSeason(newSeason);
     localStorage.setItem('szlg-selected-season', newSeason);
