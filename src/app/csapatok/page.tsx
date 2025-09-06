@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { 
   Container, 
@@ -16,7 +16,8 @@ import {
   Chip,
   Avatar,
   Divider,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
 import { ArrowBack, EmojiEvents, Person } from '@mui/icons-material';
 import Header from '@/components/Header';
@@ -31,7 +32,7 @@ import {
   type Player
 } from '@/data/mockData';
 
-export default function CsapatokPage() {
+function CsapatokContent() {
   const [selectedTeam, setSelectedTeam] = useState<TeamRoster | null>(null);
   const searchParams = useSearchParams();
   const teamRosters = getAllTeamRosters();
@@ -396,5 +397,17 @@ export default function CsapatokPage() {
       </Box>
       </Container>
     </Box>
+  );
+}
+
+export default function CsapatokPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <CsapatokContent />
+    </Suspense>
   );
 }
