@@ -23,7 +23,6 @@ const LiveMatchTimer: React.FC<LiveMatchTimerProps> = ({
   isPaused = false 
 }) => {
   const [elapsedMinutes, setElapsedMinutes] = React.useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = React.useState(0);
 
   React.useEffect(() => {
     if (isPaused) return;
@@ -34,10 +33,8 @@ const LiveMatchTimer: React.FC<LiveMatchTimerProps> = ({
       const diff = now.getTime() - start.getTime();
       const totalSeconds = Math.floor(diff / 1000);
       const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
       
       setElapsedMinutes(minutes);
-      setElapsedSeconds(seconds);
     }, 1000);
 
     return () => clearInterval(interval);

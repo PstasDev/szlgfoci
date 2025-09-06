@@ -9,7 +9,6 @@ import {
   Avatar,
   Chip,
   Button,
-  Divider,
 } from '@mui/material';
 import {
   PlayArrow as PlayIcon,
@@ -535,7 +534,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 fontWeight: 'bold',
                 minWidth: 30
               }}>
-                {event.minute}'
+                {event.minute}&apos;
               </Typography>
               <Typography variant="body2" sx={{ color: '#e8eaed' }}>
                 {event.type === 'goal' ? '⚽' : event.type === 'yellow_card' ? '🟨' : '🟥'} {event.player}

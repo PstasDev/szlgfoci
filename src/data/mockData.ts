@@ -581,9 +581,7 @@ export const getTeamRosterByTeamName = (teamName: string): TeamRoster | undefine
   return teamRosters.find(roster => roster.teamName === teamName);
 };
 
-export const getAllTeamRosters = (): TeamRoster[] => {
-  return teamRosters;
-};
+
 
 // League seasons available
 export interface LeagueSeason {

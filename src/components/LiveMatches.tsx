@@ -7,10 +7,7 @@ import {
   CardContent,
   Typography,
   Box,
-  Chip,
   Avatar,
-  Divider,
-  LinearProgress,
   Stack,
 } from '@mui/material';
 import {
@@ -19,7 +16,7 @@ import {
   Schedule as ClockIcon,
   Rectangle as CardIcon,
 } from '@mui/icons-material';
-import { getLiveMatches, getUpcomingMatches, getRecentMatches, getClassColor } from '@/data/mockData';
+import { getLiveMatches, getUpcomingMatches, getRecentMatches, getClassColor, Match, MatchEvent } from '@/data/mockData';
 import LiveMatchTimer from './LiveMatchTimer';
 
 const LiveMatches: React.FC = () => {
@@ -27,18 +24,8 @@ const LiveMatches: React.FC = () => {
   const liveMatches = getLiveMatches();
   const upcomingMatches = getUpcomingMatches(3);
   const recentMatches = getRecentMatches(3);
-  
-  const [currentTime, setCurrentTime] = React.useState(new Date());
 
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const MatchCard = ({ match, isLive = false }: { match: any, isLive?: boolean }) => (
+  const MatchCard = ({ match, isLive = false }: { match: Match, isLive?: boolean }) => (
     <Card 
       variant="outlined" 
       sx={{ 
@@ -156,7 +143,7 @@ const LiveMatches: React.FC = () => {
         {/* Live match events */}
         {isLive && match.events.length > 0 && (
           <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderTopColor: 'divider' }}>
-            {match.events.slice(-3).map((event: any) => (
+            {match.events.slice(-3).map((event: MatchEvent) => (
               <Box key={event.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                 {event.type === 'goal' ? (
                   <BallIcon sx={{ fontSize: 16, color: 'success.main' }} />
@@ -166,7 +153,7 @@ const LiveMatches: React.FC = () => {
                   <CardIcon sx={{ fontSize: 16, color: 'error.main' }} />
                 )}
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  {event.minute}' {event.player}
+                  {event.minute}&apos; {event.player}
                 </Typography>
               </Box>
             ))}
