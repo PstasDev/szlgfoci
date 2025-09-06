@@ -2,14 +2,6 @@
 import { createTheme } from '@mui/material/styles';
 import { huHU } from '@mui/material/locale';
 
-// Define SZLG brand colors
-const szlgColors = {
-  darkGray: '#34393C',
-  brown: '#A86D43',
-  lightGray: '#5c6166',
-  lightBrown: '#c79266',
-};
-
 // Google Sports inspired dark theme colors
 const googleSportsColors = {
   background: '#1a1a1a', // Dark background like Google Sports
@@ -22,20 +14,6 @@ const googleSportsColors = {
   secondary: '#34a853', // Google green
   tertiary: '#ea4335', // Google red
   outline: '#474747', // Border colors
-};
-
-// Define custom colors for the soccer theme
-const soccerGreen = {
-  50: '#e8f5e8',
-  100: '#c8e6c8',
-  200: '#a4d4a4',
-  300: '#81c784',
-  400: '#66bb6a',
-  500: '#4caf50',
-  600: '#43a047',
-  700: '#388e3c',
-  800: '#2e7d32',
-  900: '#1b5e20',
 };
 
 const theme = createTheme({

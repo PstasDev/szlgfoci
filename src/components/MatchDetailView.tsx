@@ -9,8 +9,6 @@ import {
   Chip,
   Stack,
   Divider,
-  Card,
-  CardContent,
   Badge,
 } from '@mui/material';
 import {
@@ -370,7 +368,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                       position: 'relative',
                       zIndex: 2
                     }}>
-                      {event.minute}'
+                      {event.minute}&apos;
                     </Box>
 
                     {/* Event Card Based on Type */}
@@ -412,7 +410,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                           mb: 1,
                           textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
                         }}>
-                          {event.minute}' - {event.player}
+                          {event.minute}&apos; - {event.player}
                         </Typography>
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -483,7 +481,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             borderRadius: '12px',
                             fontWeight: 600
                           }}>
-                            {event.minute}'
+                            {event.minute}&apos;
                           </Typography>
                         </Box>
 
@@ -618,7 +616,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             borderRadius: '12px',
                             fontWeight: 600
                           }}>
-                            {event.minute}'
+                            {event.minute}&apos;
                           </Typography>
                         </Box>
 
@@ -684,7 +682,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             borderRadius: '12px',
                             fontWeight: 600
                           }}>
-                            {event.minute}'
+                            {event.minute}&apos;
                           </Typography>
                         </Box>
 

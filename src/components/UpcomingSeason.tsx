@@ -11,7 +11,6 @@ import {
   Chip,
 } from '@mui/material';
 import {
-  Schedule as ScheduleIcon,
   HowToReg as RegisterIcon,
   SportsSoccer as SoccerIcon,
   CalendarToday as CalendarIcon,
