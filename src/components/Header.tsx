@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({
     setMobileOpen(!mobileOpen);
   };
 
-  const handleSeasonChange = (event: any) => {
+  const handleSeasonChange = (event: { target: { value: string } }) => {
     const newSeason = event.target.value;
     setCurrentSeason(newSeason);
     if (onSeasonChange) {
