@@ -2,19 +2,25 @@
 
 import React from 'react';
 import {
-  Container,
-  Typography,
   Box,
   Stack,
-  Divider,
+  Typography,
 } from '@mui/material';
-import Header from '@/components/Header';
-import LiveMatches from '@/components/LiveMatches';
-import UpcomingSeason from '@/components/UpcomingSeason';
+import { useRouter } from 'next/navigation';
+import SimpleLayout from '@/components/SimpleLayout';
+import MatchCard from '@/components/MatchCard';
+import MatchesList from '@/components/MatchesList';
+import LeagueTable from '@/components/LeagueTable';
+import { getLiveMatches, getUpcomingMatches, getRecentMatches } from '@/data/mockData';
 
 export default function Home() {
+  const router = useRouter();
   const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
   const [mounted, setMounted] = React.useState(false);
+
+  const liveMatches = getLiveMatches();
+  const upcomingMatches = getUpcomingMatches(3);
+  const recentMatches = getRecentMatches(3);
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -25,104 +31,92 @@ export default function Home() {
     setMounted(true);
   }, []);
 
-  const handleSeasonChange = (season: string) => {
-    setSelectedSeason(season);
-    localStorage.setItem('szlg-selected-season', season);
-  };
-
   // Don't render until mounted to avoid hydration issues
   if (!mounted) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header />
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
+        <Typography variant="h6" sx={{ color: '#e8eaed', p: 2 }}>
+          Betöltés...
+        </Typography>
       </Box>
     );
   }
 
-  // Show upcoming season view if 25/26 is selected
-  if (selectedSeason === '2025-26') {
-    return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-        <UpcomingSeason />
-      </Box>
-    );
-  }
+  // Get featured match
+  const featuredMatch = liveMatches[0] || recentMatches[0] || upcomingMatches[0];
 
-  // Show current season data for 24/25
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-      
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Stack spacing={4}>
-          {/* Page Title */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              gutterBottom
-              sx={{ 
-                fontWeight: 'bold',
-                color: 'primary.main',
-                mb: 1
-              }}
-            >
-              SZLG FOCI - Labdarúgó Bajnokság 2024/25
-            </Typography>
+    <SimpleLayout>
+      <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
+        <Stack spacing={{ xs: 3, sm: 4 }}>
+          {/* Featured Match */}
+          {featuredMatch && (
+            <Box>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: '#e8eaed',
+                  fontWeight: 600,
+                  mb: 2,
+                  fontSize: { xs: '1.1rem', sm: '1.25rem' }
+                }}
+              >
+                Kiemelt mérkőzés
+              </Typography>
+              <MatchCard match={featuredMatch} variant="detailed" />
+            </Box>
+          )}
+
+          {/* League Table */}
+          <Box>
             <Typography 
               variant="h6" 
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              SZLG Liga 24/25 - Élő eredmények és tabella
-            </Typography>
-          </Box>
-
-          <Divider />
-
-          {/* Class Color Legend Section
-          <Box>
-            <Typography 
-              variant="h4" 
-              gutterBottom 
               sx={{ 
+                color: '#e8eaed',
                 fontWeight: 600,
-                color: 'text.primary',
-                mb: 3
+                mb: 2,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
               }}
             >
-              Osztály Színkódok
+              Liga tabella
             </Typography>
-            <ClassColorLegend />
+            <LeagueTable />
           </Box>
 
-          <Divider />
+          {/* Live Matches */}
+          {liveMatches.length > 0 && (
+            <MatchesList
+              matches={liveMatches}
+              title="Élő mérkőzések"
+              variant="compact"
+              layout="grid"
+            />
+          )}
 
-          {/* Live Matches Section */}
-          <Box>
-            <Typography 
-              variant="h4" 
-              gutterBottom 
-              sx={{ 
-                fontWeight: 600,
-                color: 'text.primary',
-                mb: 3
-              }}
-            >
-              Élő Meccsek & Eredmények
-            </Typography>
-            <LiveMatches />
-          </Box>
+          {/* Matches Grid */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, 
+            gap: { xs: 3, sm: 4 }
+          }}>
+            {/* Upcoming Matches */}
+            <MatchesList
+              matches={upcomingMatches}
+              title="Következő mérkőzések"
+              variant="compact"
+              layout="list"
+            />
 
-          {/* Footer */}
-          <Box sx={{ textAlign: 'center', py: 4, mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2024 SZLG - Labdarúgó Bajnokság
-            </Typography>
+            {/* Recent Results */}
+            <MatchesList
+              matches={recentMatches}
+              title="Legutóbbi eredmények"
+              variant="compact"
+              layout="list"
+            />
           </Box>
         </Stack>
-      </Container>
-    </Box>
+      </Box>
+    </SimpleLayout>
   );
 }

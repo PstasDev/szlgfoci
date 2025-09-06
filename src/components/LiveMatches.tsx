@@ -42,14 +42,14 @@ const LiveMatches: React.FC = () => {
     <Card 
       variant="outlined" 
       sx={{ 
-        mb: 1,
-        border: isLive ? '2px solid' : '1px solid',
+        mb: 1.5,
+        border: isLive ? '1px solid' : '1px solid',
         borderColor: isLive ? 'success.main' : 'divider',
-        backgroundColor: isLive ? 'success.50' : 'background.paper',
-        position: 'relative',
+        backgroundColor: isLive ? 'rgba(76, 175, 80, 0.08)' : 'background.paper',
+        borderRadius: 2,
         cursor: 'pointer',
         '&:hover': {
-          boxShadow: 2,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
           transform: 'translateY(-1px)',
         },
         transition: 'all 0.2s ease'
@@ -57,95 +57,115 @@ const LiveMatches: React.FC = () => {
       onClick={() => router.push(`/merkozesek/${match.id}`)}
     >
       {isLive && (
-        <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
-          <LinearProgress color="success" />
-        </Box>
+        <Box sx={{ 
+          height: 2, 
+          backgroundColor: 'success.main',
+          borderRadius: '2px 2px 0 0'
+        }} />
       )}
       
-      <CardContent sx={{ pb: '12px !important', pt: isLive ? 2 : 1.5 }}>
+      <CardContent sx={{ p: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          {/* Match Status/Round */}
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+            {match.round}
+          </Typography>
+          
+          {/* Venue */}
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
+            📍 {match.venue}
+          </Typography>
+        </Box>
+
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Home Team */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
             <Avatar
               sx={{
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 bgcolor: getClassColor(match.homeTeam),
-                fontSize: '0.7rem',
+                fontSize: '0.8rem',
                 fontWeight: 'bold',
                 color: 'white'
               }}
             >
-              {match.homeTeam.split(' ')[1]} {/* Shows just the class letter */}
+              {match.homeTeam.split(' ')[1]}
             </Avatar>
-            <Typography variant="body2" fontWeight="500" noWrap>
+            <Typography 
+              variant="body1" 
+              fontWeight="500" 
+              noWrap
+              sx={{ color: 'text.primary', fontSize: '0.95rem' }}
+            >
               {match.homeTeam}
             </Typography>
           </Box>
           
           {/* Score/Time */}
-          <Box sx={{ textAlign: 'center', minWidth: 80 }}>
+          <Box sx={{ textAlign: 'center', minWidth: 90, px: 1 }}>
             {match.status === 'finished' ? (
-              <Typography variant="h6" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ color: 'text.primary' }}>
                 {match.homeScore} - {match.awayScore}
               </Typography>
             ) : match.status === 'live' ? (
-              <>
-                <Typography variant="h6" fontWeight="bold" color="success.main">
+              <Box>
+                <Typography variant="h5" fontWeight="bold" color="success.main">
                   {match.homeScore} - {match.awayScore}
                 </Typography>
                 <LiveMatchTimer startTime={`${match.date}T${match.time}`} />
-              </>
+              </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary">
-                {match.time}
-              </Typography>
+              <Box>
+                <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+                  {match.time}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  {match.date}
+                </Typography>
+              </Box>
             )}
           </Box>
           
           {/* Away Team */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
-            <Typography variant="body2" fontWeight="500" noWrap textAlign="right">
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, justifyContent: 'flex-end' }}>
+            <Typography 
+              variant="body1" 
+              fontWeight="500" 
+              noWrap 
+              textAlign="right"
+              sx={{ color: 'text.primary', fontSize: '0.95rem' }}
+            >
               {match.awayTeam}
             </Typography>
             <Avatar
               sx={{
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 bgcolor: getClassColor(match.awayTeam),
-                fontSize: '0.7rem',
+                fontSize: '0.8rem',
                 fontWeight: 'bold',
                 color: 'white'
               }}
             >
-              {match.awayTeam.split(' ')[1]} {/* Shows just the class letter */}
+              {match.awayTeam.split(' ')[1]}
             </Avatar>
           </Box>
-        </Box>
-        
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-          <Typography variant="caption" color="text.secondary">
-            {match.venue}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {match.round}
-          </Typography>
         </Box>
 
         {/* Live match events */}
         {isLive && match.events.length > 0 && (
-          <Box sx={{ mt: 1 }}>
-            <Divider sx={{ my: 1 }} />
+          <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderTopColor: 'divider' }}>
             {match.events.slice(-3).map((event: any) => (
               <Box key={event.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
                 {event.type === 'goal' ? (
-                  <BallIcon sx={{ fontSize: 14, color: 'success.main' }} />
+                  <BallIcon sx={{ fontSize: 16, color: 'success.main' }} />
                 ) : event.type === 'yellow_card' ? (
-                  <CardIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+                  <CardIcon sx={{ fontSize: 16, color: 'warning.main' }} />
                 ) : (
-                  <CardIcon sx={{ fontSize: 14, color: 'error.main' }} />
+                  <CardIcon sx={{ fontSize: 16, color: 'error.main' }} />
                 )}
-                <Typography variant="caption">
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   {event.minute}' {event.player}
                 </Typography>
               </Box>
@@ -161,13 +181,24 @@ const LiveMatches: React.FC = () => {
       {/* Live Matches */}
       {liveMatches.length > 0 && (
         <Box sx={{ flex: 1 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, color: 'success.main' }}>
+          <Card sx={{ backgroundColor: 'background.paper' }}>
+            <Box sx={{ p: 2, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1, 
+                  color: 'success.main',
+                  fontWeight: 600
+                }}
+              >
                 <SportsIcon />
                 Élő Mérkőzések
               </Typography>
-              
+            </Box>
+            
+            <CardContent sx={{ p: 2 }}>
               {liveMatches.map((match) => (
                 <MatchCard key={match.id} match={match} isLive />
               ))}
@@ -178,13 +209,24 @@ const LiveMatches: React.FC = () => {
 
       {/* Upcoming Matches */}
       <Box sx={{ flex: 1 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Card sx={{ backgroundColor: 'background.paper' }}>
+          <Box sx={{ p: 2, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                color: 'text.primary',
+                fontWeight: 600
+              }}
+            >
               <ClockIcon color="primary" />
               Következő Meccsek
             </Typography>
-            
+          </Box>
+          
+          <CardContent sx={{ p: 2 }}>
             {upcomingMatches.map((match) => (
               <MatchCard key={match.id} match={match} />
             ))}
@@ -194,13 +236,24 @@ const LiveMatches: React.FC = () => {
 
       {/* Recent Results */}
       <Box sx={{ flex: 1 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Card sx={{ backgroundColor: 'background.paper' }}>
+          <Box sx={{ p: 2, borderBottom: '1px solid', borderBottomColor: 'divider' }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1,
+                color: 'text.primary',
+                fontWeight: 600
+              }}
+            >
               <SportsIcon color="primary" />
               Utolsó Eredmények
             </Typography>
-            
+          </Box>
+          
+          <CardContent sx={{ p: 2 }}>
             {recentMatches.map((match) => (
               <MatchCard key={match.id} match={match} />
             ))}

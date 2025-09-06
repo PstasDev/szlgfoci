@@ -1,106 +1,312 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Container,
   Typography,
   Box,
   Stack,
-  Divider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Avatar,
+  Chip,
+  TextField,
+  InputAdornment,
+  Card,
+  CardContent,
 } from '@mui/material';
-import Header from '@/components/Header';
-import GoalScorersList from '@/components/GoalScorersList';
+import { Search as SearchIcon, EmojiEvents } from '@mui/icons-material';
+import SimpleLayout from '@/components/SimpleLayout';
+import { getTopScorers, getClassColor } from '@/data/mockData';
 
-export default function GoalScorersPage() {
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
-  const [mounted, setMounted] = React.useState(false);
+export default function GoalListPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const allScorers = getTopScorers(); // Get all scorers without limit
+  
+  // Filter scorers based on search term
+  const filteredScorers = allScorers.filter(scorer => 
+    scorer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    scorer.teamName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  React.useEffect(() => {
-    // Load selected season from localStorage
-    const saved = localStorage.getItem('szlg-selected-season');
-    if (saved) {
-      setSelectedSeason(saved);
+  const getRankDisplay = (position: number, prevPosition?: number) => {
+    if (prevPosition && position === prevPosition) {
+      return '';
     }
-    setMounted(true);
-  }, []);
-
-  const handleSeasonChange = (season: string) => {
-    setSelectedSeason(season);
-    localStorage.setItem('szlg-selected-season', season);
+    return `${position}.`;
   };
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header />
-      </Box>
-    );
-  }
-
-  // Show message for upcoming season
-  if (selectedSeason === '2025-26') {
-    return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-        <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="h3" color="primary.main" gutterBottom>
-            Góllövőlista
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            A SZLG Liga 25/26 góllövőlista elérhető lesz a szezon kezdete után.
-            <br />
-            Kezdés: 2025. október 15.
-          </Typography>
-        </Container>
-      </Box>
-    );
-  }
+  const getPositionColor = (position: number) => {
+    if (position === 1) return '#ffd700'; // Gold
+    if (position === 2) return '#c0c0c0'; // Silver  
+    if (position === 3) return '#cd7f32'; // Bronze
+    return 'text.primary';
+  };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-      
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Stack spacing={4}>
-          {/* Page Title */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              gutterBottom
+    <SimpleLayout>
+      <Stack spacing={4}>
+        {/* Page Header */}
+        <Box sx={{ textAlign: 'center' }}>
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            gutterBottom
+            sx={{ 
+              fontWeight: 'bold',
+              color: 'text.primary',
+              mb: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2
+            }}
+          >
+            <EmojiEvents sx={{ fontSize: 48, color: '#ffd700' }} />
+            SZLG LIGA 24/25 góllövőlistája
+          </Typography>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: 'text.secondary',
+              mb: 3
+            }}
+          >
+            {allScorers.length} játékos szerepel a gólszerzők listáján
+          </Typography>
+        </Box>
+
+        {/* Search Bar */}
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <TextField
+            variant="outlined"
+            placeholder="Keresés játékos vagy csapat alapján..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ 
+              width: { xs: '100%', sm: '400px' },
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'background.paper',
+              }
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* Top 3 Highlight Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 2 }}>
+          {allScorers.slice(0, 3).map((scorer, index) => (
+            <Card 
+              key={scorer.id}
               sx={{ 
-                fontWeight: 'bold',
-                color: 'primary.main',
-                mb: 1
+                backgroundColor: 'background.paper',
+                border: `2px solid ${getPositionColor(scorer.position)}`,
+                position: 'relative',
+                overflow: 'visible'
               }}
             >
-              Góllövőlista
-            </Typography>
-            <Typography 
-              variant="h6" 
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              SZLG Liga 24/25 - Top góllövők
-            </Typography>
-          </Box>
+              <CardContent sx={{ textAlign: 'center', py: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 60,
+                    height: 60,
+                    backgroundColor: getPositionColor(scorer.position),
+                    color: 'white',
+                    fontSize: '1.5rem',
+                    fontWeight: 'bold',
+                    margin: '0 auto',
+                    mb: 2
+                  }}
+                >
+                  {scorer.position}
+                </Avatar>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  {scorer.name}
+                </Typography>
+                <Chip 
+                  label={scorer.teamName}
+                  size="small"
+                  sx={{
+                    backgroundColor: getClassColor(scorer.teamName),
+                    color: 'white',
+                    fontWeight: 'bold',
+                    mb: 1
+                  }}
+                />
+                <Typography variant="h4" sx={{ 
+                  fontWeight: 'bold', 
+                  color: getPositionColor(scorer.position),
+                  mb: 0
+                }}>
+                  {scorer.goals}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  gól
+                </Typography>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
 
-          <Divider />
+        {/* Full Table */}
+        <Paper sx={{ backgroundColor: 'background.paper', overflow: 'hidden' }}>
+          <TableContainer sx={{ maxHeight: 800 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ 
+                    backgroundColor: 'background.default',
+                    fontWeight: 'bold',
+                    width: '80px'
+                  }}>
+                    Helyezés
+                  </TableCell>
+                  <TableCell sx={{ 
+                    backgroundColor: 'background.default',
+                    fontWeight: 'bold' 
+                  }}>
+                    Játékos
+                  </TableCell>
+                  <TableCell sx={{ 
+                    backgroundColor: 'background.default',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                    width: '120px'
+                  }}>
+                    Gólok száma
+                  </TableCell>
+                  <TableCell sx={{ 
+                    backgroundColor: 'background.default',
+                    fontWeight: 'bold',
+                    width: '140px'
+                  }}>
+                    Játékos csapata
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredScorers.map((scorer, index) => {
+                  const prevScorer = index > 0 ? filteredScorers[index - 1] : null;
+                  const showRank = !prevScorer || scorer.position !== prevScorer.position;
+                  
+                  return (
+                    <TableRow 
+                      key={scorer.id}
+                      sx={{ 
+                        '&:hover': { backgroundColor: 'action.hover' },
+                        backgroundColor: scorer.position <= 3 ? `${getPositionColor(scorer.position)}15` : 'inherit'
+                      }}
+                    >
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {showRank && (
+                            <Typography 
+                              variant="h6" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: getPositionColor(scorer.position),
+                                minWidth: '40px'
+                              }}
+                            >
+                              {scorer.position}.
+                            </Typography>
+                          )}
+                          {scorer.position <= 3 && showRank && (
+                            <EmojiEvents 
+                              sx={{ 
+                                ml: 1, 
+                                color: getPositionColor(scorer.position),
+                                fontSize: 20 
+                              }} 
+                            />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
+                          {scorer.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Chip 
+                          label={scorer.goals}
+                          color="primary"
+                          sx={{ 
+                            fontWeight: 'bold',
+                            minWidth: '50px'
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={scorer.teamName}
+                          size="small"
+                          sx={{
+                            backgroundColor: getClassColor(scorer.teamName),
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
 
-          {/* Goal Scorers Section */}
-          <Box>
-            <GoalScorersList />
+        {/* Statistics Summary */}
+        <Paper sx={{ p: 3, backgroundColor: 'background.paper' }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', textAlign: 'center' }}>
+            Statisztikák
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 3, textAlign: 'center' }}>
+            <Box>
+              <Typography variant="h4" color="primary.main" sx={{ fontWeight: 'bold' }}>
+                {allScorers.length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Gólszerző játékos
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold' }}>
+                {allScorers.reduce((sum, scorer) => sum + scorer.goals, 0)}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Összes gól
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="h4" color="warning.main" sx={{ fontWeight: 'bold' }}>
+                {allScorers[0]?.goals || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Legtöbb gól (egy játékos)
+              </Typography>
+            </Box>
+            <Box>
+              <Typography variant="h4" color="info.main" sx={{ fontWeight: 'bold' }}>
+                {Math.round((allScorers.reduce((sum, scorer) => sum + scorer.goals, 0) / allScorers.length) * 10) / 10}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Átlagos gólszám
+              </Typography>
+            </Box>
           </Box>
-
-          {/* Footer */}
-          <Box sx={{ textAlign: 'center', py: 4, mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2024 SZLG - Labdarúgó Bajnokság
-            </Typography>
-          </Box>
-        </Stack>
-      </Container>
-    </Box>
+        </Paper>
+      </Stack>
+    </SimpleLayout>
   );
 }

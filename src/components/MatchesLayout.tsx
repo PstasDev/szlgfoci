@@ -43,9 +43,9 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Container maxWidth="lg" sx={{ py: 0 }}>
+      <Container maxWidth="lg" sx={{ py: 0, px: { xs: 1, sm: 2 } }}>
         {/* Header Section */}
-        <Box sx={{ pt: 4, pb: 2 }}>
+        <Box sx={{ pt: { xs: 2, sm: 3, md: 4 }, pb: 2 }}>
           <Typography 
             variant="h3" 
             component="h1" 
@@ -54,7 +54,8 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
               fontWeight: 'bold',
               color: 'primary.main',
               textAlign: 'center',
-              mb: 1
+              mb: 1,
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
             }}
           >
             Meccsek
@@ -64,7 +65,9 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
             color="text.secondary"
             sx={{ 
               textAlign: 'center',
-              mb: 3
+              mb: { xs: 2, sm: 3 },
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+              px: { xs: 2, sm: 0 }
             }}
           >
             SZLG Liga 24/25 - Élő, közelgő és befejezett meccsek
@@ -75,9 +78,10 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
         <Paper 
           elevation={1} 
           sx={{ 
-            mb: 3,
+            mb: { xs: 2, sm: 3 },
             borderRadius: 2,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            mx: { xs: 0, sm: 0 }
           }}
         >
           <Tabs
@@ -88,10 +92,11 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
             sx={{
               '& .MuiTab-root': {
                 fontWeight: 600,
-                fontSize: isMobile ? '0.8rem' : '0.9rem',
-                py: 2,
-                minHeight: 64,
+                fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.9rem' },
+                py: { xs: 1.5, sm: 2 },
+                minHeight: { xs: 56, sm: 64 },
                 textTransform: 'none',
+                px: { xs: 0.5, sm: 1, md: 2 }
               },
               '& .MuiTabs-indicator': {
                 height: 3,
@@ -103,13 +108,15 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
               <Tab
                 key={tab.id}
                 value={tab.id}
-                label={tab.label}
+                label={isMobile ? tab.label.replace(' Meccsek', '') : tab.label}
                 icon={tab.icon}
                 iconPosition="start"
                 sx={{
                   '&.Mui-selected': {
                     color: 'primary.main',
                   },
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  gap: { xs: 0.5, sm: 1 }
                 }}
               />
             ))}
@@ -117,7 +124,7 @@ const MatchesLayout: React.FC<MatchesLayoutProps> = ({
         </Paper>
 
         {/* Content Area */}
-        <Box sx={{ pb: 4 }}>
+        <Box sx={{ pb: { xs: 3, sm: 4 } }}>
           {children}
         </Box>
       </Container>

@@ -5,13 +5,10 @@ import {
   Typography,
   Box,
   Stack,
-  Divider,
 } from '@mui/material';
 import SimpleLayout from '@/components/SimpleLayout';
-import LeagueTable from '@/components/LeagueTable';
-import ClassColorLegend from '@/components/ClassColorLegend';
 
-export default function TablePage() {
+export default function GoalListPage() {
   return (
     <SimpleLayout>
       <Stack spacing={4}>
@@ -27,7 +24,7 @@ export default function TablePage() {
               mb: 1
             }}
           >
-            Liga Tabella
+            Góllista
           </Typography>
           <Typography 
             variant="h6" 
@@ -36,44 +33,36 @@ export default function TablePage() {
               mb: 2 
             }}
           >
-            SZLG Liga 24/25 - Aktuális állás
+            SZLG Liga 24/25 - Gólszerzők ranglista
           </Typography>
         </Box>
 
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-        {/* Class Color Legend Section */}
-        <Box>
+        {/* Content Coming Soon */}
+        <Box sx={{ 
+          textAlign: 'center', 
+          py: 8,
+          backgroundColor: '#2d2d2d',
+          borderRadius: 3,
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
           <Typography 
             variant="h5" 
-            gutterBottom 
             sx={{ 
-              fontWeight: 600,
               color: '#e8eaed',
-              mb: 3
+              fontWeight: 600,
+              mb: 2
             }}
           >
-            Osztály Színkódok
+            Hamarosan elérhető! ⚽
           </Typography>
-          <ClassColorLegend />
-        </Box>
-
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-
-        {/* League Table Section */}
-        <Box>
           <Typography 
-            variant="h5" 
-            gutterBottom 
+            variant="body1" 
             sx={{ 
-              fontWeight: 600,
-              color: '#e8eaed',
-              mb: 3
+              color: '#9aa0a6'
             }}
           >
-            Tabella
+            A gólszerzők ranglista fejlesztés alatt áll.
           </Typography>
-          <LeagueTable />
         </Box>
       </Stack>
     </SimpleLayout>

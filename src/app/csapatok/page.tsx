@@ -1,266 +1,399 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Container,
-  Typography,
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { 
+  Container, 
+  Typography, 
+  Grid, 
+  Card, 
+  CardContent, 
+  List, 
+  ListItem, 
+  ListItemText, 
   Box,
-  Stack,
-  Divider,
-  Paper,
-  Avatar,
+  Button,
   Chip,
-  Card,
-  CardContent,
+  Avatar,
+  Divider,
+  IconButton
 } from '@mui/material';
+import { ArrowBack, EmojiEvents, Person } from '@mui/icons-material';
 import Header from '@/components/Header';
-import { teams, getClassColor } from '@/data/mockData';
+import { 
+  getAllTeamRosters, 
+  getClassColor, 
+  getClassColorLight, 
+  getLeagueTable,
+  getTopScorers,
+  type TeamRoster,
+  type Team,
+  type Player
+} from '@/data/mockData';
 
-export default function TeamsPage() {
-  const router = useRouter();
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
-  const [mounted, setMounted] = React.useState(false);
+export default function CsapatokPage() {
+  const [selectedTeam, setSelectedTeam] = useState<TeamRoster | null>(null);
+  const searchParams = useSearchParams();
+  const teamRosters = getAllTeamRosters();
+  const leagueTable = getLeagueTable();
+  const topScorers = getTopScorers();
 
-  React.useEffect(() => {
-    // Load selected season from localStorage
-    const saved = localStorage.getItem('szlg-selected-season');
-    if (saved) {
-      setSelectedSeason(saved);
+  // Auto-select team from URL parameter
+  useEffect(() => {
+    const teamParam = searchParams.get('team');
+    if (teamParam && !selectedTeam) {
+      const team = teamRosters.find(roster => roster.teamName === teamParam);
+      if (team) {
+        setSelectedTeam(team);
+      }
     }
-    setMounted(true);
-  }, []);
+  }, [searchParams, teamRosters, selectedTeam]);
 
-  const handleSeasonChange = (season: string) => {
-    setSelectedSeason(season);
-    localStorage.setItem('szlg-selected-season', season);
+  const getTeamStats = (teamName: string): Team | undefined => {
+    return leagueTable.find(team => team.name === teamName);
   };
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header />
-      </Box>
+  const getPlayerGoalPosition = (playerName: string, teamName: string): Player | undefined => {
+    return topScorers.find(scorer => 
+      scorer.name === playerName && scorer.teamName === teamName
     );
-  }
+  };
 
-  // Show message for upcoming season
-  if (selectedSeason === '2025-26') {
+  const handleTeamSelect = (team: TeamRoster) => {
+    setSelectedTeam(team);
+  };
+
+  const handleBackToTeams = () => {
+    setSelectedTeam(null);
+  };
+
+  if (selectedTeam) {
+    const teamStats = getTeamStats(selectedTeam.teamName);
+    const teamScorers = selectedTeam.players
+      .map(playerName => ({
+        name: playerName,
+        goalData: getPlayerGoalPosition(playerName, selectedTeam.teamName)
+      }))
+      .filter(player => player.goalData)
+      .sort((a, b) => (a.goalData?.goals || 0) - (b.goalData?.goals || 0))
+      .reverse();
+
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-        <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="h3" color="primary.main" gutterBottom>
-            Csapatok
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            A SZLG Liga 25/26 csapatai elérhető lesznek a szezon kezdete után.
-            <br />
-            Kezdés: 2025. október 15.
-          </Typography>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Header />
+        
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <IconButton onClick={handleBackToTeams} sx={{ mr: 1, color: 'text.primary' }}>
+                <ArrowBack />
+              </IconButton>
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  color: getClassColor(selectedTeam.className)
+                }}
+              >
+                {selectedTeam.className}
+              </Typography>
+            </Box>
+          </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Team Stats and Goal Scorers Row */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+            {/* Team Stats Card */}
+            {teamStats && (
+              <Card 
+                sx={{ 
+                  border: `2px solid ${getClassColor(selectedTeam.className)}`,
+                  backgroundColor: 'background.paper',
+                  borderRadius: 2
+                }}
+              >
+                <CardContent>
+                  <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', color: 'text.primary' }}>
+                    <EmojiEvents sx={{ mr: 1, color: getClassColor(selectedTeam.className) }} />
+                    Csapat Statisztikái
+                  </Typography>
+                  
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">Helyezés</Typography>
+                      <Typography variant="h6" sx={{ color: getClassColor(selectedTeam.className), fontWeight: 'bold' }}>
+                        {teamStats.position}.
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">Pontok</Typography>
+                      <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 'bold' }}>{teamStats.points}</Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">Mérk. / Győz. / Dönt. / Veszt.</Typography>
+                      <Typography variant="body1" sx={{ color: 'text.primary' }}>
+                        {teamStats.played} / {teamStats.won} / {teamStats.drawn} / {teamStats.lost}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">Gólkülönbség</Typography>
+                      <Typography variant="body1" sx={{ color: 'text.primary' }}>
+                        {teamStats.goalsFor}:{teamStats.goalsAgainst} ({teamStats.goalDifference > 0 ? '+' : ''}{teamStats.goalDifference})
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Goal Scorers Card */}
+            <Card sx={{ backgroundColor: 'background.paper', borderRadius: 2 }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', color: 'text.primary' }}>
+                  <EmojiEvents sx={{ mr: 1, color: '#ffd700' }} />
+                  Csapat Gólkirályai
+                </Typography>
+                
+                {teamScorers.length > 0 ? (
+                  <List>
+                    {teamScorers.map((scorer, index) => (
+                      <ListItem key={index} sx={{ px: 0 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                          <Avatar 
+                            sx={{ 
+                              mr: 2, 
+                              backgroundColor: index < 3 ? '#ffca28' : 'primary.main',
+                              color: index < 3 ? '#000' : '#fff',
+                              width: 32,
+                              height: 32,
+                              fontSize: '0.875rem',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {scorer.goalData?.position}
+                          </Avatar>
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                              {scorer.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Liga helyezés: {scorer.goalData?.position}. hely
+                            </Typography>
+                          </Box>
+                          <Chip 
+                            label={`${scorer.goalData?.goals} gól`}
+                            sx={{ 
+                              backgroundColor: 'success.main',
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}
+                            size="small"
+                          />
+                        </Box>
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Nincs góllövő a csapatból a top 15-ben.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* All Players Card */}
+          <Card sx={{ backgroundColor: 'background.paper', borderRadius: 2 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', color: 'text.primary' }}>
+                <Person sx={{ mr: 1, color: getClassColor(selectedTeam.className) }} />
+                Összes Játékos ({selectedTeam.players.length})
+              </Typography>
+              
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 1 }}>
+                {selectedTeam.players.map((player, index) => {
+                  const goalData = getPlayerGoalPosition(player, selectedTeam.teamName);
+                  return (
+                    <Card 
+                      key={index}
+                      variant="outlined" 
+                      sx={{ 
+                        backgroundColor: goalData ? 'rgba(76, 175, 80, 0.2)' : 'background.paper',
+                        border: goalData ? '1px solid' : '1px solid',
+                        borderColor: goalData ? 'success.main' : 'divider',
+                        borderRadius: 1
+                      }}
+                    >
+                      <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'text.primary' }}>
+                          {player}
+                        </Typography>
+                        {goalData && (
+                          <Box sx={{ mt: 0.5 }}>
+                            <Chip 
+                              label={`#${goalData.position} - ${goalData.goals} gól`}
+                              size="small"
+                              sx={{ 
+                                fontSize: '0.75rem',
+                                backgroundColor: 'success.main',
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
         </Container>
       </Box>
     );
   }
 
-  // Group teams by class
-  const teamsByClass = teams.reduce((acc, team) => {
-    const classLetter = team.className.split(' ')[1];
-    if (!acc[classLetter]) {
-      acc[classLetter] = [];
-    }
-    acc[classLetter].push(team);
-    return acc;
-  }, {} as Record<string, typeof teams>);
-
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Header />
       
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Stack spacing={4}>
-          {/* Page Title */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              gutterBottom
-              sx={{ 
-                fontWeight: 'bold',
-                color: 'primary.main',
-                mb: 1
-              }}
-            >
-              Csapatok
-            </Typography>
-            <Typography 
-              variant="h6" 
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              SZLG Liga 24/25 - Összes csapat osztály szerint
-            </Typography>
-          </Box>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            sx={{ 
+              fontWeight: 'bold',
+              textAlign: 'center',
+              mb: 1,
+              color: 'text.primary'
+            }}
+          >
+            Csapatok
+          </Typography>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              textAlign: 'center',
+              color: 'text.secondary',
+              mb: 4
+            }}
+          >
+            SZLG LIGA 24/25 bajnokságban
+          </Typography>
+        </Box>
 
-          <Divider />
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3 }}>
+        {teamRosters
+          .sort((a, b) => {
+            const teamA = getTeamStats(a.teamName);
+            const teamB = getTeamStats(b.teamName);
+            return (teamA?.position || 999) - (teamB?.position || 999);
+          })
+          .map((roster) => {
+            const teamStats = getTeamStats(roster.teamName);
+            const teamScorers = roster.players.filter(playerName => 
+              getPlayerGoalPosition(playerName, roster.teamName)
+            ).length;
 
-          {/* Teams by Class */}
-          {Object.entries(teamsByClass).sort().map(([classLetter, classTeams]) => (
-            <Box key={classLetter}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: getClassColor(`20 ${classLetter}`),
-                    color: 'white',
-                    fontWeight: 'bold',
-                    mr: 2
-                  }}
-                >
-                  {classLetter}
-                </Avatar>
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    fontWeight: 600,
-                    color: 'text.primary'
-                  }}
-                >
-                  {classLetter} Osztály ({classTeams.length} csapat)
-                </Typography>
-              </Box>
-
-              <Box 
+            return (
+              <Card 
+                key={roster.teamId}
                 sx={{ 
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' },
-                  gap: 3,
-                  mb: 4
+                  height: '100%',
+                  border: `2px solid ${getClassColor(roster.className)}`,
+                  backgroundColor: 'background.paper',
+                  cursor: 'pointer',
+                  borderRadius: 2,
+                  '&:hover': {
+                    boxShadow: 6,
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.2s ease-in-out',
+                    borderColor: getClassColor(roster.className)
+                  }
                 }}
+                onClick={() => handleTeamSelect(roster)}
               >
-                {classTeams.sort((a, b) => a.position - b.position).map((team) => (
-                  <Card 
-                    key={team.id}
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography 
+                      variant="h6" 
+                      component="h2" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        color: getClassColor(roster.className)
+                      }}
+                    >
+                      {roster.className}
+                    </Typography>
+                    {teamStats && (
+                      <Chip 
+                        label={`${teamStats.position}.`}
+                        size="small"
+                        sx={{ 
+                          backgroundColor: getClassColor(roster.className),
+                          color: 'white',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    )}
+                  </Box>
+                  
+                  <Divider sx={{ mb: 2 }} />
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Játékosok
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: getClassColor(roster.className), fontWeight: 'bold' }}>
+                        {roster.players.length}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Góllövők
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: 'success.main', fontWeight: 'bold' }}>
+                        {teamScorers}
+                      </Typography>
+                    </Box>
+                    {teamStats && (
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Pontok
+                        </Typography>
+                        <Typography variant="h6" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+                          {teamStats.points}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+
+                  <Button 
+                    variant="contained" 
+                    fullWidth 
                     sx={{ 
-                      height: '100%',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
+                      mt: 1,
+                      backgroundColor: getClassColor(roster.className),
+                      color: 'white',
+                      fontWeight: 'bold',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 4
+                        backgroundColor: getClassColor(roster.className),
+                        filter: 'brightness(0.9)'
                       }
                     }}
-                    onClick={() => router.push(`/csapatok/${team.id}`)}
                   >
-                      <CardContent sx={{ p: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <Avatar
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              bgcolor: getClassColor(team.className),
-                              color: 'white',
-                              fontWeight: 'bold',
-                              fontSize: '0.9rem',
-                              mr: 2
-                            }}
-                          >
-                            {classLetter}
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography 
-                              variant="h6" 
-                              sx={{ 
-                                fontWeight: 600,
-                                lineHeight: 1.2,
-                                mb: 0.5
-                              }}
-                            >
-                              {team.name}
-                            </Typography>
-                            <Chip 
-                              label={`${team.position}. hely`}
-                              size="small"
-                              color={team.position <= 3 ? 'success' : 'default'}
-                              sx={{ fontSize: '0.75rem' }}
-                            />
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 2 }}>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Meccsek
-                            </Typography>
-                            <Typography variant="body2" fontWeight="bold">
-                              {team.played}
-                            </Typography>
-                          </Box>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Pontok
-                            </Typography>
-                            <Typography variant="body2" fontWeight="bold" color="primary.main">
-                              {team.points}
-                            </Typography>
-                          </Box>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Győzelem
-                            </Typography>
-                            <Typography variant="body2" color="success.main">
-                              {team.won}
-                            </Typography>
-                          </Box>
-                          <Box>
-                            <Typography variant="caption" color="text.secondary">
-                              Vereség
-                            </Typography>
-                            <Typography variant="body2" color="error.main">
-                              {team.lost}
-                            </Typography>
-                          </Box>
-                        </Box>
-
-                        <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
-                          <Typography variant="caption" color="text.secondary">
-                            Gólkülönbség: 
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            component="span"
-                            sx={{ 
-                              fontWeight: 'bold',
-                              color: team.goalDifference >= 0 ? 'success.main' : 'error.main',
-                              ml: 1
-                            }}
-                          >
-                            {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
-                            ({team.goalsFor}:{team.goalsAgainst})
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                ))}
-              </Box>
-
-              {Object.entries(teamsByClass).findIndex(([key]) => key === classLetter) < Object.keys(teamsByClass).length - 1 && (
-                <Divider sx={{ my: 4 }} />
-              )}
-            </Box>
-          ))}
-
-          {/* Footer */}
-          <Box sx={{ textAlign: 'center', py: 4, mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2024 SZLG - Labdarúgó Bajnokság
-            </Typography>
-          </Box>
-        </Stack>
+                    Részletek megtekintése
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+      </Box>
       </Container>
     </Box>
   );

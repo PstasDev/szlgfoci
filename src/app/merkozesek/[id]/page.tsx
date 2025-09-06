@@ -12,91 +12,86 @@ import {
 import {
   ArrowBack as BackIcon,
 } from '@mui/icons-material';
-import Header from '@/components/Header';
+import SimpleLayout from '@/components/SimpleLayout';
 import MatchDetailView from '@/components/MatchDetailView';
 import { matches, Match } from '@/data/mockData';
 
 export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
   const [mounted, setMounted] = React.useState(false);
 
   const matchId = parseInt(params.id as string);
   const match = matches.find(m => m.id === matchId);
 
   React.useEffect(() => {
-    // Load selected season from localStorage
-    const saved = localStorage.getItem('szlg-selected-season');
-    if (saved) {
-      setSelectedSeason(saved);
-    }
     setMounted(true);
   }, []);
-
-  const handleSeasonChange = (season: string) => {
-    setSelectedSeason(season);
-    localStorage.setItem('szlg-selected-season', season);
-  };
 
   // Don't render until mounted to avoid hydration issues
   if (!mounted) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header />
-      </Box>
+      <SimpleLayout>
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          <Typography variant="h6" sx={{ color: '#e8eaed' }}>
+            Betöltés...
+          </Typography>
+        </Container>
+      </SimpleLayout>
     );
   }
 
   if (!match) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-        <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="h3" color="error.main" gutterBottom>
-            Mérkőzés nem található
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-            A keresett mérkőzés nem létezik vagy törölve lett.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<BackIcon />}
-            onClick={() => router.push('/merkozesek')}
-          >
-            Vissza a meccsekhez
-          </Button>
+      <SimpleLayout>
+        <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4, md: 6 } }}>
+          <Stack spacing={3} alignItems="center" textAlign="center">
+            <Typography variant="h3" color="error.main" gutterBottom>
+              Mérkőzés nem található
+            </Typography>
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
+              A keresett mérkőzés nem létezik vagy törölve lett.
+            </Typography>
+            <Button
+              variant="contained"
+              startIcon={<BackIcon />}
+              onClick={() => router.push('/merkozesek')}
+              sx={{
+                bgcolor: '#4285f4',
+                '&:hover': { bgcolor: '#1976d2' }
+              }}
+            >
+              Vissza a meccsekhez
+            </Button>
+          </Stack>
         </Container>
-      </Box>
+      </SimpleLayout>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
-      
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Stack spacing={3}>
+    <SimpleLayout>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 3, md: 4 } }}>
+        <Stack spacing={{ xs: 2, sm: 3 }}>
           {/* Back Button */}
           <Button
             startIcon={<BackIcon />}
             onClick={() => router.back()}
-            sx={{ alignSelf: 'flex-start' }}
+            sx={{ 
+              alignSelf: 'flex-start',
+              color: '#9aa0a6',
+              '&:hover': {
+                backgroundColor: 'rgba(154, 160, 166, 0.08)',
+              }
+            }}
           >
             Vissza
           </Button>
 
           {/* Match Detail */}
           <MatchDetailView match={match} />
-
-          {/* Footer */}
-          <Box sx={{ textAlign: 'center', py: 4, mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2024 SZLG - Labdarúgó Bajnokság
-            </Typography>
-          </Box>
         </Stack>
       </Container>
-    </Box>
+    </SimpleLayout>
   );
 }

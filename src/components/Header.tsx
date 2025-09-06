@@ -65,32 +65,75 @@ const Header: React.FC<HeaderProps> = ({
 
   const menuItems = [
     { text: 'FŐOLDAL', icon: <HomeIcon />, href: '/' },
-    { text: 'LIGA TABELLA', icon: <TrophyIcon />, href: '/tabella' },
     { text: 'CSAPATOK', icon: <PeopleIcon />, href: '/csapatok' },
     { text: 'MECCSEK', icon: <SportsIcon />, href: '/merkozesek' },
     { text: 'GÓLLÖVŐLISTA', icon: <ScoreIcon />, href: '/gollista' },
-    { text: 'JÁTÉKOSOK', icon: <PeopleIcon />, href: '/jatekosok' },
   ];
 
   const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-      <Typography variant="h6" sx={{ my: 2, color: 'primary.main', fontWeight: 'bold' }}>
+    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', height: '100%' }}>
+      <Typography variant="h6" sx={{ 
+        my: 3, 
+        color: 'primary.main', 
+        fontWeight: 'bold',
+        px: 2
+      }}>
         ⚽ SZLG FOCI
       </Typography>
-      <List>
+      
+      {/* League Selector in Mobile */}
+      <Box sx={{ px: 2, mb: 3 }}>
+        <FormControl 
+          fullWidth
+          size="small" 
+          sx={{ 
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: 'rgba(255,255,255,0.05)',
+            },
+          }}
+        >
+          <InputLabel>Liga Kiválasztása</InputLabel>
+          <Select
+            value={currentSeason}
+            label="Liga Kiválasztása"
+            onChange={handleSeasonChange}
+          >
+            {leagueSeasons.map((season) => (
+              <MenuItem key={season.id} value={season.id}>
+                {season.displayName}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      
+      <List sx={{ px: 1 }}>
         {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
+          <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton 
               component={Link} 
               href={item.href}
-              sx={{ textAlign: 'center' }}
+              sx={{ 
+                textAlign: 'left',
+                borderRadius: 2,
+                mx: 1,
+                '&:hover': {
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                }
+              }}
             >
-              <ListItemIcon sx={{ minWidth: 40 }}>
+              <ListItemIcon sx={{ minWidth: 40, color: 'primary.main' }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText 
                 primary={item.text}
-                sx={{ '& .MuiListItemText-primary': { fontWeight: 500, fontSize: '0.9rem' } }}
+                sx={{ 
+                  '& .MuiListItemText-primary': { 
+                    fontWeight: 600, 
+                    fontSize: '0.9rem',
+                    color: 'text.primary'
+                  } 
+                }}
               />
             </ListItemButton>
           </ListItem>
@@ -104,16 +147,19 @@ const Header: React.FC<HeaderProps> = ({
       <AppBar 
         position="sticky" 
         sx={{ 
-          backgroundColor: theme.palette.primary.main, // SZLG blue background
+          backgroundColor: 'background.paper',
+          borderBottom: '1px solid',
+          borderBottomColor: 'divider',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         }}
       >
-        <Toolbar>
+        <Toolbar sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
+            sx={{ mr: { xs: 1, sm: 2 }, display: { md: 'none' }, color: 'text.primary' }}
           >
             <MenuIcon />
           </IconButton>
@@ -126,16 +172,19 @@ const Header: React.FC<HeaderProps> = ({
               fontWeight: 'bold',
               display: 'flex',
               alignItems: 'center',
-              gap: 1
+              gap: { xs: 0.5, sm: 1 },
+              color: 'text.primary',
+              fontSize: { xs: '1.2rem', sm: '1.5rem' }
             }}
           >
             ⚽ SZLG FOCI
             <Typography 
               variant="caption" 
               sx={{ 
-                opacity: 0.8, 
-                fontSize: '0.7rem',
-                display: { xs: 'none', sm: 'block' }
+                opacity: 0.7, 
+                fontSize: { xs: '0.6rem', sm: '0.7rem' },
+                display: { xs: 'none', sm: 'block' },
+                color: 'text.secondary',
               }}
             >
               Labdarúgó Bajnokság
@@ -143,20 +192,27 @@ const Header: React.FC<HeaderProps> = ({
           </Typography>
 
           {/* League Selector */}
-          <Box sx={{ mr: 2 }}>
+          <Box sx={{ mr: { xs: 1, sm: 2 } }}>
             <FormControl 
               size="small" 
               sx={{ 
-                minWidth: { xs: 180, md: 200 },
+                minWidth: { xs: 100, sm: 140, md: 180 },
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'rgba(255,255,255,0.1)',
-                  '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                  '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                  '&.Mui-focused fieldset': { borderColor: 'white' },
+                  '& fieldset': { borderColor: 'divider' },
+                  '&:hover fieldset': { borderColor: 'text.secondary' },
+                  '&.Mui-focused fieldset': { borderColor: 'primary.main' },
                 },
-                '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.8)' },
-                '& .MuiSelect-select': { color: 'white' },
-                '& .MuiSvgIcon-root': { color: 'white' },
+                '& .MuiInputLabel-root': { 
+                  color: 'text.secondary',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                },
+                '& .MuiSelect-select': { 
+                  color: 'text.primary',
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                  py: { xs: 1, sm: 1.5 }
+                },
+                '& .MuiSvgIcon-root': { color: 'text.secondary' },
               }}
             >
               <InputLabel>Liga</InputLabel>
@@ -174,19 +230,21 @@ const Header: React.FC<HeaderProps> = ({
             </FormControl>
           </Box>
           
-          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-            {menuItems.slice(0, 5).map((item) => (
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5 }}>
+            {menuItems.map((item) => (
               <Button
                 key={item.text}
                 component={Link}
                 href={item.href}
-                color="inherit"
                 sx={{ 
                   fontWeight: 500,
-                  fontSize: '0.8rem',
-                  px: 1,
+                  fontSize: { md: '0.75rem', lg: '0.8rem' },
+                  px: { md: 0.8, lg: 1.2 },
+                  py: 0.8,
+                  color: 'text.primary',
+                  minWidth: 'auto',
                   '&:hover': {
-                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    backgroundColor: 'rgba(255,255,255,0.08)',
                     transform: 'translateY(-1px)',
                   },
                   transition: 'all 0.2s ease'
@@ -208,7 +266,13 @@ const Header: React.FC<HeaderProps> = ({
         }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: { xs: 280, sm: 320 },
+            backgroundColor: 'background.paper',
+            borderRight: '1px solid',
+            borderRightColor: 'divider'
+          },
         }}
       >
         {drawer}

@@ -6,177 +6,282 @@ import {
   Typography,
   Paper,
   Button,
-  Container,
   Stack,
-  Divider,
-  Card,
-  CardContent,
+  Container,
+  Chip,
 } from '@mui/material';
 import {
-  CalendarMonth as CalendarIcon,
-  AppRegistration as RegistrationIcon,
-  Sports as SportsIcon,
+  Schedule as ScheduleIcon,
+  HowToReg as RegisterIcon,
+  SportsSoccer as SoccerIcon,
+  CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 
-const UpcomingSeason: React.FC = () => {
-  const startDate = new Date('2025-10-15');
-  const today = new Date();
-  const daysUntilStart = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+interface UpcomingSeasonProps {
+  season?: {
+    id: string;
+    name: string;
+    displayName: string;
+    startDate?: string;
+    registrationOpen?: boolean;
+    registrationLink?: string;
+  };
+}
 
-  const handleRegistrationClick = () => {
-    // Here you would typically open the registration form or navigate to it
-    alert('Csapat regisztráció űrlap megnyitása...');
+const UpcomingSeason: React.FC<UpcomingSeasonProps> = ({ season }) => {
+  // Default season data if none provided
+  const defaultSeason = {
+    id: '2025-26',
+    name: 'SZLG Liga 25/26',
+    displayName: 'SZLG Liga 25/26 - Kezdés: 2025. október 15.',
+    startDate: '2025-10-15',
+    registrationOpen: true,
+    registrationLink: '#'
   };
 
+  const currentSeason = season || defaultSeason;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('hu-HU', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const calculateDaysUntilStart = (dateString: string) => {
+    const startDate = new Date(dateString);
+    const today = new Date();
+    const diffTime = startDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const daysUntilStart = currentSeason.startDate ? calculateDaysUntilStart(currentSeason.startDate) : null;
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Stack spacing={4}>
-        {/* Header */}
-        <Box sx={{ textAlign: 'center' }}>
+    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
+      <Stack spacing={{ xs: 3, sm: 4 }} alignItems="center">
+        {/* Header Section */}
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
+          <Box sx={{ 
+            fontSize: { xs: '3rem', sm: '4rem' }, 
+            mb: 2,
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 1
+          }}>
+            ⚽ 🚧 ⏰
+          </Box>
           <Typography 
             variant="h3" 
             component="h1" 
             gutterBottom
             sx={{ 
               fontWeight: 'bold',
-              color: 'primary.main',
-              mb: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 2
+              color: '#e8eaed',
+              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+              textAlign: 'center',
+              mb: 2
             }}
           >
-            <SportsIcon sx={{ fontSize: 40 }} />
-            SZLG Liga 25/26
+            {currentSeason.name}
           </Typography>
-          <Typography 
-            variant="h5" 
-            color="text.secondary"
-            sx={{ mb: 2 }}
-          >
-            A következő szezon hamarosan kezdődik!
-          </Typography>
+          <Chip 
+            label="Hamarosan"
+            sx={{ 
+              backgroundColor: '#ff9800',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: { xs: '0.8rem', sm: '0.9rem' },
+              px: { xs: 1.5, sm: 2 },
+              py: 1
+            }}
+          />
         </Box>
 
-        <Divider />
-
-        {/* Main Content */}
-        <Stack spacing={3} alignItems="center">
-          {/* Start Date Card */}
-          <Card 
-            sx={{ 
-              width: '100%', 
-              maxWidth: 600,
-              textAlign: 'center',
-              borderLeft: 4,
-              borderLeftColor: 'primary.main'
-            }}
-          >
-            <CardContent sx={{ py: 4 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
-                <CalendarIcon sx={{ fontSize: 32, color: 'primary.main', mr: 1 }} />
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                  Kezdés Dátuma
-                </Typography>
-              </Box>
-              
-              <Typography 
-                variant="h2" 
-                sx={{ 
-                  fontWeight: 'bold',
-                  color: 'text.primary',
-                  mb: 2
-                }}
-              >
-                2025. október 15.
-              </Typography>
-              
-              <Typography variant="h6" color="text.secondary">
-                {daysUntilStart > 0 ? (
-                  `Még ${daysUntilStart} nap a kezdésig`
-                ) : (
-                  'A szezon már elkezdődött!'
-                )}
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Registration Section */}
-          <Paper 
-            elevation={3}
-            sx={{ 
-              p: 4, 
-              width: '100%', 
-              maxWidth: 600,
-              textAlign: 'center',
-              backgroundColor: 'background.paper',
-              border: '2px solid',
-              borderColor: 'primary.main'
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
-              <RegistrationIcon sx={{ fontSize: 32, color: 'primary.main', mr: 1 }} />
-              <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                Csapat Regisztráció
-              </Typography>
-            </Box>
+        {/* Coming Soon Card */}
+        <Paper 
+          elevation={3}
+          sx={{ 
+            p: { xs: 2.5, sm: 3, md: 4 },
+            backgroundColor: '#2d2d2d',
+            border: '1px solid #404040',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: 600
+          }}
+        >
+          <Stack spacing={{ xs: 2.5, sm: 3 }} alignItems="center" textAlign="center">
+            <SoccerIcon sx={{ fontSize: { xs: '2.5rem', sm: '3rem' }, color: '#4285f4' }} />
+            
+            <Typography 
+              variant="h4" 
+              sx={{ 
+                fontWeight: 700,
+                color: '#e8eaed',
+                fontSize: { xs: '1.3rem', sm: '1.5rem', md: '2rem' }
+              }}
+            >
+              A liga még nem kezdődött el!
+            </Typography>
             
             <Typography 
               variant="body1" 
-              color="text.secondary" 
-              sx={{ mb: 3, fontSize: '1.1rem' }}
-            >
-              Regisztrálja csapatát a SZLG Liga 25/26 szezonra!
-              <br />
-              A regisztráció jelenleg nyitott.
-            </Typography>
-            
-            <Button
-              variant="contained"
-              size="large"
-              onClick={handleRegistrationClick}
-              startIcon={<RegistrationIcon />}
-              sx={{
-                px: 4,
-                py: 2,
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                borderRadius: 3,
-                boxShadow: 3,
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 6,
-                },
-                transition: 'all 0.3s ease'
+              sx={{ 
+                color: '#9aa0a6',
+                fontSize: { xs: '0.95rem', sm: '1rem', md: '1.1rem' },
+                lineHeight: 1.6,
+                maxWidth: 400,
+                px: { xs: 1, sm: 0 }
               }}
             >
-              Csapat Regisztráció Űrlap
-            </Button>
-          </Paper>
-
-          {/* Information Notice */}
-          <Paper 
-            sx={{ 
-              p: 3, 
-              width: '100%', 
-              maxWidth: 600,
-              backgroundColor: 'primary.50',
-              textAlign: 'center'
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              A részletes információk, csapat listák és menetrend hamarosan elérhető lesz.
-              <br />
-              Kövesse figyelemmel a frissítéseket!
+              Az új szezon előkészületei folyamatban vannak. Hamarosan jelentkezhetnek majd a csapatok!
             </Typography>
-          </Paper>
-        </Stack>
 
-        {/* Footer */}
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body2" color="text.secondary">
-            © 2025 SZLG - Labdarúgó Bajnokság
+            {currentSeason.startDate && (
+              <Box sx={{ 
+                p: { xs: 2, sm: 3 },
+                backgroundColor: '#1e1e1e',
+                borderRadius: '12px',
+                border: '1px solid #404040',
+                width: '100%'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                  <CalendarIcon sx={{ color: '#4285f4', fontSize: { xs: 20, sm: 24 } }} />
+                  <Typography variant="h6" sx={{ 
+                    color: '#e8eaed', 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}>
+                    Tervezett kezdés
+                  </Typography>
+                </Box>
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    color: '#4285f4',
+                    fontWeight: 'bold',
+                    mb: 1,
+                    fontSize: { xs: '1.3rem', sm: '1.5rem' }
+                  }}
+                >
+                  {formatDate(currentSeason.startDate)}
+                </Typography>
+                {daysUntilStart && daysUntilStart > 0 && (
+                  <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
+                    {daysUntilStart} nap múlva
+                  </Typography>
+                )}
+              </Box>
+            )}
+
+            {currentSeason.registrationOpen && (
+              <Box sx={{ 
+                p: { xs: 2, sm: 3 },
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                borderRadius: '12px',
+                border: '1px solid rgba(76, 175, 80, 0.3)',
+                width: '100%'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 2 }}>
+                  <RegisterIcon sx={{ color: '#4caf50', fontSize: { xs: 20, sm: 24 } }} />
+                  <Typography variant="h6" sx={{ 
+                    color: '#e8eaed', 
+                    fontWeight: 600,
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}>
+                    Jelentkezés
+                  </Typography>
+                </Box>
+                <Typography variant="body2" sx={{ color: '#9aa0a6', mb: 3 }}>
+                  A csapatok már jelentkezhetnek az új szezonra!
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<RegisterIcon />}
+                  href={currentSeason.registrationLink}
+                  sx={{
+                    backgroundColor: '#4caf50',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    px: { xs: 2, sm: 3 },
+                    py: { xs: 1, sm: 1.5 },
+                    borderRadius: '8px',
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    '&:hover': {
+                      backgroundColor: '#388e3c',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Jelentkezés a ligába
+                </Button>
+              </Box>
+            )}
+
+            <Box sx={{ 
+              p: { xs: 2, sm: 3 },
+              backgroundColor: '#1e1e1e',
+              borderRadius: '12px',
+              border: '1px solid #404040',
+              width: '100%'
+            }}>
+              <Typography variant="h6" sx={{ 
+                color: '#e8eaed', 
+                fontWeight: 600, 
+                mb: 2,
+                fontSize: { xs: '1rem', sm: '1.25rem' }
+              }}>
+                Mit várhatnak?
+              </Typography>
+              <Stack spacing={1.5}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ color: '#4285f4', fontSize: '1.2rem' }}>⚽</Box>
+                  <Typography variant="body2" sx={{ color: '#9aa0a6', fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                    Élő meccskövetés és eredmények
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ color: '#4285f4', fontSize: '1.2rem' }}>🏆</Box>
+                  <Typography variant="body2" sx={{ color: '#9aa0a6', fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                    Liga tabella és statisztikák
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ color: '#4285f4', fontSize: '1.2rem' }}>📱</Box>
+                  <Typography variant="body2" sx={{ color: '#9aa0a6', fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                    Modern, mobilbarát felület
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box sx={{ color: '#4285f4', fontSize: '1.2rem' }}>👥</Box>
+                  <Typography variant="body2" sx={{ color: '#9aa0a6', fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                    Játékos és csapat statisztikák
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </Stack>
+        </Paper>
+
+        {/* Additional Info */}
+        <Box sx={{ textAlign: 'center', mt: { xs: 3, sm: 4 } }}>
+          <Typography variant="body2" sx={{ 
+            color: '#9aa0a6', 
+            mb: 2,
+            fontSize: { xs: '0.8rem', sm: '0.9rem' },
+            px: { xs: 2, sm: 0 }
+          }}>
+            További információkért kövesse figyelemmel az oldalt vagy lépjen kapcsolatba a szervezőkkel.
+          </Typography>
+          <Typography variant="caption" sx={{ 
+            color: '#666',
+            fontSize: { xs: '0.7rem', sm: '0.75rem' }
+          }}>
+            &copy; 2025 - Szent László Gimnázium 
           </Typography>
         </Box>
       </Stack>
