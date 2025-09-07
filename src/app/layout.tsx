@@ -16,6 +16,15 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: "Szlgfoci - Iskolai Foci Kupa",
   description: "Kövesd nyomon az iskolai labdarúgó bajnokság eredményeit, csapatokat és játékosokat",
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.svg', sizes: '16x16', type: 'image/svg+xml' },
+      { url: '/favicon.svg', sizes: '32x32', type: 'image/svg+xml' },
+      { url: '/favicon-48x48.svg', sizes: '48x48', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/favicon-48x48.svg',
+  },
 };
 
 export default function RootLayout({
