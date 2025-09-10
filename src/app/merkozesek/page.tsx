@@ -12,11 +12,13 @@ import SimpleLayout from '@/components/SimpleLayout';
 import MatchesLayout from '@/components/MatchesLayout';
 import MatchesList from '@/components/MatchesList';
 import LiveMatches from '@/components/LiveMatches';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function MatchesPage() {
   const [activeTab, setActiveTab] = React.useState<'live' | 'upcoming' | 'recent'>('live');
-  const { matches, loading, error } = useTournamentData();
+  const { matches, loading, error, refetch } = useTournamentData();
   const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   if (loading) {
@@ -34,13 +36,16 @@ export default function MatchesPage() {
     );
   }
 
-  if (error) {
+  if (error || (isEmptyDataError(matches) && !loading)) {
+    const errorInfo = getErrorInfo('matches', error);
     return (
       <SimpleLayout>
         <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            {error}
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            fullPage
+          />
         </Box>
       </SimpleLayout>
     );

@@ -24,14 +24,16 @@ import {
 } from '@mui/material';
 import Header from '@/components/Header';
 import SimpleLayout from '@/components/SimpleLayout';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getClassColor } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function PlayersPage() {
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
   const [mounted, setMounted] = React.useState(false);
-  const { topScorers, teams, loading, error } = useTournamentData();
+  const { topScorers, teams, loading, error, refetch } = useTournamentData();
 
   React.useEffect(() => {
     // Load selected season from localStorage

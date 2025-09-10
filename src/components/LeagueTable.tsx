@@ -22,10 +22,12 @@ import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getClassColor } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import ErrorDisplay from './ErrorDisplay';
 import type { Standing } from '@/types/api';
 
 const LeagueTable: React.FC = () => {
-  const { standings, loading, error } = useTournamentData();
+  const { standings, loading, error, refetch } = useTournamentData();
   const router = useRouter();
 
   const getPositionColor = (position: number) => {
@@ -52,13 +54,16 @@ const LeagueTable: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || isEmptyDataError(standings)) {
+    const errorInfo = getErrorInfo('standings', error);
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            Hiba a tabella betöltésekor: {error}
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            variant="box"
+          />
         </CardContent>
       </Card>
     );

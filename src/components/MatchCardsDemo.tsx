@@ -10,10 +10,12 @@ import {
 } from '@mui/material';
 import MatchCard from './MatchCard';
 import MatchesList from './MatchesList';
+import ErrorDisplay from './ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 const MatchCardsDemo: React.FC = () => {
-  const { matches, loading, error } = useTournamentData();
+  const { matches, loading, error, refetch } = useTournamentData();
 
   if (loading) {
     return (
@@ -23,12 +25,15 @@ const MatchCardsDemo: React.FC = () => {
     );
   }
 
-  if (error || matches.length === 0) {
+  if (error || isEmptyDataError(matches)) {
+    const errorInfo = getErrorInfo('matches', error);
     return (
       <Box sx={{ p: 3, backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
-        <Typography variant="h4" sx={{ color: '#e8eaed', textAlign: 'center' }}>
-          No matches available for demo
-        </Typography>
+        <ErrorDisplay 
+          errorInfo={errorInfo}
+          onRetry={refetch}
+          fullPage
+        />
       </Box>
     );
   }

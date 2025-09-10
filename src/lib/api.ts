@@ -16,7 +16,10 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      const error = new Error(`API Error: ${response.status} ${response.statusText}`);
+      (error as any).status = response.status;
+      (error as any).statusText = response.statusText;
+      throw error;
     }
 
     return response.json();
@@ -33,7 +36,10 @@ export const api = {
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      const error = new Error(`API Error: ${response.status} ${response.statusText}`);
+      (error as any).status = response.status;
+      (error as any).statusText = response.statusText;
+      throw error;
     }
 
     return response.json();

@@ -29,8 +29,10 @@ import {
   EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import Header from '@/components/Header';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getClassColor } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function TeamPage() {
   const params = useParams();
@@ -38,7 +40,7 @@ export default function TeamPage() {
   const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
   
-  const { standings, topScorers, teams, matches, loading, error } = useTournamentData();
+  const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentData();
   
   const teamId = parseInt(params.id as string);
   const team = teams.find(t => t.id === teamId);
@@ -87,42 +89,32 @@ export default function TeamPage() {
   }
 
   // Show error state
-  if (error) {
+  if (error || (isEmptyDataError(teams) && !loading)) {
+    const errorInfo = getErrorInfo('teams', error);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Alert severity="error" sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              Hiba történt az adatok betöltésekor
-            </Typography>
-            <Typography variant="body2">
-              {error}
-            </Typography>
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            fullPage
+          />
         </Container>
       </Box>
     );
   }
 
   if (!team) {
+    const errorInfo = getErrorInfo('team');
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="h3" color="error.main" gutterBottom>
-            Csapat nem található
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-            A keresett csapat nem létezik vagy törölve lett.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<BackIcon />}
-            onClick={() => router.push('/csapatok')}
-          >
-            Vissza a csapatokhoz
-          </Button>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            fullPage
+          />
         </Container>
       </Box>
     );

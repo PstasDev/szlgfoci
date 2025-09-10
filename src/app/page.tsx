@@ -13,14 +13,16 @@ import SimpleLayout from '@/components/SimpleLayout';
 import MatchCard from '@/components/MatchCard';
 import MatchesList from '@/components/MatchesList';
 import LeagueTable from '@/components/LeagueTable';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function Home() {
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
   const [mounted, setMounted] = React.useState(false);
 
-  const { matches, teams, standings, loading, error } = useTournamentData();
+  const { matches, teams, standings, loading, error, refetch } = useTournamentData();
   const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   React.useEffect(() => {

@@ -21,13 +21,15 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, EmojiEvents } from '@mui/icons-material';
 import SimpleLayout from '@/components/SimpleLayout';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { getClassColor } from '@/utils/dataUtils';
 import { useTournamentData } from '@/hooks/useTournamentData';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { convertTopScorerToPlayer } from '@/utils/dataUtils';
 
 export default function GoalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const { topScorers, loading, error } = useTournamentData();
+  const { topScorers, loading, error, refetch } = useTournamentData();
   const allScorers = topScorers.map(convertTopScorerToPlayer); // Convert to display format
   
   // Filter scorers based on search term
@@ -53,13 +55,16 @@ export default function GoalListPage() {
     );
   }
 
-  if (error) {
+  if (error || (isEmptyDataError(topScorers) && !loading)) {
+    const errorInfo = getErrorInfo('goalscorers', error);
     return (
       <SimpleLayout>
         <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" sx={{ color: '#e8eaed', textAlign: 'center' }}>
-            Hiba történt az adatok betöltésekor: {error}
-          </Typography>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            fullPage
+          />
         </Box>
       </SimpleLayout>
     );

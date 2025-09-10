@@ -3,8 +3,9 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import Header from './Header';
-import UpcomingSeason from './UpcomingSeason';
+import ErrorDisplay from './ErrorDisplay';
 import { useTournaments } from '@/hooks/useTournaments';
+import { getErrorInfo } from '@/utils/errorUtils';
 
 interface SimpleLayoutProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
   const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
   
-  const { tournaments, loading, error } = useTournaments();
+  const { tournaments, loading, error, refetch } = useTournaments();
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -46,13 +47,16 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
 
   // Show error state
   if (error) {
+    const errorInfo = getErrorInfo('tournaments', error);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
         <Header />
         <Box sx={{ pt: 8, px: { xs: 2, sm: 3 } }}>
-          <Box sx={{ color: '#f44336', textAlign: 'center', py: 4 }}>
-            Hiba történt az adatok betöltésekor: {error}
-          </Box>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            variant="box"
+          />
         </Box>
       </Box>
     );
@@ -62,7 +66,6 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
   const currentTournament = tournaments.find(tournament => 
     tournament.id && tournament.id.toString() === selectedSeason
   );
-  const showUpcomingSeason = !currentTournament;
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
@@ -73,11 +76,7 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
         px: { xs: 0, sm: 0 }, // Remove padding as children components handle their own
         minHeight: 'calc(100vh - 64px)'
       }}>
-        {showUpcomingSeason ? (
-          <UpcomingSeason season={currentTournament} />
-        ) : (
-          children
-        )}
+        {children}
       </Box>
     </Box>
   );

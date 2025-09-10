@@ -16,14 +16,16 @@ import {
 } from '@mui/icons-material';
 import SimpleLayout from '@/components/SimpleLayout';
 import MatchDetailView from '@/components/MatchDetailView';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { Match } from '@/types/api';
 
 export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
-  const { matches, loading, error } = useTournamentData();
+  const { matches, loading, error, refetch } = useTournamentData();
 
   const matchId = parseInt(params.id as string);
   const match = matches.find(m => m.id === matchId);
@@ -59,41 +61,30 @@ export default function MatchPage() {
   }
 
   // Show error state
-  if (error) {
+  if (error || (isEmptyDataError(matches) && !loading)) {
+    const errorInfo = getErrorInfo('matches', error);
     return (
       <SimpleLayout>
         <Container maxWidth="lg" sx={{ py: 2 }}>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            Hiba a mérkőzés betöltésekor: {error}
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            fullPage
+          />
         </Container>
       </SimpleLayout>
     );
   }
 
   if (!match) {
+    const errorInfo = getErrorInfo('match');
     return (
       <SimpleLayout>
         <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4, md: 6 } }}>
-          <Stack spacing={3} alignItems="center" textAlign="center">
-            <Typography variant="h3" color="error.main" gutterBottom>
-              Mérkőzés nem található
-            </Typography>
-            <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-              A keresett mérkőzés nem létezik vagy törölve lett.
-            </Typography>
-            <Button
-              variant="contained"
-              startIcon={<BackIcon />}
-              onClick={() => router.push('/merkozesek')}
-              sx={{
-                bgcolor: '#4285f4',
-                '&:hover': { bgcolor: '#1976d2' }
-              }}
-            >
-              Vissza a meccsekhez
-            </Button>
-          </Stack>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            fullPage
+          />
         </Container>
       </SimpleLayout>
     );

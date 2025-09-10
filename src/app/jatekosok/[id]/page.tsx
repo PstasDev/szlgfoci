@@ -29,15 +29,17 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import Header from '@/components/Header';
+import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getClassColor } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function PlayerPage() {
   const params = useParams();
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
-  const { topScorers, teams, matches, loading, error } = useTournamentData();
+  const { topScorers, teams, matches, loading, error, refetch } = useTournamentData();
 
   const playerId = parseInt(params.id as string);
   const player = topScorers.find(p => p.id === playerId);
@@ -84,37 +86,32 @@ export default function PlayerPage() {
   }
 
   // Show error state
-  if (error) {
+  if (error || (isEmptyDataError(topScorers) && !loading)) {
+    const errorInfo = getErrorInfo('players', error);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            Hiba a játékos adatok betöltésekor: {error}
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            fullPage
+          />
         </Container>
       </Box>
     );
   }
 
   if (!player || !playerTeam) {
+    const errorInfo = getErrorInfo('player');
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-          <Typography variant="h3" color="error.main" gutterBottom>
-            Játékos nem található
-          </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ mb: 4 }}>
-            A keresett játékos nem létezik vagy törölve lett.
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<BackIcon />}
-            onClick={() => router.push('/jatekosok')}
-          >
-            Vissza a játékosokhoz
-          </Button>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            fullPage
+          />
         </Container>
       </Box>
     );

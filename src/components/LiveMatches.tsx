@@ -19,12 +19,14 @@ import {
   Rectangle as CardIcon,
 } from '@mui/icons-material';
 import { getClassColor, Match, MatchEvent } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
 import LiveMatchTimer from './LiveMatchTimer';
+import ErrorDisplay from './ErrorDisplay';
 
 const LiveMatches: React.FC = () => {
   const router = useRouter();
-  const { matches, loading, error } = useTournamentData();
+  const { matches, loading, error, refetch } = useTournamentData();
   const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   if (loading) {
@@ -39,13 +41,16 @@ const LiveMatches: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || (isEmptyDataError(matches) && !loading)) {
+    const errorInfo = getErrorInfo('matches', error);
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            Hiba a mérkőzések betöltésekor: {error}
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            variant="box"
+          />
         </CardContent>
       </Card>
     );

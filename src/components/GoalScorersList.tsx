@@ -19,10 +19,12 @@ import {
 } from '@mui/material';
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
 import { getClassColor, convertTopScorerToPlayer } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { useTournamentData } from '@/hooks/useTournamentData';
+import ErrorDisplay from './ErrorDisplay';
 
 const GoalScorersList: React.FC = () => {
-  const { topScorers, loading, error } = useTournamentData();
+  const { topScorers, loading, error, refetch } = useTournamentData();
 
   const getPositionColor = (position: number) => {
     if (position === 1) return '#ffd700'; // Gold
@@ -71,13 +73,16 @@ const GoalScorersList: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || (isEmptyDataError(topScorers) && !loading)) {
+    const errorInfo = getErrorInfo('goalscorers', error);
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            Hiba a góllövők betöltésekor: {error}
-          </Alert>
+          <ErrorDisplay 
+            errorInfo={errorInfo}
+            onRetry={refetch}
+            variant="box"
+          />
         </CardContent>
       </Card>
     );

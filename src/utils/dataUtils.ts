@@ -201,5 +201,23 @@ export const formatMatchEvent = (event: MatchEvent): any => {
   };
 };
 
+// Convert Standing to Team format for compatibility with Google Sports layout
+export const convertStandingToTeam = (standing: Standing, index: number): any => {
+  return {
+    id: standing.team_id,
+    name: standing.team_name,
+    className: standing.team_name,
+    position: index + 1,
+    played: standing.played,
+    won: standing.won,
+    drawn: standing.drawn,
+    lost: standing.lost,
+    goalsFor: standing.goals_for,
+    goalsAgainst: standing.goals_against,
+    goalDifference: standing.goal_difference,
+    points: standing.points
+  };
+};
+
 // Default tournament ID - should be configurable
 export const DEFAULT_TOURNAMENT_ID = 1;

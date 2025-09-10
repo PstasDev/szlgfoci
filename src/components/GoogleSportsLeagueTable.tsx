@@ -15,15 +15,37 @@ import {
   Chip,
 } from '@mui/material';
 import { getClassColor } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { convertStandingToTeam } from '@/utils/dataUtils';
+import ErrorDisplay from './ErrorDisplay';
 
 const GoogleSportsLeagueTable: React.FC = () => {
-  const { standings, loading, error } = useTournamentData();
-  const teams = standings.map(convertStandingToTeam);
+  const { standings, loading, error, refetch } = useTournamentData();
+  const teams = standings.map((standing, index) => convertStandingToTeam(standing, index));
 
-  if (loading || error) {
-    return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '200px' 
+      }}>
+        <Typography sx={{ color: '#9aa0a6' }}>Betöltés...</Typography>
+      </Box>
+    );
+  }
+
+  if (error || (isEmptyDataError(standings) && !loading)) {
+    const errorInfo = getErrorInfo('standings', error);
+    return (
+      <ErrorDisplay 
+        errorInfo={errorInfo}
+        onRetry={refetch}
+        variant="box"
+      />
+    );
   }
 
   const getFormIndicator = (position: number) => {
