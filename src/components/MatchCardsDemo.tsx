@@ -6,12 +6,33 @@ import {
   Typography,
   Divider,
   Paper,
+  CircularProgress,
 } from '@mui/material';
 import MatchCard from './MatchCard';
 import MatchesList from './MatchesList';
-import { matches } from '@/data/mockData';
+import { useTournamentData } from '@/hooks/useTournamentData';
 
 const MatchCardsDemo: React.FC = () => {
+  const { matches, loading, error } = useTournamentData();
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress sx={{ color: '#42a5f5' }} />
+      </Box>
+    );
+  }
+
+  if (error || matches.length === 0) {
+    return (
+      <Box sx={{ p: 3, backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
+        <Typography variant="h4" sx={{ color: '#e8eaed', textAlign: 'center' }}>
+          No matches available for demo
+        </Typography>
+      </Box>
+    );
+  }
+
   const liveMatch = matches.find(m => m.status === 'live');
   const finishedMatch = matches.find(m => m.status === 'finished');
   const upcomingMatch = matches.find(m => m.status === 'upcoming');

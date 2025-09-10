@@ -19,6 +19,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -27,18 +29,22 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import Header from '@/components/Header';
-import { topScorers, teams, matches, getClassColor, getMatchesByTeam } from '@/data/mockData';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { getClassColor } from '@/utils/dataUtils';
 
 export default function PlayerPage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
+  const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
+  const { topScorers, teams, matches, loading, error } = useTournamentData();
 
   const playerId = parseInt(params.id as string);
   const player = topScorers.find(p => p.id === playerId);
   const playerTeam = player ? teams.find(t => t.id === player.teamId) : null;
-  const teamMatches = playerTeam ? getMatchesByTeam(playerTeam.id) : [];
+  const teamMatches = playerTeam ? matches.filter(m => 
+    m.homeTeam === playerTeam.name || m.awayTeam === playerTeam.name
+  ) : [];
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -59,6 +65,34 @@ export default function PlayerPage() {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
+      </Box>
+    );
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
+        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+            <CircularProgress sx={{ color: '#42a5f5' }} />
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
+        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+            Hiba a játékos adatok betöltésekor: {error}
+          </Alert>
+        </Container>
       </Box>
     );
   }
@@ -108,7 +142,7 @@ export default function PlayerPage() {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: getClassColor(playerTeam.className),
+                  bgcolor: getClassColor(playerTeam.name || ''),
                   fontSize: '2rem',
                   fontWeight: 'bold',
                 }}
@@ -126,7 +160,7 @@ export default function PlayerPage() {
                   <Chip
                     icon={<TrophyIcon />}
                     label={`#${player.position} góllövő`}
-                    color={player.position <= 3 ? 'success' : 'default'}
+                    color={(player.position || 0) <= 3 ? 'success' : 'default'}
                     sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
                   />
                   <Chip
@@ -215,7 +249,7 @@ export default function PlayerPage() {
                       <Chip
                         label={playerTeam.name}
                         sx={{ 
-                          backgroundColor: getClassColor(playerTeam.className),
+                          backgroundColor: getClassColor(playerTeam.name || ''),
                           color: 'white',
                           fontWeight: 'bold'
                         }}

@@ -17,20 +17,13 @@ import {
   Avatar,
   Divider,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import { ArrowBack, EmojiEvents, Person } from '@mui/icons-material';
 import Header from '@/components/Header';
-import { 
-  getAllTeamRosters, 
-  getClassColor, 
-  getClassColorLight, 
-  getLeagueTable,
-  getTopScorers,
-  type TeamRoster,
-  type Team,
-  type Player
-} from '@/data/mockData';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { getClassColor, getClassColorLight } from '@/utils/dataUtils';
 
 function CsapatokContent() {
   const [selectedTeam, setSelectedTeam] = useState<TeamRoster | null>(null);

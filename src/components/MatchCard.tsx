@@ -16,7 +16,7 @@ import {
   LocationOn as LocationIcon,
   SportsSoccer as SoccerIcon,
 } from '@mui/icons-material';
-import { Match, getClassColor } from '@/data/mockData';
+import { Match, getClassColor } from '@/utils/dataUtils';
 
 interface MatchCardProps {
   match: Match;

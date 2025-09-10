@@ -9,6 +9,8 @@ import {
   Box,
   Avatar,
   Stack,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Sports as SportsIcon,
@@ -16,14 +18,38 @@ import {
   Schedule as ClockIcon,
   Rectangle as CardIcon,
 } from '@mui/icons-material';
-import { getLiveMatches, getUpcomingMatches, getRecentMatches, getClassColor, Match, MatchEvent } from '@/data/mockData';
+import { getClassColor, Match, MatchEvent } from '@/utils/dataUtils';
+import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
 import LiveMatchTimer from './LiveMatchTimer';
 
 const LiveMatches: React.FC = () => {
   const router = useRouter();
-  const liveMatches = getLiveMatches();
-  const upcomingMatches = getUpcomingMatches(3);
-  const recentMatches = getRecentMatches(3);
+  const { matches, loading, error } = useTournamentData();
+  const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
+
+  if (loading) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress sx={{ color: '#42a5f5' }} />
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+            Hiba a mérkőzések betöltésekor: {error}
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const MatchCard = ({ match, isLive = false }: { match: Match, isLive?: boolean }) => (
     <Card 

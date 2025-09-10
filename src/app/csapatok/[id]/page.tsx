@@ -20,6 +20,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -27,18 +29,24 @@ import {
   EmojiEvents as TrophyIcon,
 } from '@mui/icons-material';
 import Header from '@/components/Header';
-import { teams, matches, topScorers, getClassColor, getMatchesByTeam } from '@/data/mockData';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { getClassColor } from '@/utils/dataUtils';
 
 export default function TeamPage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
+  const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
-
+  
+  const { standings, topScorers, teams, matches, loading, error } = useTournamentData();
+  
   const teamId = parseInt(params.id as string);
   const team = teams.find(t => t.id === teamId);
-  const teamMatches = team ? getMatchesByTeam(team.id) : [];
-  const teamPlayers = team ? topScorers.filter(p => p.teamId === team.id) : [];
+  const standing = standings.find(s => s.team_id === teamId);
+  const teamMatches = matches.filter(match => 
+    match.homeTeam === team?.name || match.awayTeam === team?.name
+  );
+  const teamPlayers = topScorers.filter(player => player.teamId === teamId);
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -59,6 +67,40 @@ export default function TeamPage() {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
+      </Box>
+    );
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
+        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Adatok betöltése...
+          </Typography>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
+        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <Alert severity="error" sx={{ mb: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Hiba történt az adatok betöltésekor
+            </Typography>
+            <Typography variant="body2">
+              {error}
+            </Typography>
+          </Alert>
+        </Container>
       </Box>
     );
   }
@@ -108,29 +150,29 @@ export default function TeamPage() {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: getClassColor(team.className),
+                  bgcolor: team?.className ? getClassColor(team.className) : 'grey.500',
                   fontSize: '2rem',
                   fontWeight: 'bold',
                 }}
               >
-                {team.className.split(' ')[1]}
+                {team?.className ? team.className.split(' ')[1] : 'T'}
               </Avatar>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
                   {team.name}
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, mb: 2 }}>
-                  {team.className}
+                  {team?.className || 'Ismeretlen osztály'}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <Chip
                     icon={<TrophyIcon />}
-                    label={`${team.position}. hely`}
-                    color={team.position <= 3 ? 'success' : 'default'}
+                    label={`${standing?.position || '?'}. hely`}
+                    color={(standing?.position || 0) <= 3 ? 'success' : 'default'}
                     sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
                   />
                   <Chip
-                    label={`${team.points} pont`}
+                    label={`${standing?.points || 0} pont`}
                     sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
                   />
                 </Box>
@@ -141,7 +183,7 @@ export default function TeamPage() {
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 3 }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                  {team.played}
+                  {standing?.played || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Meccsek
@@ -149,7 +191,7 @@ export default function TeamPage() {
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'success.light' }}>
-                  {team.won}
+                  {standing?.won || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Győzelem
@@ -157,7 +199,7 @@ export default function TeamPage() {
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'warning.light' }}>
-                  {team.drawn}
+                  {standing?.drawn || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Döntetlen
@@ -165,7 +207,7 @@ export default function TeamPage() {
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'error.light' }}>
-                  {team.lost}
+                  {standing?.lost || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Vereség
@@ -173,7 +215,7 @@ export default function TeamPage() {
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                  {team.goalsFor}:{team.goalsAgainst}
+                  {standing?.goals_for || 0}:{standing?.goals_against || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Gólok
@@ -184,10 +226,10 @@ export default function TeamPage() {
                   variant="h4" 
                   sx={{ 
                     fontWeight: 'bold',
-                    color: team.goalDifference >= 0 ? 'success.light' : 'error.light'
+                    color: (standing?.goal_difference || 0) >= 0 ? 'success.light' : 'error.light'
                   }}
                 >
-                  {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                  {(standing?.goal_difference || 0) > 0 ? '+' : ''}{standing?.goal_difference || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Különbség

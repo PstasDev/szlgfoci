@@ -8,7 +8,7 @@ import {
   Skeleton,
 } from '@mui/material';
 import MatchCard from './MatchCard';
-import { Match } from '@/data/mockData';
+import { Match } from '@/utils/dataUtils';
 
 interface MatchesListProps {
   matches: Match[];

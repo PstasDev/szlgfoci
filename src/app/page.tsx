@@ -5,22 +5,23 @@ import {
   Box,
   Stack,
   Typography,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import SimpleLayout from '@/components/SimpleLayout';
 import MatchCard from '@/components/MatchCard';
 import MatchesList from '@/components/MatchesList';
 import LeagueTable from '@/components/LeagueTable';
-import { getLiveMatches, getUpcomingMatches, getRecentMatches } from '@/data/mockData';
+import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
 
 export default function Home() {
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
   const [mounted, setMounted] = React.useState(false);
 
-  const liveMatches = getLiveMatches();
-  const upcomingMatches = getUpcomingMatches(3);
-  const recentMatches = getRecentMatches(3);
+  const { matches, teams, standings, loading, error } = useTournamentData();
+  const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -39,6 +40,35 @@ export default function Home() {
           Betöltés...
         </Typography>
       </Box>
+    );
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '50vh' 
+        }}>
+          <CircularProgress sx={{ color: '#42a5f5' }} />
+        </Box>
+      </SimpleLayout>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
+          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+            {error}
+          </Alert>
+        </Box>
+      </SimpleLayout>
     );
   }
 

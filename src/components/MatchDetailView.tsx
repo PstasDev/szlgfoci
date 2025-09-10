@@ -20,7 +20,7 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getClassColor, getTeamById } from '@/data/mockData';
+import { Match, getClassColor, getTeamById } from '@/utils/dataUtils';
 import LiveMatchTimer from './LiveMatchTimer';
 
 interface MatchDetailViewProps {

@@ -34,7 +34,8 @@ import {
   Settings as SettingsIcon,
   TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
-import { leagueSeasons, getLiveMatches } from '@/data/mockData';
+import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
+import { useTournaments } from '@/hooks/useTournaments';
 
 interface GoogleSportsLayoutProps {
   children: React.ReactNode;
@@ -58,10 +59,12 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
+  const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
 
-  const liveMatches = getLiveMatches();
+  const { matches } = useTournamentData();
+  const { tournaments } = useTournaments();
+  const { liveMatches } = useMatchesByStatus(matches);
   const liveMatchCount = liveMatches.length;
 
   React.useEffect(() => {
@@ -327,7 +330,7 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                   onChange={handleSeasonChange}
                   displayEmpty
                   renderValue={(value) => {
-                    const season = leagueSeasons.find(s => s.id === value);
+                    const tournament = tournaments.find(t => t.id && t.id.toString() === value);
                     return (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                         <Box
@@ -345,9 +348,9 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                           <TrophyIcon sx={{ color: 'white', fontSize: 12 }} />
                         </Box>
                         <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>
-                          {season?.displayName || 'Liga kiválasztása'}
+                          {tournament?.name || 'Liga kiválasztása'}
                         </Typography>
-                        {selectedSeason === '2024-25' && (
+                        {selectedSeason === '1' && (
                           <Chip 
                             label="AKTÍV"
                             size="small"
@@ -364,10 +367,10 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                     );
                   }}
                 >
-                  {leagueSeasons.map((season) => (
+                  {tournaments.map((tournament) => (
                     <MenuItem 
-                      key={season.id} 
-                      value={season.id}
+                      key={tournament.id} 
+                      value={tournament.id?.toString() || ''}
                       sx={{
                         backgroundColor: '#2d2d2d',
                         color: '#e8eaed',
@@ -392,14 +395,14 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                           sx={{
                             width: 24,
                             height: 24,
-                            background: season.id === selectedSeason 
+                            background: tournament.id?.toString() === selectedSeason 
                               ? 'linear-gradient(45deg, #4285f4, #34a853)'
                               : 'linear-gradient(45deg, #666, #888)',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: season.id === selectedSeason 
+                            boxShadow: tournament.id?.toString() === selectedSeason 
                               ? '0 2px 8px rgba(66, 133, 244, 0.4)'
                               : '0 1px 3px rgba(0,0,0,0.3)',
                           }}
@@ -408,14 +411,13 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                         </Box>
                         <Box sx={{ flex: 1 }}>
                           <Typography sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                            {season.displayName}
+                            {tournament.name}
                           </Typography>
                           <Typography sx={{ fontSize: '0.7rem', color: '#9aa0a6' }}>
-                            {season.id === '2024-25' ? 'Jelenlegi szezon' : 
-                             season.id === '2025-26' ? 'Következő szezon' : 'Archív'}
+                            {tournament.id === 1 ? 'Jelenlegi szezon' : 'Archív'}
                           </Typography>
                         </Box>
-                        {season.id === selectedSeason && (
+                        {tournament.id?.toString() === selectedSeason && (
                           <Box
                             sx={{
                               width: 6,
@@ -671,10 +673,10 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                 onChange={handleSeasonChange}
                 displayEmpty
               >
-                {leagueSeasons.map((season) => (
+                {tournaments.map((tournament) => (
                   <MenuItem 
-                    key={season.id} 
-                    value={season.id}
+                    key={tournament.id} 
+                    value={tournament.id?.toString() || ''}
                     sx={{
                       backgroundColor: '#2d2d2d',
                       color: '#e8eaed',
@@ -685,7 +687,7 @@ const GoogleSportsLayout: React.FC<GoogleSportsLayoutProps> = ({
                     }}
                   >
                     <TrophyIcon sx={{ mr: 1, fontSize: 16, color: '#4285f4' }} />
-                    {season.displayName}
+                    {tournament.name}
                   </MenuItem>
                 ))}
               </Select>

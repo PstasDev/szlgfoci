@@ -7,7 +7,7 @@ import {
   Paper,
   Avatar,
 } from '@mui/material';
-import { getClassColor } from '@/data/mockData';
+import { getClassColor } from '@/utils/dataUtils';
 
 const ClassColorLegend: React.FC = () => {
   const classes = [

@@ -14,10 +14,17 @@ import {
   Avatar,
   Chip,
 } from '@mui/material';
-import { getLeagueTable, getClassColor } from '@/data/mockData';
+import { getClassColor } from '@/utils/dataUtils';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { convertStandingToTeam } from '@/utils/dataUtils';
 
 const GoogleSportsLeagueTable: React.FC = () => {
-  const teams = getLeagueTable();
+  const { standings, loading, error } = useTournamentData();
+  const teams = standings.map(convertStandingToTeam);
+
+  if (loading || error) {
+    return <div>Loading...</div>;
+  }
 
   const getFormIndicator = (position: number) => {
     // Mock recent form - in real app this would come from data

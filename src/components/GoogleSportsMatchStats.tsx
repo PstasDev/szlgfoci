@@ -8,7 +8,7 @@ import {
   LinearProgress,
   Avatar,
 } from '@mui/material';
-import { Match, getClassColor } from '@/data/mockData';
+import { Match, getClassColor } from '@/utils/dataUtils';
 
 interface GoogleSportsMatchStatsProps {
   match: Match;

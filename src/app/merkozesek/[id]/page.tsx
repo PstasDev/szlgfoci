@@ -8,18 +8,22 @@ import {
   Typography,
   Button,
   Stack,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
 } from '@mui/icons-material';
 import SimpleLayout from '@/components/SimpleLayout';
 import MatchDetailView from '@/components/MatchDetailView';
-import { matches, Match } from '@/data/mockData';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { Match } from '@/types/api';
 
 export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
+  const { matches, loading, error } = useTournamentData();
 
   const matchId = parseInt(params.id as string);
   const match = matches.find(m => m.id === matchId);
@@ -36,6 +40,32 @@ export default function MatchPage() {
           <Typography variant="h6" sx={{ color: '#e8eaed' }}>
             Betöltés...
           </Typography>
+        </Container>
+      </SimpleLayout>
+    );
+  }
+
+  // Show loading state
+  if (loading) {
+    return (
+      <SimpleLayout>
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+            <CircularProgress sx={{ color: '#42a5f5' }} />
+          </Box>
+        </Container>
+      </SimpleLayout>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <SimpleLayout>
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+            Hiba a mérkőzés betöltésekor: {error}
+          </Alert>
         </Container>
       </SimpleLayout>
     );

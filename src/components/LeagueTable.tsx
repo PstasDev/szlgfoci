@@ -11,18 +11,21 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Box,
   Chip,
   Avatar,
   ButtonBase,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { getLeagueTable, getClassColor, getAllTeamRosters } from '@/data/mockData';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { getClassColor } from '@/utils/dataUtils';
+import type { Standing } from '@/types/api';
 
 const LeagueTable: React.FC = () => {
-  const teams = getLeagueTable();
+  const { standings, loading, error } = useTournamentData();
   const router = useRouter();
 
   const getPositionColor = (position: number) => {
@@ -34,9 +37,35 @@ const LeagueTable: React.FC = () => {
 
   const handleTeamClick = (teamName: string) => {
     // Navigate to the Csapatok page with team selection
-    // We'll create a URL parameter to auto-select the team
     router.push(`/csapatok?team=${encodeURIComponent(teamName)}`);
   };
+
+  if (loading) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress sx={{ color: '#42a5f5' }} />
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+            Hiba a tabella betöltésekor: {error}
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // The standings data already contains the needed information
+  const teams = standings;
 
   return (
     <Card sx={{ backgroundColor: 'background.paper' }}>
@@ -94,7 +123,7 @@ const LeagueTable: React.FC = () => {
                         sx={{
                           width: 4,
                           height: 20,
-                          backgroundColor: getPositionColor(team.position),
+                          backgroundColor: getPositionColor(team.position || 0),
                           borderRadius: 1,
                         }}
                       />
@@ -106,7 +135,7 @@ const LeagueTable: React.FC = () => {
                   
                   <TableCell>
                     <ButtonBase
-                      onClick={() => handleTeamClick(team.className)}
+                      onClick={() => handleTeamClick(team.className || team.name || team.team_name)}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
@@ -122,17 +151,17 @@ const LeagueTable: React.FC = () => {
                         sx={{
                           width: 24,
                           height: 24,
-                          bgcolor: getClassColor(team.className),
+                          bgcolor: getClassColor(team.className || team.name || team.team_name),
                           fontSize: '0.7rem',
                           fontWeight: 'bold',
                           color: 'white'
                         }}
                       >
-                        {team.className.split(' ')[1]} {/* Shows just the letter (A, B, C, etc.) */}
+                        {((team.className || team.name || team.team_name || '').split(' ')[1] || (team.className || team.name || team.team_name || '').charAt((team.className || team.name || team.team_name || '').length - 1))}
                       </Avatar>
                       <Typography 
                         variant="body2" 
-                        fontWeight={team.position <= 3 ? 'bold' : 'normal'}
+                        fontWeight={(team.position || 0) <= 3 ? 'bold' : 'normal'}
                         sx={{ 
                           color: 'text.primary',
                           '&:hover': {
@@ -141,38 +170,38 @@ const LeagueTable: React.FC = () => {
                           }
                         }}
                       >
-                        {team.className}
+                        {team.className || team.name}
                       </Typography>
                     </ButtonBase>
                   </TableCell>
                   
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.played}</TableCell>
+                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.played || 0}</TableCell>
                   <TableCell align="center" sx={{ color: 'success.main', fontWeight: 'bold' }}>
-                    {team.won}
+                    {team.won || 0}
                   </TableCell>
                   <TableCell align="center" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
-                    {team.drawn}
+                    {team.drawn || 0}
                   </TableCell>
                   <TableCell align="center" sx={{ color: 'error.main', fontWeight: 'bold' }}>
-                    {team.lost}
+                    {team.lost || 0}
                   </TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.goalsFor}</TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.goalsAgainst}</TableCell>
+                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.goalsFor || 0}</TableCell>
+                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.goalsAgainst || 0}</TableCell>
                   <TableCell align="center" sx={{ 
-                    color: team.goalDifference > 0 ? 'success.main' : team.goalDifference < 0 ? 'error.main' : 'text.primary',
+                    color: (team.goalDifference || 0) > 0 ? 'success.main' : (team.goalDifference || 0) < 0 ? 'error.main' : 'text.primary',
                     fontWeight: 'bold'
                   }}>
-                    {team.goalDifference > 0 ? '+' : ''}{team.goalDifference}
+                    {(team.goalDifference || 0) > 0 ? '+' : ''}{team.goalDifference || 0}
                   </TableCell>
                   <TableCell align="center">
                     <Chip
-                      label={team.points}
+                      label={team.points || 0}
                       size="small"
                       sx={{
                         fontWeight: 'bold',
-                        backgroundColor: team.position === 1 ? 'warning.main' : 
-                                       team.position <= 3 ? 'success.main' : 
-                                       team.position >= 15 ? 'error.main' : 'primary.main',
+                        backgroundColor: (team.position || 0) === 1 ? 'warning.main' : 
+                                       (team.position || 0) <= 3 ? 'success.main' : 
+                                       (team.position || 0) >= 15 ? 'error.main' : 'primary.main',
                         color: 'white',
                         minWidth: '35px'
                       }}

@@ -17,7 +17,7 @@ import {
   Sports as SportsIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getClassColor } from '@/data/mockData';
+import { Match, getClassColor } from '@/utils/dataUtils';
 
 interface GoogleSportsMatchCardProps {
   match: Match;

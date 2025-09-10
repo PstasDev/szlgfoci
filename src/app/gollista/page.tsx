@@ -21,17 +21,49 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, EmojiEvents } from '@mui/icons-material';
 import SimpleLayout from '@/components/SimpleLayout';
-import { getTopScorers, getClassColor } from '@/data/mockData';
+import { getClassColor } from '@/utils/dataUtils';
+import { useTournamentData } from '@/hooks/useTournamentData';
+import { convertTopScorerToPlayer } from '@/utils/dataUtils';
 
 export default function GoalListPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const allScorers = getTopScorers(); // Get all scorers without limit
+  const { topScorers, loading, error } = useTournamentData();
+  const allScorers = topScorers.map(convertTopScorerToPlayer); // Convert to display format
   
   // Filter scorers based on search term
-  const filteredScorers = allScorers.filter(scorer => 
+  const filteredScorers = allScorers.filter((scorer: any) => 
     scorer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     scorer.teamName.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '50vh' 
+        }}>
+          <Typography variant="h6" sx={{ color: '#e8eaed' }}>
+            Betöltés...
+          </Typography>
+        </Box>
+      </SimpleLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" sx={{ color: '#e8eaed', textAlign: 'center' }}>
+            Hiba történt az adatok betöltésekor: {error}
+          </Typography>
+        </Box>
+      </SimpleLayout>
+    );
+  }
 
   const getRankDisplay = (position: number, prevPosition?: number) => {
     if (prevPosition && position === prevPosition) {

@@ -4,15 +4,17 @@ import React from 'react';
 import { Box } from '@mui/material';
 import Header from './Header';
 import UpcomingSeason from './UpcomingSeason';
-import { leagueSeasons } from '@/data/mockData';
+import { useTournaments } from '@/hooks/useTournaments';
 
 interface SimpleLayoutProps {
   children: React.ReactNode;
 }
 
 const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
+  const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
+  
+  const { tournaments, loading, error } = useTournaments();
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -29,7 +31,7 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
   };
 
   // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
+  if (!mounted || loading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
         <Header />
@@ -42,9 +44,25 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
     );
   }
 
-  // Show upcoming season page if 2025-26 is selected
-  const currentSeason = leagueSeasons.find(season => season.id === selectedSeason);
-  const showUpcomingSeason = selectedSeason === '2025-26' || !currentSeason?.active;
+  // Show error state
+  if (error) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
+        <Header />
+        <Box sx={{ pt: 8, px: { xs: 2, sm: 3 } }}>
+          <Box sx={{ color: '#f44336', textAlign: 'center', py: 4 }}>
+            Hiba történt az adatok betöltésekor: {error}
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Find current tournament
+  const currentTournament = tournaments.find(tournament => 
+    tournament.id && tournament.id.toString() === selectedSeason
+  );
+  const showUpcomingSeason = !currentTournament;
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
@@ -56,7 +74,7 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
         minHeight: 'calc(100vh - 64px)'
       }}>
         {showUpcomingSeason ? (
-          <UpcomingSeason season={currentSeason} />
+          <UpcomingSeason season={currentTournament} />
         ) : (
           children
         )}

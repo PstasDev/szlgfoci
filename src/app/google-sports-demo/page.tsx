@@ -5,22 +5,43 @@ import {
   Box,
   Typography,
   Stack,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import GoogleSportsLayout from '@/components/GoogleSportsLayout';
 import GoogleSportsMatchCard from '@/components/GoogleSportsMatchCard';
 import GoogleSportsLeagueTable from '@/components/GoogleSportsLeagueTable';
 import GoogleSportsMatchStats from '@/components/GoogleSportsMatchStats';
-import { getLiveMatches, getUpcomingMatches, getRecentMatches } from '@/data/mockData';
+import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
 import { useRouter } from 'next/navigation';
 
 const GoogleSportsDemo: React.FC = () => {
   const router = useRouter();
-  const liveMatches = getLiveMatches();
-  const upcomingMatches = getUpcomingMatches(2);
-  const recentMatches = getRecentMatches(2);
+  const { matches, loading, error } = useTournamentData();
+  const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   // Get a sample match for statistics
   const sampleMatch = recentMatches[0] || liveMatches[0] || upcomingMatches[0];
+
+  if (loading) {
+    return (
+      <GoogleSportsLayout showBackButton={true} onBack={() => router.back()}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress sx={{ color: '#42a5f5' }} />
+        </Box>
+      </GoogleSportsLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <GoogleSportsLayout showBackButton={true} onBack={() => router.back()}>
+        <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+          Hiba az adatok betöltésekor: {error}
+        </Alert>
+      </GoogleSportsLayout>
+    );
+  }
 
   return (
     <GoogleSportsLayout

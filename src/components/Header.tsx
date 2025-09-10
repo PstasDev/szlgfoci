@@ -21,6 +21,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -31,7 +32,7 @@ import {
   Home as HomeIcon,
   SportsScore as ScoreIcon,
 } from '@mui/icons-material';
-import { leagueSeasons } from '@/data/mockData';
+import { useTournaments } from '@/hooks/useTournaments';
 
 interface HeaderProps {
   selectedSeason?: string;
@@ -39,11 +40,12 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  selectedSeason = '2024-25', 
+  selectedSeason = '1', 
   onSeasonChange 
 }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [currentSeason, setCurrentSeason] = React.useState(selectedSeason);
+  const { tournaments, loading: tournamentsLoading, error } = useTournaments();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -97,12 +99,22 @@ const Header: React.FC<HeaderProps> = ({
             value={currentSeason}
             label="Liga Kiválasztása"
             onChange={handleSeasonChange}
+            disabled={tournamentsLoading}
           >
-            {leagueSeasons.map((season) => (
-              <MenuItem key={season.id} value={season.id}>
-                {season.displayName}
+            {tournamentsLoading ? (
+              <MenuItem disabled>
+                <CircularProgress size={16} sx={{ mr: 1 }} />
+                Betöltés...
               </MenuItem>
-            ))}
+            ) : tournaments.length > 0 ? (
+              tournaments.map((tournament) => (
+                <MenuItem key={tournament.id} value={tournament.id?.toString() || '1'}>
+                  {tournament.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>Nincsenek elérhető bajnokságok</MenuItem>
+            )}
           </Select>
         </FormControl>
       </Box>
@@ -220,12 +232,22 @@ const Header: React.FC<HeaderProps> = ({
                 value={currentSeason}
                 label="Liga"
                 onChange={handleSeasonChange}
+                disabled={tournamentsLoading}
               >
-                {leagueSeasons.map((season) => (
-                  <MenuItem key={season.id} value={season.id}>
-                    {season.displayName}
+                {tournamentsLoading ? (
+                  <MenuItem disabled>
+                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                    Betöltés...
                   </MenuItem>
-                ))}
+                ) : tournaments.length > 0 ? (
+                  tournaments.map((tournament) => (
+                    <MenuItem key={tournament.id} value={tournament.id?.toString() || '1'}>
+                      {tournament.name}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>Nincsenek elérhető bajnokságok</MenuItem>
+                )}
               </Select>
             </FormControl>
           </Box>
