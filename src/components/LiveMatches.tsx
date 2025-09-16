@@ -20,13 +20,14 @@ import {
 } from '@mui/icons-material';
 import { getClassColor, Match, MatchEvent } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
-import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { useMatchesByStatus } from '@/hooks/useMatchesByStatus';
 import LiveMatchTimer from './LiveMatchTimer';
 import ErrorDisplay from './ErrorDisplay';
 
 const LiveMatches: React.FC = () => {
   const router = useRouter();
-  const { matches, loading, error, refetch } = useTournamentData();
+  const { matches, loading, error, refetch } = useTournamentContext();
   const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   if (loading) {

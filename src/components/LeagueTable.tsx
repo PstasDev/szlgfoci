@@ -20,14 +20,14 @@ import {
 } from '@mui/material';
 import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { useTournamentData } from '@/hooks/useTournamentData';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { getClassColor } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import ErrorDisplay from './ErrorDisplay';
 import type { Standing } from '@/types/api';
 
 const LeagueTable: React.FC = () => {
-  const { standings, loading, error, refetch } = useTournamentData();
+  const { standings, loading, error, refetch } = useTournamentContext();
   const router = useRouter();
 
   const getPositionColor = (position: number) => {

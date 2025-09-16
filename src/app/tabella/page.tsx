@@ -6,12 +6,90 @@ import {
   Box,
   Stack,
   Divider,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import SimpleLayout from '@/components/SimpleLayout';
 import LeagueTable from '@/components/LeagueTable';
 import ClassColorLegend from '@/components/ClassColorLegend';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { hasTournamentStarted } from '@/utils/dataUtils';
 
 export default function TablePage() {
+  const { tournament, loading, error } = useTournamentContext();
+
+  if (loading) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '50vh' 
+        }}>
+          <CircularProgress sx={{ color: '#42a5f5' }} />
+        </Box>
+      </SimpleLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
+          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
+            {error}
+          </Alert>
+        </Box>
+      </SimpleLayout>
+    );
+  }
+
+  // Check if tournament has started
+  if (tournament && !hasTournamentStarted(tournament)) {
+    return (
+      <SimpleLayout>
+        <Stack spacing={4} sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+            A torna még nem kezdődött el
+          </Typography>
+          <Typography variant="h6" sx={{ color: 'text.secondary' }}>
+            {tournament.name}
+          </Typography>
+          {tournament.start_date && (
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              Kezdés dátuma: {new Date(tournament.start_date).toLocaleDateString('hu-HU')}
+            </Typography>
+          )}
+          {tournament.registration_by_link ? (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
+                Regisztráció a tornára:
+              </Typography>
+              <a 
+                href={tournament.registration_by_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#42a5f5', 
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem'
+                }}
+              >
+                Regisztrálok a tornára
+              </a>
+            </Box>
+          ) : (
+            <Typography variant="body1" sx={{ color: 'text.secondary', mt: 4 }}>
+              A regisztráció hamarosan elérhető lesz
+            </Typography>
+          )}
+        </Stack>
+      </SimpleLayout>
+    );
+  }
+
   return (
     <SimpleLayout>
       <Stack spacing={4}>
@@ -36,7 +114,7 @@ export default function TablePage() {
               mb: 2 
             }}
           >
-            SZLG Liga 24/25 - Aktuális állás
+            {tournament?.name || 'SZLG Liga'} - Aktuális állás
           </Typography>
         </Box>
 

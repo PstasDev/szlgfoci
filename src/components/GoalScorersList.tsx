@@ -20,11 +20,11 @@ import {
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
 import { getClassColor, convertTopScorerToPlayer } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
-import { useTournamentData } from '@/hooks/useTournamentData';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
 import ErrorDisplay from './ErrorDisplay';
 
 const GoalScorersList: React.FC = () => {
-  const { topScorers, loading, error, refetch } = useTournamentData();
+  const { topScorers, loading, error, refetch } = useTournamentContext();
 
   const getPositionColor = (position: number) => {
     if (position === 1) return '#ffd700'; // Gold

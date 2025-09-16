@@ -26,6 +26,7 @@ export function useTournaments(): UseTournamentsReturn {
     } catch (err) {
       console.error('Error fetching tournaments:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch tournaments');
+      setTournaments([]); // Set empty array on error
     } finally {
       setLoading(false);
     }

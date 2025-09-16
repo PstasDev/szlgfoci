@@ -1,153 +1,157 @@
-'use client';
+"use client";
 
-import React from 'react';
-import {
-  Box,
-  Stack,
-  Typography,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import { useRouter } from 'next/navigation';
-import SimpleLayout from '@/components/SimpleLayout';
-import MatchCard from '@/components/MatchCard';
-import MatchesList from '@/components/MatchesList';
-import LeagueTable from '@/components/LeagueTable';
-import ErrorDisplay from '@/components/ErrorDisplay';
-import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import React from "react";
+import { Box, Stack, Typography, Card, CardContent, Button, FormControl, InputLabel, Select, MenuItem, CircularProgress } from "@mui/material";
+import SimpleLayout from "../components/SimpleLayout";
+import LiveMatches from "../components/LiveMatches";
+import MatchesList from "../components/MatchesList";
+import LeagueTable from "../components/LeagueTable";
+import GoalScorersList from "../components/GoalScorersList";
+import ErrorDisplay from "../components/ErrorDisplay";
+import { useTournamentContext, useTournamentSelection } from "../hooks/useTournamentContext";
+import { useTournaments } from "../hooks/useTournaments";
+import { hasTournamentStarted } from "../utils/dataUtils";
 
-export default function Home() {
-  const router = useRouter();
-  const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
-  const [mounted, setMounted] = React.useState(false);
+export default function HomePage() {
+  const { tournament, matches, loading, error } = useTournamentContext();
+  const { selectedTournament, selectedTournamentId, setSelectedTournamentId } = useTournamentSelection();
+  const { tournaments, loading: tournamentsLoading } = useTournaments();
 
-  const { matches, teams, standings, loading, error, refetch } = useTournamentData();
-  const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
+  const displayTournament = tournament ?? selectedTournament ?? null;
 
-  React.useEffect(() => {
-    // Load selected season from localStorage
-    const saved = localStorage.getItem('szlg-selected-season');
-    if (saved) {
-      setSelectedSeason(saved);
+  const showPreTournament = (() => {
+    if (tournament) return !hasTournamentStarted(tournament);
+    if (selectedTournament) return !hasTournamentStarted(selectedTournament);
+    return false;
+  })();
+
+  const handleTournamentChange = (event: { target: { value: string } }) => {
+    const newTournamentId = parseInt(event.target.value);
+    console.log(`🔄 Homepage: User selected tournament ID: ${newTournamentId}`);
+    setSelectedTournamentId(newTournamentId);
+  };
+
+  const getSelectValue = () => {
+    if (tournamentsLoading || tournaments.length === 0) {
+      return '';
     }
-    setMounted(true);
-  }, []);
+    const tournamentExists = selectedTournamentId !== null && tournaments.some(t => t.id === selectedTournamentId);
+    return tournamentExists ? selectedTournamentId.toString() : '';
+  };
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
-    return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
-        <Typography variant="h6" sx={{ color: '#e8eaed', p: 2 }}>
-          Betöltés...
-        </Typography>
-      </Box>
-    );
-  }
-
-  // Show loading state
-  if (loading) {
-    return (
-      <SimpleLayout>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          minHeight: '50vh' 
-        }}>
-          <CircularProgress sx={{ color: '#42a5f5' }} />
-        </Box>
-      </SimpleLayout>
-    );
-  }
-
-  // Show error state
   if (error) {
     return (
       <SimpleLayout>
-        <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
-          <Alert severity="error" sx={{ backgroundColor: '#d32f2f', color: '#fff' }}>
-            {error}
-          </Alert>
+        <Box sx={{ p: 3 }}>
+          <Typography color="error">{error}</Typography>
         </Box>
       </SimpleLayout>
     );
   }
 
-  // Get featured match
-  const featuredMatch = liveMatches[0] || recentMatches[0] || upcomingMatches[0];
+  if (showPreTournament && displayTournament) {
+    const registrationLink = (displayTournament as any).registration_by_link;
+
+    return (
+      <SimpleLayout>
+        <Box sx={{ p: 3 }}>
+          <Card>
+            <CardContent>
+              <Stack spacing={2}>
+                <Typography variant="h5">{displayTournament.name}</Typography>
+                <Typography color="text.secondary">
+                  This tournament has not started yet. Check back later for schedules and
+                  live results.
+                </Typography>
+                {registrationLink ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    href={registrationLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Register / More info
+                  </Button>
+                ) : null}
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      </SimpleLayout>
+    );
+  }
+
+  if (loading && !displayTournament) {
+    return (
+      <SimpleLayout>
+        <Box sx={{ p: 3 }}>
+          <Typography>Loading tournament data…</Typography>
+        </Box>
+      </SimpleLayout>
+    );
+  }
 
   return (
     <SimpleLayout>
-      <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
-        <Stack spacing={{ xs: 3, sm: 4 }}>
-          {/* Featured Match */}
-          {featuredMatch && (
-            <Box>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  color: '#e8eaed',
-                  fontWeight: 600,
-                  mb: 2,
-                  fontSize: { xs: '1.1rem', sm: '1.25rem' }
-                }}
-              >
-                Kiemelt mérkőzés
-              </Typography>
-              <MatchCard match={featuredMatch} variant="detailed" />
-            </Box>
-          )}
-
-          {/* League Table */}
-          <Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color: '#e8eaed',
-                fontWeight: 600,
-                mb: 2,
-                fontSize: { xs: '1.1rem', sm: '1.25rem' }
-              }}
+      <Box sx={{ p: 3 }}>
+        {/* Tournament Selector */}
+        <Box sx={{ mb: 3 }}>
+          <FormControl 
+            size="small" 
+            sx={{ 
+              minWidth: 300,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                '& fieldset': { borderColor: 'divider' },
+                '&:hover fieldset': { borderColor: 'text.secondary' },
+                '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+              },
+              '& .MuiInputLabel-root': { 
+                color: 'text.secondary',
+              },
+              '& .MuiSelect-select': { 
+                color: 'text.primary',
+              },
+              '& .MuiSvgIcon-root': { color: 'text.secondary' },
+            }}
+          >
+            <InputLabel>Válassz Bajnokságot</InputLabel>
+            <Select
+              value={getSelectValue()}
+              label="Válassz Bajnokságot"
+              onChange={handleTournamentChange}
+              disabled={tournamentsLoading}
             >
-              Liga tabella
-            </Typography>
+              {tournamentsLoading ? (
+                <MenuItem disabled>
+                  <CircularProgress size={16} sx={{ mr: 1 }} />
+                  Betöltés...
+                </MenuItem>
+              ) : tournaments.length > 0 ? (
+                tournaments.map((tournament) => (
+                  <MenuItem key={tournament.id} value={tournament.id?.toString() || ''}>
+                    {tournament.name}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>Nincsenek elérhető bajnokságok</MenuItem>
+              )}
+            </Select>
+          </FormControl>
+        </Box>
+
+        {displayTournament ? (
+          <Stack spacing={3}>
+            <Typography variant="h4">{displayTournament.name}</Typography>
+            <LiveMatches />
+            <MatchesList matches={matches ?? []} />
             <LeagueTable />
-          </Box>
-
-          {/* Live Matches */}
-          {liveMatches.length > 0 && (
-            <MatchesList
-              matches={liveMatches}
-              title="Élő mérkőzések"
-              variant="compact"
-              layout="grid"
-            />
-          )}
-
-          {/* Matches Grid */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, 
-            gap: { xs: 3, sm: 4 }
-          }}>
-            {/* Upcoming Matches */}
-            <MatchesList
-              matches={upcomingMatches}
-              title="Következő mérkőzések"
-              variant="compact"
-              layout="list"
-            />
-
-            {/* Recent Results */}
-            <MatchesList
-              matches={recentMatches}
-              title="Legutóbbi eredmények"
-              variant="compact"
-              layout="list"
-            />
-          </Box>
-        </Stack>
+            <GoalScorersList />
+          </Stack>
+        ) : (
+          <Typography>Select a tournament to view details.</Typography>
+        )}
       </Box>
     </SimpleLayout>
   );

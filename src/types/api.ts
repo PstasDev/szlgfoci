@@ -7,6 +7,7 @@ export interface Tournament {
   end_date?: string | null;
   registration_open?: boolean;
   registration_deadline?: string | null;
+  registration_by_link?: string | null;
 }
 
 export interface Team {

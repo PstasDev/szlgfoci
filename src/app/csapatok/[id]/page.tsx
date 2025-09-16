@@ -31,16 +31,17 @@ import {
 import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
+import { useTournamentSelection } from '@/hooks/useTournamentContext';
 import { getClassColor } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function TeamPage() {
   const params = useParams();
   const router = useRouter();
-  const [selectedSeason, setSelectedSeason] = React.useState('1'); // Default to tournament ID 1
   const [mounted, setMounted] = React.useState(false);
+  const { selectedTournamentId, setSelectedTournamentId, isReady } = useTournamentSelection();
   
-  const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentData();
+  const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentData(selectedTournamentId || undefined);
   
   const teamId = parseInt(params.id as string);
   const team = teams.find(t => t.id === teamId);
@@ -51,21 +52,15 @@ export default function TeamPage() {
   const teamPlayers = topScorers.filter(player => player.teamId === teamId);
 
   React.useEffect(() => {
-    // Load selected season from localStorage
-    const saved = localStorage.getItem('szlg-selected-season');
-    if (saved) {
-      setSelectedSeason(saved);
-    }
     setMounted(true);
   }, []);
 
   const handleSeasonChange = (season: string) => {
-    setSelectedSeason(season);
-    localStorage.setItem('szlg-selected-season', season);
+    setSelectedTournamentId(parseInt(season));
   };
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
+  // Don't render until mounted and tournament is ready
+  if (!mounted || !isReady || selectedTournamentId === null) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
@@ -77,7 +72,7 @@ export default function TeamPage() {
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
           <CircularProgress size={60} />
           <Typography variant="h6" sx={{ mt: 2 }}>
@@ -93,7 +88,7 @@ export default function TeamPage() {
     const errorInfo = getErrorInfo('teams', error);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
@@ -109,7 +104,7 @@ export default function TeamPage() {
     const errorInfo = getErrorInfo('team');
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
@@ -122,7 +117,7 @@ export default function TeamPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedSeason} onSeasonChange={handleSeasonChange} />
+      <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
       
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={4}>

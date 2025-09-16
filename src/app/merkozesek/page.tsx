@@ -13,12 +13,14 @@ import MatchesLayout from '@/components/MatchesLayout';
 import MatchesList from '@/components/MatchesList';
 import LiveMatches from '@/components/LiveMatches';
 import ErrorDisplay from '@/components/ErrorDisplay';
-import { useTournamentData, useMatchesByStatus } from '@/hooks/useTournamentData';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { useMatchesByStatus } from '@/hooks/useTournamentData';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import { hasTournamentStarted } from '@/utils/dataUtils';
 
 export default function MatchesPage() {
   const [activeTab, setActiveTab] = React.useState<'live' | 'upcoming' | 'recent'>('live');
-  const { matches, loading, error, refetch } = useTournamentData();
+  const { matches, tournament, loading, error, refetch } = useTournamentContext();
   const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   if (loading) {
@@ -32,6 +34,51 @@ export default function MatchesPage() {
         }}>
           <CircularProgress sx={{ color: '#42a5f5' }} />
         </Box>
+      </SimpleLayout>
+    );
+  }
+
+  // Check if tournament has started
+  if (tournament && !hasTournamentStarted(tournament)) {
+    return (
+      <SimpleLayout>
+        <Stack spacing={4} sx={{ textAlign: 'center', py: 8 }}>
+          <Typography variant="h4" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+            A torna még nem kezdődött el
+          </Typography>
+          <Typography variant="h6" sx={{ color: 'text.secondary' }}>
+            {tournament.name}
+          </Typography>
+          {tournament.start_date && (
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              Kezdés dátuma: {new Date(tournament.start_date).toLocaleDateString('hu-HU')}
+            </Typography>
+          )}
+          {tournament.registration_by_link ? (
+            <Box sx={{ mt: 4 }}>
+              <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
+                Regisztráció a tornára:
+              </Typography>
+              <a 
+                href={tournament.registration_by_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ 
+                  color: '#42a5f5', 
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem'
+                }}
+              >
+                Regisztrálok a tornára
+              </a>
+            </Box>
+          ) : (
+            <Typography variant="body1" sx={{ color: 'text.secondary', mt: 4 }}>
+              A regisztráció hamarosan elérhető lesz
+            </Typography>
+          )}
+        </Stack>
       </SimpleLayout>
     );
   }

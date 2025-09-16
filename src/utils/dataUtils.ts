@@ -219,5 +219,107 @@ export const convertStandingToTeam = (standing: Standing, index: number): any =>
   };
 };
 
-// Default tournament ID - should be configurable
-export const DEFAULT_TOURNAMENT_ID = 1;
+// Smart tournament selection logic
+export const selectMostRelevantTournament = (tournaments: any[]): any | null => {
+  if (!tournaments || tournaments.length === 0) {
+    console.log('⚠️ No tournaments available');
+    return null;
+  }
+
+  const now = new Date();
+  console.log(`🎯 Selecting most relevant tournament from ${tournaments.length} tournaments`);
+  console.log(`🎯 Available tournaments:`, tournaments.map(t => ({ id: t.id, name: t.name, start_date: t.start_date, end_date: t.end_date })));
+  
+  // 1. First priority: Currently active tournaments (started but not ended)
+  const activeTournaments = tournaments.filter(tournament => {
+    const hasStarted = hasTournamentStarted(tournament);
+    const hasEnded = tournament.end_date ? now > new Date(tournament.end_date) : false;
+    const isActive = hasStarted && !hasEnded;
+    console.log(`🔍 Tournament ${tournament.name} (ID: ${tournament.id}): started=${hasStarted}, ended=${hasEnded}, active=${isActive}`);
+    return isActive;
+  });
+  
+  if (activeTournaments.length > 0) {
+    // Sort by start date, most recent first
+    const sorted = activeTournaments.sort((a, b) => {
+      const dateA = a.start_date ? new Date(a.start_date) : new Date(0);
+      const dateB = b.start_date ? new Date(b.start_date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+    console.log(`✅ Found ${activeTournaments.length} active tournament(s), selecting: ${sorted[0].name} (ID: ${sorted[0].id})`);
+    return sorted[0];
+  }
+
+  // 2. Second priority: Upcoming tournaments (not yet started)
+  const upcomingTournaments = tournaments.filter(tournament => {
+    const hasStarted = hasTournamentStarted(tournament);
+    console.log(`🔍 Tournament ${tournament.name} (ID: ${tournament.id}): upcoming=${!hasStarted}`);
+    return !hasStarted;
+  });
+  
+  if (upcomingTournaments.length > 0) {
+    // Sort by start date, nearest first
+    const sorted = upcomingTournaments.sort((a, b) => {
+      const dateA = a.start_date ? new Date(a.start_date) : new Date(9999, 11, 31);
+      const dateB = b.start_date ? new Date(b.start_date) : new Date(9999, 11, 31);
+      return dateA.getTime() - dateB.getTime();
+    });
+    console.log(`✅ Found ${upcomingTournaments.length} upcoming tournament(s), selecting: ${sorted[0].name} (ID: ${sorted[0].id})`);
+    return sorted[0];
+  }
+
+  // 3. Last priority: Recently ended tournaments
+  const endedTournaments = tournaments.filter(tournament => {
+    const hasStarted = hasTournamentStarted(tournament);
+    const hasEnded = tournament.end_date ? now > new Date(tournament.end_date) : false;
+    const isEnded = hasStarted && hasEnded;
+    console.log(`🔍 Tournament ${tournament.name} (ID: ${tournament.id}): ended=${isEnded}`);
+    return isEnded;
+  });
+
+  if (endedTournaments.length > 0) {
+    // Sort by end date, most recent first
+    const sorted = endedTournaments.sort((a, b) => {
+      const dateA = a.end_date ? new Date(a.end_date) : new Date(0);
+      const dateB = b.end_date ? new Date(b.end_date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+    console.log(`✅ Found ${endedTournaments.length} ended tournament(s), selecting most recent: ${sorted[0].name} (ID: ${sorted[0].id})`);
+    return sorted[0];
+  }
+
+  // 4. Fallback: Just pick the first tournament
+  console.log(`⚠️ No tournaments match criteria, falling back to first tournament: ${tournaments[0].name} (ID: ${tournaments[0].id})`);
+  return tournaments[0];
+};
+
+// Default tournament ID - will be replaced by smart selection
+export const DEFAULT_TOURNAMENT_ID = 2; // Updated to match available tournament IDs
+
+// Check if tournament has started
+export const hasTournamentStarted = (tournament: any): boolean => {
+  if (!tournament?.start_date) {
+    console.log(`⚠️ No start_date found in tournament`);
+    return false;
+  }
+  
+  const startDate = new Date(tournament.start_date);
+  const now = new Date();
+  
+  console.log(`📅 Tournament start date: ${tournament.start_date} (parsed: ${startDate.toISOString()})`);
+  console.log(`📅 Current date: ${now.toISOString()}`);
+  console.log(`📅 Now >= Start: ${now >= startDate}`);
+  
+  return now >= startDate;
+};
+
+// Get tournament status message
+export const getTournamentStatusMessage = (tournament: any): string => {
+  if (!tournament) return 'Nincs aktív torna';
+  
+  if (!hasTournamentStarted(tournament)) {
+    return 'A torna még nem kezdődött el';
+  }
+  
+  return 'A torna folyamatban van';
+};
