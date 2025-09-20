@@ -1,12 +1,21 @@
 // API configuration and utilities for SZLG Foci application
 const isDevelopment = process.env.NODE_ENV === 'development';
-const API_BASE_URL = isDevelopment ? 'http://localhost:8000/api' : 'https://fociapi.szlg.info/api';
+// Use Next.js API routes as proxy to Django backend to avoid CORS issues.
+// In development the client should use the relative '/api' path so the browser hits Next.js
+// which will proxy server-side to the Django backend (configured in the API routes).
+const API_BASE_URL = isDevelopment ? '/api' : 'https://fociapi.szlg.info/api';
+
+// Export base so other modules can reuse it if needed
+export const baseURL = API_BASE_URL;
 
 export const api = {
   baseURL: API_BASE_URL,
 
   async get<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`🌐 API GET request to: ${url}`);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -16,13 +25,17 @@ export const api = {
     });
 
     if (!response.ok) {
-      const error = new Error(`API Error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error(`❌ API Error: ${response.status} ${response.statusText}`, errorText);
+      const error = new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
       (error as any).status = response.status;
       (error as any).statusText = response.statusText;
       throw error;
     }
 
-    return response.json();
+    const data = await response.json();
+    console.log(`✅ API Response from ${url}:`, data);
+    return data;
   },
 
   async post<T>(endpoint: string, data?: any): Promise<T> {

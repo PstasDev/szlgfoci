@@ -18,23 +18,36 @@ export function useTournaments(): UseTournamentsReturn {
 
   const fetchTournaments = async () => {
     try {
+      console.log('🔄 useTournaments: Starting to fetch tournaments...');
       setLoading(true);
       setError(null);
       
+      console.log('🔄 Fetching tournaments from API...');
       const tournamentsData = await tournamentService.getAll();
+      console.log('✅ Successfully fetched tournaments:', tournamentsData);
       setTournaments(tournamentsData);
     } catch (err) {
-      console.error('Error fetching tournaments:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch tournaments');
+      console.error('❌ Error fetching tournaments:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tournaments';
+      console.error('❌ Error details:', {
+        message: errorMessage,
+        error: err,
+        stack: err instanceof Error ? err.stack : undefined
+      });
+      setError(errorMessage);
       setTournaments([]); // Set empty array on error
     } finally {
       setLoading(false);
+      console.log('🔄 useTournaments: Finished fetching (loading set to false)');
     }
   };
 
   useEffect(() => {
+    console.log('🔄 useTournaments: useEffect triggered, calling fetchTournaments...');
     fetchTournaments();
   }, []);
+
+  console.log('🔄 useTournaments: Returning state:', { tournamentsCount: tournaments.length, loading, error });
 
   return {
     tournaments,
