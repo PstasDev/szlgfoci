@@ -69,7 +69,7 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
 
   // Show error state
   if (error) {
-    const errorInfo = getErrorInfo('tournaments', error);
+    const errorInfo = getErrorInfo('tournaments', error ? { message: error } : undefined);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
         <Header />

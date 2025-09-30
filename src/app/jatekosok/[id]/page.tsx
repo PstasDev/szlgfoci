@@ -69,7 +69,7 @@ export default function PlayerPage() {
 
   // Show error state
   if (error || (isEmptyDataError(topScorers) && !loading)) {
-    const errorInfo = getErrorInfo('players', error);
+    const errorInfo = getErrorInfo('players', error ? { message: error } : undefined);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />

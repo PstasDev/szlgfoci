@@ -6,12 +6,10 @@ import {
   Stack,
   Typography,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import SimpleLayout from '@/components/SimpleLayout';
 import MatchesLayout from '@/components/MatchesLayout';
 import MatchesList from '@/components/MatchesList';
-import LiveMatches from '@/components/LiveMatches';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { useMatchesByStatus } from '@/hooks/useTournamentData';
@@ -84,7 +82,7 @@ export default function MatchesPage() {
   }
 
   if (error || (isEmptyDataError(matches) && !loading)) {
-    const errorInfo = getErrorInfo('matches', error);
+    const errorInfo = getErrorInfo('matches', error ? { message: error } : undefined);
     return (
       <SimpleLayout>
         <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>

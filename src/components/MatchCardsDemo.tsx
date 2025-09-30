@@ -26,7 +26,7 @@ const MatchCardsDemo: React.FC = () => {
   }
 
   if (error || isEmptyDataError(matches)) {
-    const errorInfo = getErrorInfo('matches', error);
+    const errorInfo = getErrorInfo('matches', error ? { message: error } : undefined);
     return (
       <Box sx={{ p: 3, backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
         <ErrorDisplay 

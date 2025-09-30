@@ -9,7 +9,6 @@ import {
   Button,
   Stack,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -19,7 +18,6 @@ import MatchDetailView from '@/components/MatchDetailView';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
-import { Match } from '@/types/api';
 
 export default function MatchPage() {
   const params = useParams();
@@ -62,7 +60,7 @@ export default function MatchPage() {
 
   // Show error state
   if (error || (isEmptyDataError(matches) && !loading)) {
-    const errorInfo = getErrorInfo('matches', error);
+    const errorInfo = getErrorInfo('matches', error ? { message: error } : undefined);
     return (
       <SimpleLayout>
         <Container maxWidth="lg" sx={{ py: 2 }}>
