@@ -20,7 +20,7 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getClassColor, getTeamById } from '@/utils/dataUtils';
+import { Match, getClassColor, MatchEvent } from '@/utils/dataUtils';
 import LiveMatchTimer from './LiveMatchTimer';
 
 interface MatchDetailViewProps {
@@ -28,8 +28,22 @@ interface MatchDetailViewProps {
 }
 
 const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
-  const homeTeam = getTeamById(match.homeTeamId);
-  const awayTeam = getTeamById(match.awayTeamId);
+  // Create team objects from available match data since we don't have standings array
+  const homeTeam = {
+    id: match.homeTeamId,
+    className: match.homeTeam,
+    name: match.homeTeam
+  };
+  const awayTeam = {
+    id: match.awayTeamId,
+    className: match.awayTeam,
+    name: match.awayTeam
+  };
+
+  // Helper function to get event type consistently
+  const getEventType = (event: MatchEvent): string => {
+    return event.type || event.event_type;
+  };
 
   const getEventIcon = (eventType: string) => {
     switch (eventType) {
@@ -372,7 +386,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                     </Box>
 
                     {/* Event Card Based on Type */}
-                    {event.type === 'goal' ? (
+                    {getEventType(event) === 'goal' ? (
                       // Goal Celebration Card
                       <Box sx={{
                         flex: 1,
@@ -444,7 +458,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                           </Typography>
                         </Box>
                       </Box>
-                    ) : event.type === 'substitution' ? (
+                    ) : getEventType(event) === 'substitution' ? (
                       // Substitution Card
                       <Box sx={{
                         flex: 1,
@@ -530,51 +544,50 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                         </Box>
 
                         {/* Player Going Out */}
-                        {event.playerOut && (
-                          <Box sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 2,
-                            p: 1.5,
-                            backgroundColor: 'rgba(244, 67, 54, 0.1)',
-                            borderRadius: '8px',
-                            border: '1px solid rgba(244, 67, 54, 0.3)'
+                        {/* Note: playerOut is not available in current MatchEvent type - would need API enhancement */}
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: 2,
+                          p: 1.5,
+                          backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                          borderRadius: '8px',
+                          border: '1px solid rgba(244, 67, 54, 0.3)'
+                        }}>
+                          <Box sx={{
+                            backgroundColor: '#f44336',
+                            borderRadius: '50%',
+                            width: 24,
+                            height: 24,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '0.8rem'
                           }}>
-                            <Box sx={{
-                              backgroundColor: '#f44336',
-                              borderRadius: '50%',
-                              width: 24,
-                              height: 24,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: 'white',
-                              fontSize: '0.8rem'
-                            }}>
-                              ↓
-                            </Box>
-                            <Typography variant="caption" sx={{ 
-                              color: '#f44336', 
-                              fontWeight: 600,
-                              minWidth: 20
-                            }}>
-                              LE
-                            </Typography>
-                            <Avatar sx={{ width: 40, height: 40, bgcolor: teamColor, color: 'white', fontWeight: 'bold' }}>
-                              {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 600 }}>
-                                {event.playerOut}
-                              </Typography>
-                              <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
-                                {isHomeTeam ? match.homeTeam : match.awayTeam} • Védő #3
-                              </Typography>
-                            </Box>
+                            ↓
                           </Box>
-                        )}
+                          <Typography variant="caption" sx={{ 
+                            color: '#f44336', 
+                            fontWeight: 600,
+                            minWidth: 20
+                          }}>
+                            LE
+                          </Typography>
+                          <Avatar sx={{ width: 40, height: 40, bgcolor: teamColor, color: 'white', fontWeight: 'bold' }}>
+                            {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 600 }}>
+                              TBD Player Out
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
+                              {isHomeTeam ? match.homeTeam : match.awayTeam} • Védő #3
+                            </Typography>
+                          </Box>
+                        </Box>
                       </Box>
-                    ) : event.type === 'yellow_card' ? (
+                    ) : getEventType(event) === 'yellow_card' ? (
                       // Yellow Card
                       <Box sx={{
                         flex: 1,
@@ -640,7 +653,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                           </Box>
                         </Box>
                       </Box>
-                    ) : event.type === 'red_card' ? (
+                    ) : getEventType(event) === 'red_card' ? (
                       // Red Card
                       <Box sx={{
                         flex: 1,
@@ -726,7 +739,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             alignItems: 'center',
                             justifyContent: 'center'
                           }}>
-                            {getEventIcon(event.type)}
+                            {getEventIcon(getEventType(event))}
                           </Box>
                           <Box sx={{ flex: 1 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -735,7 +748,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                                 color: '#e8eaed',
                                 fontSize: '1.1rem'
                               }}>
-                                {getEventEmoji(event.type)} {getEventLabel(event.type)}
+                                {getEventEmoji(getEventType(event))} {getEventLabel(getEventType(event))}
                               </Typography>
                               <Chip 
                                 label={isHomeTeam ? match.homeTeam : match.awayTeam}
