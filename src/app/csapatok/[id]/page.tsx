@@ -546,13 +546,6 @@ export default function TeamPage() {
               </Paper>
             )}
           </Box>
-
-          {/* Footer */}
-          <Box sx={{ textAlign: 'center', py: 4, mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2024 SZLG - Labdarúgó Bajnokság
-            </Typography>
-          </Box>
         </Stack>
       </Container>
     </Box>

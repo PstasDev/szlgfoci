@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
-const DJANGO_API_BASE = process.env.DJANGO_API_BASE || 'http://localhost:8000/api';
+const isDevelopment = process.env.NODE_ENV === 'development';
+const DJANGO_API_BASE = process.env.DJANGO_API_BASE || (isDevelopment 
+  ? 'http://localhost:8000/api' 
+  : 'https://fociapi.szlg.info/api');
 
 export async function GET() {
   try {
@@ -12,20 +15,33 @@ export async function GET() {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      cache: 'no-store',
+      // Cache matches for 1 minute (live data should be fresher)
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
       console.error(`❌ Django API Error: ${response.status} ${response.statusText}`);
-      return NextResponse.json([]);
+      return NextResponse.json([], {
+        headers: {
+          'Cache-Control': 'public, max-age=30, stale-while-revalidate=15'
+        }
+      });
     }
 
     const data = await response.json();
     console.log('✅ Successfully fetched matches from Django:', data);
     
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=30'
+      }
+    });
   } catch (error) {
     console.error('❌ Error in matches API route:', error);
-    return NextResponse.json([]);
+    return NextResponse.json([], {
+      headers: {
+        'Cache-Control': 'public, max-age=30, stale-while-revalidate=15'
+      }
+    });
   }
 }

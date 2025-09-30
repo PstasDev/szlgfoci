@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   AppBar,
   Toolbar,
@@ -21,8 +20,8 @@ import {
   Menu as MenuIcon,
   Sports as SportsIcon,
   People as PeopleIcon,
-  Home as HomeIcon,
   SportsScore as ScoreIcon,
+  SportsSoccer as SoccerIcon,
 } from '@mui/icons-material';
 
 interface HeaderProps {
@@ -32,14 +31,12 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeasonChange: _onSeasonChange }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [showLogo, setShowLogo] = React.useState(true);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
   const menuItems = [
-    { text: 'FŐOLDAL', icon: <HomeIcon />, href: '/' },
     { text: 'CSAPATOK', icon: <PeopleIcon />, href: '/csapatok' },
     { text: 'MECCSEK', icon: <SportsIcon />, href: '/merkozesek' },
     { text: 'GÓLLÖVŐLISTA', icon: <ScoreIcon />, href: '/gollista' },
@@ -57,16 +54,7 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
         justifyContent: 'center',
         gap: 1
       }}>
-        {showLogo && (
-          <Image 
-            src="/favicon.svg" 
-            alt="Focikupa logo" 
-            width={24} 
-            height={24}
-            style={{ flexShrink: 0 }}
-            onError={() => setShowLogo(false)}
-          />
-        )}
+        <SoccerIcon sx={{ fontSize: 24, color: 'primary.main' }} />
         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
           Focikupa
         </Typography>
@@ -118,7 +106,7 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         }}
       >
-        <Toolbar sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
+        <Toolbar sx={{ px: { xs: 2, sm: 2, md: 3 } }}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -130,8 +118,9 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
           </IconButton>
           
           <Typography
+            component={Link}
+            href="/"
             variant="h5"
-            component="div"
             sx={{ 
               flexGrow: 1, 
               fontWeight: 'bold',
@@ -139,19 +128,11 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
               alignItems: 'center',
               gap: { xs: 0.5, sm: 1 },
               color: 'text.primary',
-              fontSize: { xs: '1.2rem', sm: '1.5rem' }
+              fontSize: { xs: '1.2rem', sm: '1.5rem' },
+              textDecoration: 'none',
             }}
           >
-            {showLogo && (
-              <Image 
-                src="/favicon.svg" 
-                alt="Focikupa logo" 
-                width={28} 
-                height={28}
-                style={{ flexShrink: 0 }}
-                onError={() => setShowLogo(false)}
-              />
-            )}
+            <SoccerIcon sx={{ fontSize: { xs: 24, sm: 28 }, color: 'primary.main' }} />
             Focikupa
           </Typography>
           
@@ -170,9 +151,7 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
                   minWidth: 'auto',
                   '&:hover': {
                     backgroundColor: 'rgba(255,255,255,0.08)',
-                    transform: 'translateY(-1px)',
                   },
-                  transition: 'all 0.2s ease'
                 }}
               >
                 {item.text}

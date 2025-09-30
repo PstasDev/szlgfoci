@@ -14,18 +14,18 @@ import {
   Box,
   Avatar,
   Chip,
-  CircularProgress,
 } from '@mui/material';
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
 import { getClassColor, convertTopScorerToPlayer } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
-import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { useTournamentData } from '@/contexts/TournamentDataContext';
+import LoadingSkeleton from './LoadingSkeleton';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
 import type { Player } from '@/types/api';
 
 const GoalScorersList: React.FC = () => {
-  const { topScorers, loading, error, refetch } = useTournamentContext();
+  const { topScorers, loading, error, refetch } = useTournamentData();
 
   const getPositionColor = (position: number) => {
     if (position === 1) return '#ffd700'; // Gold
@@ -66,9 +66,7 @@ const GoalScorersList: React.FC = () => {
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress sx={{ color: '#42a5f5' }} />
-          </Box>
+          <LoadingSkeleton variant="topscorers" count={5} />
         </CardContent>
       </Card>
     );

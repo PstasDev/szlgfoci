@@ -5,11 +5,10 @@ interface ApiError extends Error {
   statusText?: string;
 }
 
-const isDevelopment = process.env.NODE_ENV === 'development';
 // Use Next.js API routes as proxy to Django backend to avoid CORS issues.
-// In development the client should use the relative '/api' path so the browser hits Next.js
-// which will proxy server-side to the Django backend (configured in the API routes).
-const API_BASE_URL = isDevelopment ? '/api' : 'https://fociapi.szlg.info/api';
+// In development: use local Next.js API routes that can proxy to local Django server
+// In production: use Next.js API routes that proxy to production Django server
+const API_BASE_URL = '/api';
 
 // Export base so other modules can reuse it if needed
 export const baseURL = API_BASE_URL;

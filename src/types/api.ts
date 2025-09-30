@@ -48,6 +48,18 @@ export interface Profile {
   user: number;
   biro?: boolean; // referee
   player?: Player | null;
+  user_details?: User; // Populated user data
+}
+
+export interface User {
+  id: number;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  is_staff?: boolean;
+  is_active?: boolean;
+  date_joined?: string;
 }
 
 export interface ApiMatch {
@@ -197,4 +209,22 @@ export interface TeamRoster {
   teamName: string;
   className: string;
   players: string[];
+}
+
+// Announcement interfaces
+export interface Announcement {
+  id: number;
+  title: string;
+  content: string;
+  date_created: string;
+  date_updated: string;
+  active: boolean;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  author?: {
+    id: number;
+    user: number;
+    biro?: boolean;
+    player?: Player | null;
+    user_details?: User; // Populated user data
+  } | null;
 }

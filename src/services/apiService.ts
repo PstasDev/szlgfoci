@@ -12,7 +12,9 @@ import type {
   TopScorerSchema,
   AllEventsSchema,
   AllEvents,
-  Profile
+  Profile,
+  Announcement,
+  User
 } from '@/types/api';
 
 // Tournament endpoints
@@ -282,5 +284,59 @@ export const roundService = {
 
   async getById(id: number): Promise<Round> {
     return api.get<Round>(`/rounds/${id}`);
+  }
+};
+
+// Announcement endpoints
+export const announcementService = {
+  async getActive(): Promise<Announcement[]> {
+    try {
+      console.log('🔥 announcementService.getActive() called');
+      const result = await api.get<Announcement[]>('/announcements');
+      console.log('🔥 announcementService.getActive() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 announcementService.getActive() failed:', error);
+      throw error;
+    }
+  },
+
+  async getById(id: number): Promise<Announcement> {
+    try {
+      console.log(`🔥 announcementService.getById(${id}) called`);
+      const result = await api.get<Announcement>(`/announcements/${id}`);
+      console.log(`🔥 announcementService.getById(${id}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔥 announcementService.getById(${id}) failed:`, error);
+      throw error;
+    }
+  },
+
+  async getByPriority(priority: 'low' | 'normal' | 'high' | 'urgent'): Promise<Announcement[]> {
+    try {
+      console.log(`🔥 announcementService.getByPriority(${priority}) called`);
+      const result = await api.get<Announcement[]>(`/announcements/priority/${priority}`);
+      console.log(`🔥 announcementService.getByPriority(${priority}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔥 announcementService.getByPriority(${priority}) failed:`, error);
+      throw error;
+    }
+  }
+};
+
+// User endpoints
+export const userService = {
+  async getById(id: number): Promise<User> {
+    try {
+      console.log(`🔥 userService.getById(${id}) called`);
+      const result = await api.get<User>(`/users/${id}`);
+      console.log(`🔥 userService.getById(${id}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔥 userService.getById(${id}) failed:`, error);
+      throw error;
+    }
   }
 };

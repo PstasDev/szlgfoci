@@ -2,7 +2,13 @@
 
 import React from 'react';
 import { Box, Typography, Link, Container, Divider, Stack, useTheme } from '@mui/material';
-import { Info as InfoIcon, AdminPanelSettings as AdminIcon } from '@mui/icons-material';
+import { 
+  Info as InfoIcon, 
+  AdminPanelSettings as AdminIcon,
+  GitHub as GitHubIcon,
+  School as SchoolIcon,
+  SportsSoccer as SoccerIcon
+} from '@mui/icons-material';
 
 const Footer: React.FC = () => {
   const theme = useTheme();
@@ -24,81 +30,147 @@ const Footer: React.FC = () => {
       sx={{ 
         backgroundColor: theme.palette.grey[900],
         color: theme.palette.grey[300],
-        py: 3,
+        py: 4,
         borderTop: `1px solid ${theme.palette.divider}`,
-        flexShrink: 0, // Prevent footer from shrinking
+        flexShrink: 0,
       }}
     >
       <Container maxWidth="lg">
-        <Stack 
-          direction={{ xs: 'column', sm: 'row' }} 
-          spacing={2} 
-          justifyContent="space-between"
-          alignItems={{ xs: 'center', sm: 'flex-start' }}
-        >
-          <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-            <Typography variant="body2" color="text.secondary">
-              © {new Date().getFullYear()} Szlgfoci - Iskolai Foci Kupa
-            </Typography>
-          </Box>
-
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={3}
-            alignItems="center"
-            sx={{ textAlign: { xs: 'center', sm: 'right' } }}
-          >
-            <Link
-              href="/focikuparol"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                color: theme.palette.primary.light,
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline',
-                  color: theme.palette.primary.main,
-                },
-              }}
-            >
-              <InfoIcon fontSize="small" />
-              <Typography variant="body2">
-                A Focikupáról
+        <Stack spacing={3}>
+            {/* Header Section */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ mb: 1 }}>
+                <SoccerIcon sx={{ color: theme.palette.primary.main, fontSize: 28 }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: theme.palette.primary.main,
+                  }}
+                >
+                  Focikupa
+                </Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                Kőbányai Szent László Gimnázium Futballtornája
               </Typography>
-            </Link>
+            </Box>
 
-            <Divider 
-              orientation="vertical" 
-              flexItem 
-              sx={{ 
-                display: { xs: 'none', sm: 'block' },
-                borderColor: theme.palette.grey[700] 
-              }} 
-            />
+            <Divider sx={{ borderColor: theme.palette.grey[700] }} />
 
-            <Link
-              href={getAdminUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.5,
-                color: theme.palette.secondary.light,
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline',
-                  color: theme.palette.secondary.main,
-                },
-              }}
+            {/* Links Section */}
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={3}
+              justifyContent="center"
+              alignItems="center"
             >
-              <AdminIcon fontSize="small" />
-              <Typography variant="body2">
-                Bíró vagyok
+              <Link
+                href="/focikuparol"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  color: theme.palette.grey[400],
+                  textDecoration: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    color: theme.palette.primary.main,
+                    backgroundColor: `${theme.palette.primary.main}10`,
+                  },
+                }}
+              >
+                <InfoIcon fontSize="small" />
+                <Typography variant="body2" fontWeight="500">
+                  A Focikupáról
+                </Typography>
+              </Link>
+
+              <Link
+                href={getAdminUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  color: theme.palette.grey[400],
+                  textDecoration: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    color: theme.palette.secondary.main,
+                    backgroundColor: `${theme.palette.secondary.main}10`,
+                  },
+                }}
+              >
+                <AdminIcon fontSize="small" />
+                <Typography variant="body2" fontWeight="500">
+                  Bíró vagyok
+                </Typography>
+              </Link>
+
+              <Link
+                href="https://szlgbp.hu"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  color: theme.palette.grey[400],
+                  textDecoration: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    color: theme.palette.info.main,
+                    backgroundColor: `${theme.palette.info.main}10`,
+                  },
+                }}
+              >
+                <SchoolIcon fontSize="small" />
+                <Typography variant="body2" fontWeight="500">
+                  SZLGBP
+                </Typography>
+              </Link>
+
+              <Link
+                href="https://github.com/PstasDev/szlgfoci"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  color: theme.palette.grey[400],
+                  textDecoration: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  '&:hover': {
+                    color: theme.palette.grey[200],
+                    backgroundColor: `${theme.palette.grey[200]}10`,
+                  },
+                }}
+              >
+                <GitHubIcon fontSize="small" />
+                <Typography variant="body2" fontWeight="500">
+                  GitHub
+                </Typography>
+              </Link>
+            </Stack>
+
+            <Divider sx={{ borderColor: theme.palette.grey[700] }} />
+
+            {/* Copyright Section */}
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.8 }}>
+                © {new Date().getFullYear()} SZLG Diákönkormányzata
               </Typography>
-            </Link>
-          </Stack>
+              <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.6, mt: 0.5, display: 'block' }}>
+                Diákoktól diákoknak
+              </Typography>
+            </Box>
         </Stack>
       </Container>
     </Box>

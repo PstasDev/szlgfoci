@@ -2,69 +2,75 @@
 import { createTheme } from '@mui/material/styles';
 import { huHU } from '@mui/material/locale';
 
-// Google Sports inspired dark theme colors
-const googleSportsColors = {
-  background: '#1a1a1a', // Dark background like Google Sports
+// Clean sports theme - minimalistic approach
+const cleanSportsColors = {
+  background: '#1a1a1a', // Clean dark background
   surface: '#2d2d2d', // Card backgrounds
   surfaceVariant: '#363636', // Lighter surface
   onSurface: '#ffffff', // White text on dark surfaces
   onSurfaceVariant: '#e0e0e0', // Light gray text
-  primary: '#4285f4', // Google blue
+  primary: '#4285f4', // Clean blue
   primaryContainer: '#1e3a8a',
-  secondary: '#34a853', // Google green
-  tertiary: '#ea4335', // Google red
+  secondary: '#34a853', // Clean green
+  tertiary: '#ea4335', // Clean red
   outline: '#474747', // Border colors
 };
 
 const theme = createTheme({
   cssVariables: true,
   palette: {
-    mode: 'dark', // Switch to dark mode
+    mode: 'dark',
     primary: {
-      main: googleSportsColors.primary, // Google blue
+      main: cleanSportsColors.primary,
       light: '#5a9eff',
       dark: '#1565c0',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: googleSportsColors.secondary, // Google green
+      main: cleanSportsColors.secondary,
       light: '#4db86e',
       dark: '#2e7d32',
       contrastText: '#ffffff',
     },
     success: {
-      main: '#4caf50', // Success green
+      main: '#4caf50',
       light: '#81c784',
       dark: '#388e3c',
       contrastText: '#ffffff',
     },
     warning: {
-      main: '#ff9800', // Yellow cards
+      main: '#ff9800',
       light: '#ffb74d',
       dark: '#f57c00',
       contrastText: '#000000',
     },
     error: {
-      main: googleSportsColors.tertiary, // Google red
+      main: cleanSportsColors.tertiary,
       light: '#ff6659',
       dark: '#c62828',
       contrastText: '#ffffff',
     },
+    info: {
+      main: '#2196f3',
+      light: '#64b5f6',
+      dark: '#1976d2',
+      contrastText: '#ffffff',
+    },
     background: {
-      default: googleSportsColors.background, // Dark background
-      paper: googleSportsColors.surface, // Dark card background
+      default: cleanSportsColors.background,
+      paper: cleanSportsColors.surface,
     },
     text: {
-      primary: googleSportsColors.onSurface, // White text
-      secondary: googleSportsColors.onSurfaceVariant, // Light gray text
-      disabled: '#9e9e9e',
+      primary: cleanSportsColors.onSurface,
+      secondary: cleanSportsColors.onSurfaceVariant,
+      disabled: '#9ca3af',
     },
-    divider: googleSportsColors.outline,
+    divider: cleanSportsColors.outline,
     action: {
       hover: 'rgba(255, 255, 255, 0.08)',
       selected: 'rgba(66, 133, 244, 0.12)',
-      disabled: '#6c6c6c',
-      disabledBackground: '#404040',
+      disabled: '#6b7280',
+      disabledBackground: '#374151',
     },
   },
   typography: {
@@ -115,9 +121,9 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 8, // Less rounded like Google Sports
-          backgroundColor: googleSportsColors.surface, // Dark card background
-          border: `1px solid ${googleSportsColors.outline}`,
+          borderRadius: 8,
+          backgroundColor: cleanSportsColors.surface,
+          border: `1px solid ${cleanSportsColors.outline}`,
           boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
           '&:hover': {
             boxShadow: '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
@@ -130,9 +136,9 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundImage: 'none', // Remove default gradient
-          backgroundColor: googleSportsColors.surface,
-          color: googleSportsColors.onSurface,
+          backgroundImage: 'none',
+          backgroundColor: cleanSportsColors.surface,
+          color: cleanSportsColors.onSurface,
         },
       },
     },
@@ -140,8 +146,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 0,
-          backgroundColor: googleSportsColors.surface,
-          color: googleSportsColors.onSurface,
+          backgroundColor: cleanSportsColors.surface,
+          color: cleanSportsColors.onSurface,
           boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         },
       },
@@ -149,7 +155,7 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 6, // Less rounded
+          borderRadius: 6,
           textTransform: 'none',
           fontWeight: 500,
           minHeight: 36,
@@ -161,7 +167,7 @@ const theme = createTheme({
           },
         },
         text: {
-          color: googleSportsColors.onSurface,
+          color: cleanSportsColors.onSurface,
           '&:hover': {
             backgroundColor: 'rgba(255, 255, 255, 0.08)',
           },
@@ -172,8 +178,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           fontWeight: 500,
-          backgroundColor: googleSportsColors.surfaceVariant,
-          color: googleSportsColors.onSurface,
+          backgroundColor: cleanSportsColors.surfaceVariant,
+          color: cleanSportsColors.onSurface,
           '& .MuiChip-label': {
             paddingLeft: 8,
             paddingRight: 8,
@@ -184,42 +190,42 @@ const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: `1px solid ${googleSportsColors.outline}`,
-          color: googleSportsColors.onSurface,
+          borderBottom: `1px solid ${cleanSportsColors.outline}`,
+          color: cleanSportsColors.onSurface,
         },
         head: {
-          backgroundColor: googleSportsColors.surfaceVariant,
+          backgroundColor: cleanSportsColors.surfaceVariant,
           fontWeight: 600,
-          color: googleSportsColors.onSurface,
+          color: cleanSportsColors.onSurface,
         },
       },
     },
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          backgroundColor: googleSportsColors.surface,
+          backgroundColor: cleanSportsColors.surface,
         },
       },
     },
     MuiAvatar: {
       styleOverrides: {
         root: {
-          backgroundColor: googleSportsColors.primary,
-          color: googleSportsColors.onSurface,
+          backgroundColor: cleanSportsColors.primary,
+          color: cleanSportsColors.onSurface,
         },
       },
     },
     MuiTypography: {
       styleOverrides: {
         root: {
-          color: 'inherit', // Use inherited color from parent
+          color: 'inherit',
         },
       },
     },
     MuiDivider: {
       styleOverrides: {
         root: {
-          borderColor: googleSportsColors.outline,
+          borderColor: cleanSportsColors.outline,
         },
       },
     },
@@ -227,31 +233,31 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& fieldset': {
-            borderColor: googleSportsColors.outline,
+            borderColor: cleanSportsColors.outline,
           },
           '&:hover fieldset': {
-            borderColor: googleSportsColors.onSurfaceVariant,
+            borderColor: cleanSportsColors.onSurfaceVariant,
           },
           '&.Mui-focused fieldset': {
-            borderColor: googleSportsColors.primary,
+            borderColor: cleanSportsColors.primary,
           },
         },
         input: {
-          color: googleSportsColors.onSurface,
+          color: cleanSportsColors.onSurface,
         },
       },
     },
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          color: googleSportsColors.onSurfaceVariant,
+          color: cleanSportsColors.onSurfaceVariant,
         },
       },
     },
     MuiSelect: {
       styleOverrides: {
         icon: {
-          color: googleSportsColors.onSurfaceVariant,
+          color: cleanSportsColors.onSurfaceVariant,
         },
       },
     },

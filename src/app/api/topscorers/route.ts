@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 
-const DJANGO_API_BASE = process.env.DJANGO_API_BASE || 'http://localhost:8000/api';
+const isDevelopment = process.env.NODE_ENV === 'development';
+const DJANGO_API_BASE = process.env.DJANGO_API_BASE || (isDevelopment 
+  ? 'http://localhost:8000/api' 
+  : 'https://fociapi.szlg.info/api');
 
 export async function GET() {
   try {

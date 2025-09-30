@@ -1,29 +1,98 @@
 @import "tailwindcss";
 
 :root {
-  --background: #1a1a1a; /* Dark background like Google Sports */
+  --background: #1a1a1a; /* Clean dark background */
   --foreground: #ffffff; /* White text */
-  --color-background: #1a1a1a;
-  --color-foreground: #ffffff;
+  --surface: #2d2d2d; /* Dark card backgrounds */
+  --surface-variant: #363636; /* Lighter surface */
+  --primary: #4285f4; /* Clean blue */
+  --secondary: #34a853; /* Clean green */
+  --error: #ea4335; /* Clean red */
+  --warning: #ff9800; /* Clean amber */
+  
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* Remove the light mode media query to force dark theme */
-
+/* Base body styling */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', 'Roboto', Arial, Helvetica, sans-serif;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
-/* Ensure proper styling for dark mode */
+/* Smooth scrolling */
 * {
   color: inherit;
+  box-sizing: border-box;
 }
 
-/* Override any default white backgrounds */
 html {
   background: var(--background);
+  scroll-behavior: smooth;
+}
+
+/* Clean scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a9eff;
+}
+
+/* Modern focus styles */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Loading skeleton animation only */
+
+/* Loading skeleton animation */
+@keyframes skeleton-loading {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200px 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+/* Responsive animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode scrollbar for Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) var(--surface);
 }

@@ -9,7 +9,6 @@ import {
   Box,
   Avatar,
   Stack,
-  CircularProgress,
 } from '@mui/material';
 import {
   Sports as SportsIcon,
@@ -19,24 +18,23 @@ import {
 } from '@mui/icons-material';
 import { getTeamColor, Match, MatchEvent } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
-import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { useTournamentData } from '@/contexts/TournamentDataContext';
 import { useMatchesByStatus } from '@/hooks/useMatchesByStatus';
+import LoadingSkeleton from './LoadingSkeleton';
 import LiveMatchTimer from './LiveMatchTimer';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
 
 const LiveMatches: React.FC = () => {
   const router = useRouter();
-  const { matches, loading, error, refetch } = useTournamentContext();
+  const { matches, loading, error, refetch } = useTournamentData();
   const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   if (loading) {
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress sx={{ color: '#42a5f5' }} />
-          </Box>
+          <LoadingSkeleton variant="matches" count={3} />
         </CardContent>
       </Card>
     );

@@ -11,7 +11,7 @@ import {
 import MatchCard from './MatchCard';
 import MatchesList from './MatchesList';
 import ErrorDisplay from './ErrorDisplay';
-import { useTournamentData } from '@/hooks/useTournamentData';
+import { useTournamentData } from '@/contexts/TournamentDataContext';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 const MatchCardsDemo: React.FC = () => {

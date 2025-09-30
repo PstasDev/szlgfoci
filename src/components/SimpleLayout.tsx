@@ -1,20 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, GlobalStyles } from '@mui/material';
 import Header from './Header';
-import ErrorDisplay from './ErrorDisplay';
-import { tournamentService } from '@/services/apiService';
-import { getErrorInfo } from '@/utils/errorUtils';
-import type { Tournament } from '@/types/api';
 
 interface SimpleLayoutProps {
   children: React.ReactNode;
 }
 
-// Simplified context for current tournament only
+// Legacy context for backward compatibility
 export const TournamentContext = React.createContext<{
-  currentTournament: Tournament | null;
+  currentTournament: any | null;
   loading: boolean;
   error: string | null;
 }>({
@@ -24,41 +20,18 @@ export const TournamentContext = React.createContext<{
 });
 
 const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
-  const [currentTournament, setCurrentTournament] = React.useState<Tournament | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    // Load current tournament data
-    const loadCurrentTournament = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log('� SimpleLayout: Loading current tournament...');
-        
-        const tournament = await tournamentService.getCurrent();
-        console.log('✅ SimpleLayout: Loaded current tournament:', tournament);
-        setCurrentTournament(tournament);
-      } catch (err) {
-        console.error('❌ SimpleLayout: Error loading current tournament:', err);
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load current tournament';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
-        setMounted(true);
-      }
-    };
-
-    loadCurrentTournament();
+    setMounted(true);
   }, []);
 
   // Don't render until mounted to avoid hydration issues
-  if (!mounted || loading) {
+  if (!mounted) {
     return (
       <Box sx={{ 
         minHeight: '100vh', 
-        backgroundColor: '#1a1a1a',
+        background: 'linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #0f1419 100%)',
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -79,66 +52,61 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
     );
   }
 
-  // Show error state
-  if (error) {
-    const errorInfo = getErrorInfo('tournaments', error ? { message: error } : undefined);
-    return (
-      <Box sx={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#1a1a1a',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <Header />
-        <Box sx={{ 
-          pt: 8, 
-          px: { xs: 2, sm: 3 }, 
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <ErrorDisplay 
-            errorInfo={errorInfo}
-            onRetry={() => window.location.reload()}
-            variant="box"
-          />
-        </Box>
-      </Box>
-    );
-  }
-
-  console.log(`🎯 SimpleLayout context values:`, {
-    currentTournament: currentTournament?.name,
-    loading,
-    error
-  });
-
   return (
-    <TournamentContext.Provider value={{ 
-      currentTournament,
-      loading,
-      error
-    }}>
+    <>
+      <GlobalStyles
+        styles={{
+          '@keyframes glow': {
+            '0%': {
+              boxShadow: '0 0 5px rgba(66, 165, 245, 0.3)',
+            },
+            '50%': {
+              boxShadow: '0 0 20px rgba(66, 165, 245, 0.6), 0 0 30px rgba(66, 165, 245, 0.4)',
+            },
+            '100%': {
+              boxShadow: '0 0 5px rgba(66, 165, 245, 0.3)',
+            },
+          },
+          '@keyframes float': {
+            '0%': {
+              transform: 'translateY(0px)',
+            },
+            '50%': {
+              transform: 'translateY(-10px)',
+            },
+            '100%': {
+              transform: 'translateY(0px)',
+            },
+          },
+          '.glow-effect': {
+            animation: 'glow 3s ease-in-out infinite alternate',
+          },
+          '.float-effect': {
+            animation: 'float 6s ease-in-out infinite',
+          },
+        }}
+      />
+      
       <Box sx={{ 
         minHeight: '100vh', 
         backgroundColor: '#1a1a1a',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
       }}>
+        
         <Header />
         
         <Box sx={{ 
-          pt: { xs: 7, sm: 8 }, // Account for AppBar height
-          px: { xs: 0, sm: 0 }, // Remove padding as children components handle their own
-          flex: 1, // Take up remaining space
+          pt: { xs: 7, sm: 8 },
+          px: { xs: 0, sm: 0 },
+          flex: 1,
           display: 'flex',
           flexDirection: 'column'
         }}>
           {children}
         </Box>
       </Box>
-    </TournamentContext.Provider>
+    </>
   );
 };
 

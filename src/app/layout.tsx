@@ -6,6 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
 import theme from '../theme';
 import Footer from '../components/Footer';
+import { TournamentDataProvider } from '../contexts/TournamentDataContext';
 import "./globals.css";
 
 const roboto = Roboto({
@@ -40,16 +41,18 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Box sx={{ 
-              minHeight: '100vh', 
-              display: 'flex', 
-              flexDirection: 'column' 
-            }}>
-              <Box sx={{ flex: 1 }}>
-                {children}
+            <TournamentDataProvider>
+              <Box sx={{ 
+                minHeight: '100vh', 
+                display: 'flex', 
+                flexDirection: 'column' 
+              }}>
+                <Box sx={{ flex: 1 }}>
+                  {children}
+                </Box>
+                <Footer />
               </Box>
-              <Footer />
-            </Box>
+            </TournamentDataProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

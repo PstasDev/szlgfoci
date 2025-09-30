@@ -15,18 +15,18 @@ import {
   Chip,
   Avatar,
   ButtonBase,
-  CircularProgress,
 } from '@mui/material';
 import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
-import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { useTournamentData } from '@/contexts/TournamentDataContext';
+import LoadingSkeleton from './LoadingSkeleton';
 import { getClassColor } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
 
 const LeagueTable: React.FC = () => {
-  const { standings, loading, error, refetch } = useTournamentContext();
+  const { standings, loading, error, refetch } = useTournamentData();
   const router = useRouter();
 
   const getPositionColor = (position: number) => {
@@ -45,9 +45,7 @@ const LeagueTable: React.FC = () => {
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-            <CircularProgress sx={{ color: '#42a5f5' }} />
-          </Box>
+          <LoadingSkeleton variant="standings" count={8} />
         </CardContent>
       </Card>
     );
