@@ -56,9 +56,21 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
   // Don't render until mounted to avoid hydration issues
   if (!mounted || loading) {
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1a1a1a',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         <Header />
-        <Box sx={{ pt: 8, px: { xs: 2, sm: 3 } }}>
+        <Box sx={{ 
+          pt: 8, 
+          px: { xs: 2, sm: 3 }, 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
           <Box sx={{ color: '#e8eaed', textAlign: 'center', py: 4 }}>
             Betöltés...
           </Box>
@@ -71,9 +83,21 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
   if (error) {
     const errorInfo = getErrorInfo('tournaments', error ? { message: error } : undefined);
     return (
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1a1a1a',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         <Header />
-        <Box sx={{ pt: 8, px: { xs: 2, sm: 3 } }}>
+        <Box sx={{ 
+          pt: 8, 
+          px: { xs: 2, sm: 3 }, 
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
             onRetry={() => window.location.reload()}
@@ -96,13 +120,20 @@ const SimpleLayout: React.FC<SimpleLayoutProps> = ({ children }) => {
       loading,
       error
     }}>
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#1a1a1a' }}>
+      <Box sx={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#1a1a1a',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
         <Header />
         
         <Box sx={{ 
           pt: { xs: 7, sm: 8 }, // Account for AppBar height
           px: { xs: 0, sm: 0 }, // Remove padding as children components handle their own
-          minHeight: 'calc(100vh - 64px)'
+          flex: 1, // Take up remaining space
+          display: 'flex',
+          flexDirection: 'column'
         }}>
           {children}
         </Box>

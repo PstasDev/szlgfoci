@@ -3,7 +3,9 @@ import { Roboto } from "next/font/google";
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Box } from '@mui/material';
 import theme from '../theme';
+import Footer from '../components/Footer';
 import "./globals.css";
 
 const roboto = Roboto({
@@ -38,7 +40,16 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            {children}
+            <Box sx={{ 
+              minHeight: '100vh', 
+              display: 'flex', 
+              flexDirection: 'column' 
+            }}>
+              <Box sx={{ flex: 1 }}>
+                {children}
+              </Box>
+              <Footer />
+            </Box>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

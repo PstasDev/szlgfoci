@@ -202,7 +202,30 @@ export default function TeamPage() {
           </Button>
 
           {/* Team Header */}
-          <Paper elevation={2} sx={{ p: 4, backgroundColor: 'primary.main', color: 'white' }}>
+          <Paper 
+            elevation={2} 
+            sx={{ 
+              p: 4, 
+              background: `linear-gradient(135deg, ${team ? getClassColor(getTeamClassName(team)) : '#4285f4'} 0%, rgba(0,0,0,0.7) 100%)`,
+              color: 'white',
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                borderRadius: 'inherit',
+                zIndex: 1,
+              },
+              '& > *': {
+                position: 'relative',
+                zIndex: 2,
+              }
+            }}
+          >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
               <Avatar
                 sx={{
@@ -229,18 +252,31 @@ export default function TeamPage() {
                         icon={<TrophyIcon />}
                         label={`${standing.position || '?'}. hely`}
                         color={(standing.position || 0) <= 3 ? 'success' : 'default'}
-                        sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
+                        sx={{ 
+                          color: 'white', 
+                          backgroundColor: 'rgba(0,0,0,0.4)',
+                          '& .MuiChip-icon': { color: 'white' },
+                          border: '1px solid rgba(255,255,255,0.3)'
+                        }}
                       />
                       <Chip
                         label={`${standing.points || 0} pont`}
-                        sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
+                        sx={{ 
+                          color: 'white', 
+                          backgroundColor: 'rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.3)'
+                        }}
                       />
                     </>
                   )}
                   {!standing && (
                     <Chip
                       label="Még nincs rangsor adat"
-                      sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
+                      sx={{ 
+                        color: 'white', 
+                        backgroundColor: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(255,255,255,0.3)'
+                      }}
                     />
                   )}
                 </Box>
@@ -313,13 +349,13 @@ export default function TeamPage() {
             </Typography>
             
             {actualTeamPlayers.length > 0 ? (
-              <TableContainer component={Paper}>
+              <TableContainer component={Paper} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                 <Table>
-                  <TableHead sx={{ backgroundColor: '#fafafa' }}>
+                  <TableHead sx={{ backgroundColor: 'action.selected' }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Játékos</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Szerepkör</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Gólok</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Játékos</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Szerepkör</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Gólok</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -333,12 +369,15 @@ export default function TeamPage() {
                         <TableRow 
                           key={player.id}
                           sx={{ 
-                            '&:hover': { backgroundColor: '#f0f0f0' },
-                            cursor: 'pointer'
+                            '&:hover': { 
+                              backgroundColor: 'action.hover',
+                            },
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
                           }}
                           onClick={() => router.push(`/jatekosok/${player.id}`)}
                         >
-                          <TableCell>
+                          <TableCell sx={{ py: 2 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               <Typography variant="body1" sx={{ fontWeight: 500 }}>
                                 {player.name}
@@ -353,7 +392,7 @@ export default function TeamPage() {
                               )}
                             </Box>
                           </TableCell>
-                          <TableCell align="center">
+                          <TableCell align="center" sx={{ py: 2 }}>
                             <Typography variant="body2" color="text.secondary">
                               {player.csk ? 'Csapatkapitány' : 'Játékos'}
                             </Typography>
@@ -397,13 +436,13 @@ export default function TeamPage() {
                 Góllövők ({teamPlayers.length})
               </Typography>
               
-              <TableContainer component={Paper}>
+              <TableContainer component={Paper} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                 <Table>
-                  <TableHead sx={{ backgroundColor: '#fafafa' }}>
+                  <TableHead sx={{ backgroundColor: 'action.selected' }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Játékos</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Gólok</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Liga Pozíció</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Játékos</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Gólok</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold', color: 'text.primary', py: 2 }}>Liga Pozíció</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -413,8 +452,11 @@ export default function TeamPage() {
                         <TableRow 
                           key={player.id}
                           sx={{ 
-                            '&:hover': { backgroundColor: '#f0f0f0' },
-                            cursor: 'pointer'
+                            '&:hover': { 
+                              backgroundColor: 'action.hover',
+                            },
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
                           }}
                           onClick={() => router.push(`/jatekosok/${player.id}`)}
                         >
@@ -423,7 +465,7 @@ export default function TeamPage() {
                               {player.name}
                             </Typography>
                           </TableCell>
-                          <TableCell align="center">
+                          <TableCell align="center" sx={{ py: 2 }}>
                             <Chip
                               icon={<GoalIcon />}
                               label={player.goals}
@@ -431,7 +473,7 @@ export default function TeamPage() {
                               color={player.goals >= 5 ? 'success' : player.goals >= 3 ? 'warning' : 'default'}
                             />
                           </TableCell>
-                          <TableCell align="center">
+                          <TableCell align="center" sx={{ py: 2 }}>
                             <Typography variant="body2" color="text.secondary">
                               #{player.position}
                             </Typography>
@@ -457,8 +499,12 @@ export default function TeamPage() {
                     key={match.id}
                     sx={{ 
                       cursor: 'pointer',
-                      '&:hover': { boxShadow: 4, transform: 'translateY(-1px)' },
-                      transition: 'all 0.2s ease'
+                      '&:hover': { 
+                        boxShadow: 6, 
+                        transform: 'translateY(-2px)',
+                        backgroundColor: 'action.hover',
+                      },
+                      transition: 'all 0.2s ease-in-out'
                     }}
                     onClick={() => router.push(`/merkozesek/${match.id}`)}
                   >
