@@ -9,10 +9,9 @@ import {
   getRecentMatches, 
   convertStandingSchemaToStanding,
   convertTopScorerSchemaToTopScorer,
-  DEFAULT_TOURNAMENT_ID,
   hasTournamentStarted
 } from '@/utils/dataUtils';
-import type { Match, Team, Standing, ApiMatch, TopScorer, StandingSchema, TopScorerSchema, Tournament } from '@/types/api';
+import type { Match, Team, Standing, TopScorer, Tournament } from '@/types/api';
 
 interface UseTournamentDataReturn {
   matches: Match[];
@@ -25,7 +24,7 @@ interface UseTournamentDataReturn {
   refetch: () => void;
 }
 
-export function useTournamentData(tournamentId: number = DEFAULT_TOURNAMENT_ID): UseTournamentDataReturn {
+export function useTournamentData(): UseTournamentDataReturn {
   const [matches, setMatches] = useState<Match[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [standings, setStandings] = useState<Standing[]>([]);
@@ -39,24 +38,16 @@ export function useTournamentData(tournamentId: number = DEFAULT_TOURNAMENT_ID):
       setLoading(true);
       setError(null);
       
-      console.log(`🔄 Loading tournament data for ID: ${tournamentId}`);
+      console.log(`🔄 Loading current tournament data...`);
       
-      // Validate tournament ID - must be a positive number
-      if (!tournamentId || tournamentId <= 0 || !Number.isInteger(tournamentId)) {
-        console.error(`❌ Invalid tournament ID: ${tournamentId}`);
-        setError(`Invalid tournament ID: ${tournamentId}. Please select a valid tournament.`);
-        setLoading(false);
-        return;
-      }
-      
-      // First, fetch only the tournament data to check if it exists and has started
+      // First, fetch the current tournament to check if it exists and has started
       let tournamentData;
       try {
-        tournamentData = await tournamentService.getById(tournamentId);
-        console.log(`📊 Fetched tournament:`, tournamentData);
+        tournamentData = await tournamentService.getCurrent();
+        console.log(`📊 Fetched current tournament:`, tournamentData);
       } catch (err) {
-        console.error(`❌ Tournament ID ${tournamentId} not found or inaccessible:`, err);
-        setError(`Tournament with ID ${tournamentId} was not found. Please select a different tournament.`);
+        console.error(`❌ Current tournament not found or inaccessible:`, err);
+        setError(`Current tournament was not found. The tournament may not be set up yet.`);
         setLoading(false);
         return;
       }
@@ -95,27 +86,27 @@ export function useTournamentData(tournamentId: number = DEFAULT_TOURNAMENT_ID):
       // Fetch data for started tournaments (including ended ones)
       try {
         const [matchesData, teamsData, standingsData, topScorersData] = await Promise.all([
-          tournamentService.getMatches(tournamentId).catch(err => {
-            console.warn(`⚠️ Failed to fetch matches for tournament ${tournamentId}:`, err);
+          tournamentService.getMatches().catch(err => {
+            console.warn(`⚠️ Failed to fetch matches for current tournament:`, err);
             return [];
           }),
-          tournamentService.getTeams(tournamentId).catch(err => {
-            console.warn(`⚠️ Failed to fetch teams for tournament ${tournamentId}:`, err);
+          tournamentService.getTeams().catch(err => {
+            console.warn(`⚠️ Failed to fetch teams for current tournament:`, err);
             return [];
           }),
-          tournamentService.getStandings(tournamentId).catch(err => {
-            console.warn(`⚠️ Failed to fetch standings for tournament ${tournamentId}:`, err);
+          tournamentService.getStandings().catch(err => {
+            console.warn(`⚠️ Failed to fetch standings for current tournament:`, err);
             return [];
           }),
-          tournamentService.getTopScorers(tournamentId).catch(err => {
-            console.warn(`⚠️ Failed to fetch top scorers for tournament ${tournamentId}:`, err);
+          tournamentService.getTopScorers().catch(err => {
+            console.warn(`⚠️ Failed to fetch top scorers for current tournament:`, err);
             return [];
           })
         ]);
 
         const formattedMatches = matchesData.map(match => formatMatch(match, teamsData));
         const formattedStandings = standingsData.map(convertStandingSchemaToStanding);
-        const formattedTopScorers = topScorersData.map((scorer, index) => 
+        const formattedTopScorers = topScorersData.map((scorer) => 
           convertTopScorerSchemaToTopScorer(scorer, `Team ${scorer.id}`)
         );
         
@@ -137,7 +128,7 @@ export function useTournamentData(tournamentId: number = DEFAULT_TOURNAMENT_ID):
 
   useEffect(() => {
     fetchData();
-  }, [tournamentId]);
+  }, []);
 
   return {
     matches,

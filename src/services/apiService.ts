@@ -21,83 +21,144 @@ import type {
 // Tournament endpoints
 export const tournamentService = {
   async getAll(): Promise<Tournament[]> {
-    return api.get<Tournament[]>('/tournaments');
+    try {
+      console.log('🔥 tournamentService.getAll() called');
+      const result = await api.get<Tournament[]>('/tournaments');
+      console.log('🔥 tournamentService.getAll() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 tournamentService.getAll() failed:', error);
+      throw error;
+    }
   },
 
   async getById(id: number): Promise<Tournament> {
-    return api.get<Tournament>(`/tournaments/${id}`);
+    try {
+      console.log(`🔥 tournamentService.getById(${id}) called`);
+      const result = await api.get<Tournament>(`/tournaments/${id}`);
+      console.log(`🔥 tournamentService.getById(${id}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔥 tournamentService.getById(${id}) failed:`, error);
+      throw error;
+    }
+  },
+
+  async getCurrent(): Promise<Tournament> {
+    try {
+      console.log('🔥 tournamentService.getCurrent() called');
+      const result = await api.get<Tournament>('/tournament/current');
+      console.log('🔥 tournamentService.getCurrent() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 tournamentService.getCurrent() failed:', error);
+      throw error;
+    }
   },
 
   async getOpenForRegistration(): Promise<Tournament[]> {
     return api.get<Tournament[]>('/tournaments/open-for-registration');
   },
 
-  async getStandings(tournamentId: number): Promise<StandingSchema[]> {
-    return api.get<StandingSchema[]>(`/tournaments/${tournamentId}/standings`);
+  // New simplified endpoints that work with the current tournament
+  async getStandings(): Promise<StandingSchema[]> {
+    try {
+      console.log('🔥 tournamentService.getStandings() called');
+      const result = await api.get<StandingSchema[]>('/standings');
+      console.log('🔥 tournamentService.getStandings() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 tournamentService.getStandings() failed:', error);
+      throw error;
+    }
   },
 
-  async getMatches(tournamentId: number): Promise<ApiMatch[]> {
-    return api.get<ApiMatch[]>(`/tournaments/${tournamentId}/matches`);
+  async getMatches(): Promise<ApiMatch[]> {
+    try {
+      console.log('🔥 tournamentService.getMatches() called');
+      const result = await api.get<ApiMatch[]>('/matches');
+      console.log('🔥 tournamentService.getMatches() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 tournamentService.getMatches() failed:', error);
+      throw error;
+    }
   },
 
-  async getTeams(tournamentId: number): Promise<Team[]> {
-    return api.get<Team[]>(`/tournaments/${tournamentId}/teams`);
+  async getTeams(): Promise<Team[]> {
+    try {
+      console.log('🔥 tournamentService.getTeams() called');
+      const result = await api.get<Team[]>('/teams');
+      console.log('🔥 tournamentService.getTeams() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 tournamentService.getTeams() failed:', error);
+      throw error;
+    }
   },
 
-  async getTeam(tournamentId: number, teamId: number): Promise<Team> {
-    return api.get<Team>(`/tournaments/${tournamentId}/teams/${teamId}`);
+  async getTeam(teamId: number): Promise<Team> {
+    return api.get<Team>(`/teams/${teamId}`);
   },
 
-  async getTeamPlayers(tournamentId: number, teamId: number): Promise<Player[]> {
-    return api.get<Player[]>(`/tournaments/${tournamentId}/teams/${teamId}/players`);
+  async getTeamPlayers(teamId: number): Promise<Player[]> {
+    return api.get<Player[]>(`/teams/${teamId}/players`);
   },
 
-  async getTeamMatches(tournamentId: number, teamId: number): Promise<ApiMatch[]> {
-    return api.get<ApiMatch[]>(`/tournaments/${tournamentId}/teams/${teamId}/matches`);
+  async getTeamMatches(teamId: number): Promise<ApiMatch[]> {
+    return api.get<ApiMatch[]>(`/teams/${teamId}/matches`);
   },
 
-  async getTopScorers(tournamentId: number): Promise<TopScorerSchema[]> {
-    return api.get<TopScorerSchema[]>(`/tournaments/${tournamentId}/topscorers`);
+  async getTopScorers(): Promise<TopScorerSchema[]> {
+    try {
+      console.log('🔥 tournamentService.getTopScorers() called');
+      const result = await api.get<TopScorerSchema[]>('/topscorers');
+      console.log('🔥 tournamentService.getTopScorers() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 tournamentService.getTopScorers() failed:', error);
+      throw error;
+    }
   },
 
-  async getRounds(tournamentId: number): Promise<Round[]> {
-    return api.get<Round[]>(`/tournaments/${tournamentId}/rounds`);
+  async getRounds(): Promise<Round[]> {
+    return api.get<Round[]>('/rounds');
   },
 
-  async getRound(tournamentId: number, roundNumber: number): Promise<Round> {
-    return api.get<Round>(`/tournaments/${tournamentId}/rounds/${roundNumber}`);
+  async getRound(roundNumber: number): Promise<Round> {
+    return api.get<Round>(`/rounds/${roundNumber}`);
   },
 
-  async getRoundMatches(tournamentId: number, roundNumber: number): Promise<ApiMatch[]> {
-    return api.get<ApiMatch[]>(`/tournaments/${tournamentId}/rounds/${roundNumber}/matches`);
+  async getRoundMatches(roundNumber: number): Promise<ApiMatch[]> {
+    return api.get<ApiMatch[]>(`/rounds/${roundNumber}/matches`);
   },
 
-  async getGoals(tournamentId: number): Promise<EventSchema[]> {
-    return api.get<EventSchema[]>(`/tournaments/${tournamentId}/goals`);
+  async getGoals(): Promise<EventSchema[]> {
+    return api.get<EventSchema[]>('/goals');
   },
 
-  async getYellowCards(tournamentId: number): Promise<EventSchema[]> {
-    return api.get<EventSchema[]>(`/tournaments/${tournamentId}/yellow_cards`);
+  async getYellowCards(): Promise<EventSchema[]> {
+    return api.get<EventSchema[]>('/yellow_cards');
   },
 
-  async getRedCards(tournamentId: number): Promise<EventSchema[]> {
-    return api.get<EventSchema[]>(`/tournaments/${tournamentId}/red_cards`);
+  async getRedCards(): Promise<EventSchema[]> {
+    return api.get<EventSchema[]>('/red_cards');
   },
 
-  async getPlayers(tournamentId: number): Promise<Player[]> {
-    return api.get<Player[]>(`/tournaments/${tournamentId}/players`);
+  async getPlayers(): Promise<Player[]> {
+    return api.get<Player[]>('/players');
   },
 
-  async getPlayer(tournamentId: number, playerId: number): Promise<Player> {
-    return api.get<Player>(`/tournaments/${tournamentId}/players/${playerId}`);
+  async getPlayer(playerId: number): Promise<Player> {
+    return api.get<Player>(`/players/${playerId}`);
   },
 
-  async getPlayerEvents(tournamentId: number, playerId: number): Promise<AllEventsSchema> {
-    return api.get<AllEventsSchema>(`/tournaments/${tournamentId}/players/${playerId}/events`);
+  async getPlayerEvents(playerId: number): Promise<AllEventsSchema> {
+    return api.get<AllEventsSchema>(`/players/${playerId}/events`);
   },
 
-  async getTeamEvents(tournamentId: number, teamId: number): Promise<AllEventsSchema> {
-    return api.get<AllEventsSchema>(`/tournaments/${tournamentId}/teams/${teamId}/events`);
+  async getTeamEvents(teamId: number): Promise<AllEventsSchema> {
+    return api.get<AllEventsSchema>(`/teams/${teamId}/events`);
   }
 };
 

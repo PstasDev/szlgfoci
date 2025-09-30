@@ -13,14 +13,7 @@ import {
   Chip,
   Card,
   CardContent,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -30,8 +23,7 @@ import {
 } from '@mui/icons-material';
 import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
-import { useTournamentData } from '@/hooks/useTournamentData';
-import { useTournamentSelection } from '@/hooks/useTournamentContext';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { getClassColor } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
@@ -39,8 +31,7 @@ export default function PlayerPage() {
   const params = useParams();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
-  const { selectedTournamentId, setSelectedTournamentId, isReady } = useTournamentSelection();
-  const { topScorers, teams, matches, loading, error, refetch } = useTournamentData(selectedTournamentId || undefined);
+  const { topScorers, teams, matches, loading, error, refetch } = useTournamentContext();
 
   const playerId = parseInt(params.id as string);
   const player = topScorers.find(p => p.id === playerId);
@@ -53,12 +44,8 @@ export default function PlayerPage() {
     setMounted(true);
   }, []);
 
-  const handleSeasonChange = (season: string) => {
-    setSelectedTournamentId(parseInt(season));
-  };
-
-  // Don't render until mounted and tournament is ready
-  if (!mounted || !isReady || selectedTournamentId === null) {
+  // Don't render until mounted
+  if (!mounted) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
@@ -70,7 +57,7 @@ export default function PlayerPage() {
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
             <CircularProgress sx={{ color: '#42a5f5' }} />
@@ -85,7 +72,7 @@ export default function PlayerPage() {
     const errorInfo = getErrorInfo('players', error);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
@@ -101,7 +88,7 @@ export default function PlayerPage() {
     const errorInfo = getErrorInfo('player');
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
@@ -114,7 +101,7 @@ export default function PlayerPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+      <Header />
       
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={4}>
@@ -134,7 +121,7 @@ export default function PlayerPage() {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: getClassColor(playerTeam.name || ''),
+                  bgcolor: playerTeam?.className ? getClassColor(playerTeam.className) : 'grey.500',
                   fontSize: '2rem',
                   fontWeight: 'bold',
                 }}
@@ -146,18 +133,18 @@ export default function PlayerPage() {
                   {player.name}
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, mb: 2 }}>
-                  {playerTeam.name} ({playerTeam.className})
+                  {playerTeam.name || 'Unknown team'}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <Chip
                     icon={<TrophyIcon />}
-                    label={`#${player.position} góllövő`}
+                    label={`#${player.position} scorer`}
                     color={(player.position || 0) <= 3 ? 'success' : 'default'}
                     sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
                   />
                   <Chip
                     icon={<GoalIcon />}
-                    label={`${player.goals} gól`}
+                    label={`${player.goals} goals`}
                     sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
                   />
                 </Box>
@@ -171,7 +158,7 @@ export default function PlayerPage() {
                   {player.goals}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Gólok
+                  Goals
                 </Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
@@ -179,93 +166,32 @@ export default function PlayerPage() {
                   #{player.position}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Liga Pozíció
+                  League Position
                 </Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                  {playerTeam.played}
+                  {playerTeam?.played || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Csapat Meccsek
+                  Team Matches
                 </Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                  {playerTeam.points}
+                  {playerTeam?.points || 0}
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Csapat Pontok
+                  Team Points
                 </Typography>
               </Box>
             </Box>
           </Paper>
 
-          {/* Player Statistics */}
+          {/* Recent Team Matches */}
           <Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Játékos Statisztikák
-            </Typography>
-            
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead sx={{ backgroundColor: '#fafafa' }}>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 'bold' }}>Statisztika</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 'bold' }}>Érték</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>Gólok száma</TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        icon={<GoalIcon />}
-                        label={player.goals}
-                        color="success"
-                        size="small"
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Góllövőlista pozíció</TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-                        #{player.position}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Csapat</TableCell>
-                    <TableCell align="center">
-                      <Chip
-                        label={playerTeam.name}
-                        sx={{ 
-                          backgroundColor: getClassColor(playerTeam.name || ''),
-                          color: 'white',
-                          fontWeight: 'bold'
-                        }}
-                        onClick={() => router.push(`/csapatok/${playerTeam.id}`)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>Csapat pozíció</TableCell>
-                    <TableCell align="center">
-                      <Typography variant="body1">
-                        {playerTeam.position}. hely
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-
-          {/* Team Recent Matches */}
-          <Box>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Csapat Legutóbbi Meccsek ({teamMatches.length})
+              Recent Team Matches ({teamMatches.length})
             </Typography>
             
             <Stack spacing={2}>
@@ -296,7 +222,7 @@ export default function PlayerPage() {
                           </Typography>
                         )}
                         <Chip
-                          label={match.status === 'finished' ? 'Befejezett' : match.status === 'live' ? 'Élő' : 'Közelgő'}
+                          label={match.status === 'finished' ? 'Finished' : match.status === 'live' ? 'Live' : 'Upcoming'}
                           size="small"
                           color={match.status === 'finished' ? 'default' : match.status === 'live' ? 'success' : 'info'}
                         />
@@ -306,13 +232,6 @@ export default function PlayerPage() {
                 </Card>
               ))}
             </Stack>
-          </Box>
-
-          {/* Footer */}
-          <Box sx={{ textAlign: 'center', py: 4, mt: 4 }}>
-            <Typography variant="body2" color="text.secondary">
-              © 2024 SZLG - Labdarúgó Bajnokság
-            </Typography>
           </Box>
         </Stack>
       </Container>

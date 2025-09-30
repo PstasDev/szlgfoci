@@ -1,8 +1,8 @@
 // Utility functions for data processing and formatting
-import type { Team, Standing, ApiMatch, Match, TopScorer, LeagueSeason, MatchEvent, StandingSchema, TopScorerSchema } from '@/types/api';
+import type { Team, Standing, ApiMatch, Match, TopScorer, MatchEvent, StandingSchema, TopScorerSchema, Tournament } from '@/types/api';
 
 // Re-export types for convenience
-export type { Match, MatchEvent, Team, Standing, TopScorer, LeagueSeason } from '@/types/api';
+export type { Match, MatchEvent, Team, Standing, TopScorer, Tournament } from '@/types/api';
 
 // Class color coding system - optimized for dark mode with better contrast
 export const getClassColor = (className: string): string => {
@@ -293,8 +293,9 @@ export const selectMostRelevantTournament = (tournaments: any[]): any | null => 
   return tournaments[0];
 };
 
-// Default tournament ID - will be replaced by smart selection
-export const DEFAULT_TOURNAMENT_ID = 2; // Updated to match available tournament IDs
+// Default tournament ID is no longer used since we work with the current tournament
+// Keeping for backward compatibility but no longer needed
+export const DEFAULT_TOURNAMENT_ID = 1; // Deprecated - use getCurrentTournament() instead
 
 // Check if tournament has started
 export const hasTournamentStarted = (tournament: any): boolean => {

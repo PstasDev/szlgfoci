@@ -13,7 +13,6 @@ import {
   Chip,
   Card,
   CardContent,
-  Divider,
   Table,
   TableBody,
   TableCell,
@@ -21,7 +20,6 @@ import {
   TableHead,
   TableRow,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -30,8 +28,7 @@ import {
 } from '@mui/icons-material';
 import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
-import { useTournamentData } from '@/hooks/useTournamentData';
-import { useTournamentSelection } from '@/hooks/useTournamentContext';
+import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { getClassColor } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
@@ -39,9 +36,8 @@ export default function TeamPage() {
   const params = useParams();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
-  const { selectedTournamentId, setSelectedTournamentId, isReady } = useTournamentSelection();
   
-  const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentData(selectedTournamentId || undefined);
+  const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentContext();
   
   const teamId = parseInt(params.id as string);
   const team = teams.find(t => t.id === teamId);
@@ -55,12 +51,8 @@ export default function TeamPage() {
     setMounted(true);
   }, []);
 
-  const handleSeasonChange = (season: string) => {
-    setSelectedTournamentId(parseInt(season));
-  };
-
-  // Don't render until mounted and tournament is ready
-  if (!mounted || !isReady || selectedTournamentId === null) {
+  // Don't render until mounted
+  if (!mounted) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
@@ -72,7 +64,7 @@ export default function TeamPage() {
   if (loading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
           <CircularProgress size={60} />
           <Typography variant="h6" sx={{ mt: 2 }}>
@@ -88,7 +80,7 @@ export default function TeamPage() {
     const errorInfo = getErrorInfo('teams', error);
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8 }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
@@ -104,7 +96,7 @@ export default function TeamPage() {
     const errorInfo = getErrorInfo('team');
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+        <Header />
         <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
           <ErrorDisplay 
             errorInfo={errorInfo}
@@ -117,7 +109,7 @@ export default function TeamPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-      <Header selectedSeason={selectedTournamentId.toString()} onSeasonChange={handleSeasonChange} />
+      <Header />
       
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={4}>

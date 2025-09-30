@@ -1,56 +1,68 @@
 "use client";
 
 import React from "react";
-import { Box, Stack, Typography, Card, CardContent, Button, FormControl, InputLabel, Select, MenuItem, CircularProgress } from "@mui/material";
+import { Box, Stack, Typography, Card, CardContent, Button, Paper } from "@mui/material";
+import { BugReport as BugIcon } from "@mui/icons-material";
 import SimpleLayout from "../components/SimpleLayout";
 import LiveMatches from "../components/LiveMatches";
 import MatchesList from "../components/MatchesList";
 import LeagueTable from "../components/LeagueTable";
 import GoalScorersList from "../components/GoalScorersList";
-import ErrorDisplay from "../components/ErrorDisplay";
-import { useTournamentContext, useTournamentSelection } from "../hooks/useTournamentContext";
-import { useTournaments } from "../hooks/useTournaments";
+import { useTournamentContext } from "../hooks/useTournamentContext";
 import { hasTournamentStarted } from "../utils/dataUtils";
 
 export default function HomePage() {
   const { tournament, matches, loading, error } = useTournamentContext();
-  const { selectedTournament, selectedTournamentId, setSelectedTournamentId } = useTournamentSelection();
-  const { tournaments, loading: tournamentsLoading } = useTournaments();
+  const [debugInfo, setDebugInfo] = React.useState<Record<string, unknown> | null>(null);
+  const [showDebug, setShowDebug] = React.useState(false);
 
-  const displayTournament = tournament ?? selectedTournament ?? null;
-
-  const showPreTournament = (() => {
-    if (tournament) return !hasTournamentStarted(tournament);
-    if (selectedTournament) return !hasTournamentStarted(selectedTournament);
-    return false;
-  })();
-
-  const handleTournamentChange = (event: { target: { value: string } }) => {
-    const newTournamentId = parseInt(event.target.value);
-    console.log(`🔄 Homepage: User selected tournament ID: ${newTournamentId}`);
-    setSelectedTournamentId(newTournamentId);
-  };
-
-  const getSelectValue = () => {
-    if (tournamentsLoading || tournaments.length === 0) {
-      return '';
+  const fetchDebugInfo = async () => {
+    try {
+      console.log('🔍 Fetching debug info...');
+      const response = await fetch('/api/debug');
+      const data = await response.json();
+      console.log('🔍 Debug info:', data);
+      setDebugInfo(data);
+      setShowDebug(true);
+    } catch (err) {
+      console.error('🔍 Error fetching debug info:', err);
+      setDebugInfo({ error: 'Failed to fetch debug info' });
+      setShowDebug(true);
     }
-    const tournamentExists = selectedTournamentId !== null && tournaments.some(t => t.id === selectedTournamentId);
-    return tournamentExists ? selectedTournamentId.toString() : '';
   };
+
+  const showPreTournament = tournament ? !hasTournamentStarted(tournament) : false;
 
   if (error) {
     return (
       <SimpleLayout>
         <Box sx={{ p: 3 }}>
-          <Typography color="error">{error}</Typography>
+          <Stack spacing={2}>
+            <Typography color="error">{error}</Typography>
+            {debugInfo && showDebug && (
+              <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
+                <Typography variant="h6" gutterBottom>Debug Information:</Typography>
+                <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </Paper>
+            )}
+            <Button 
+              variant="outlined" 
+              startIcon={<BugIcon />}
+              onClick={fetchDebugInfo}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Show Debug Info
+            </Button>
+          </Stack>
         </Box>
       </SimpleLayout>
     );
   }
 
-  if (showPreTournament && displayTournament) {
-    const registrationLink = (displayTournament as any).registration_by_link;
+  if (showPreTournament && tournament) {
+    const registrationLink = tournament.registration_by_link;
 
     return (
       <SimpleLayout>
@@ -58,7 +70,7 @@ export default function HomePage() {
           <Card>
             <CardContent>
               <Stack spacing={2}>
-                <Typography variant="h5">{displayTournament.name}</Typography>
+                <Typography variant="h5">{tournament.name}</Typography>
                 <Typography color="text.secondary">
                   This tournament has not started yet. Check back later for schedules and
                   live results.
@@ -82,7 +94,7 @@ export default function HomePage() {
     );
   }
 
-  if (loading && !displayTournament) {
+  if (loading) {
     return (
       <SimpleLayout>
         <Box sx={{ p: 3 }}>
@@ -95,62 +107,16 @@ export default function HomePage() {
   return (
     <SimpleLayout>
       <Box sx={{ p: 3 }}>
-        {/* Tournament Selector */}
-        <Box sx={{ mb: 3 }}>
-          <FormControl 
-            size="small" 
-            sx={{ 
-              minWidth: 300,
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'rgba(255,255,255,0.1)',
-                '& fieldset': { borderColor: 'divider' },
-                '&:hover fieldset': { borderColor: 'text.secondary' },
-                '&.Mui-focused fieldset': { borderColor: 'primary.main' },
-              },
-              '& .MuiInputLabel-root': { 
-                color: 'text.secondary',
-              },
-              '& .MuiSelect-select': { 
-                color: 'text.primary',
-              },
-              '& .MuiSvgIcon-root': { color: 'text.secondary' },
-            }}
-          >
-            <InputLabel>Válassz Bajnokságot</InputLabel>
-            <Select
-              value={getSelectValue()}
-              label="Válassz Bajnokságot"
-              onChange={handleTournamentChange}
-              disabled={tournamentsLoading}
-            >
-              {tournamentsLoading ? (
-                <MenuItem disabled>
-                  <CircularProgress size={16} sx={{ mr: 1 }} />
-                  Betöltés...
-                </MenuItem>
-              ) : tournaments.length > 0 ? (
-                tournaments.map((tournament) => (
-                  <MenuItem key={tournament.id} value={tournament.id?.toString() || ''}>
-                    {tournament.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>Nincsenek elérhető bajnokságok</MenuItem>
-              )}
-            </Select>
-          </FormControl>
-        </Box>
-
-        {displayTournament ? (
+        {tournament ? (
           <Stack spacing={3}>
-            <Typography variant="h4">{displayTournament.name}</Typography>
+            <Typography variant="h4">{tournament.name}</Typography>
             <LiveMatches />
             <MatchesList matches={matches ?? []} />
             <LeagueTable />
             <GoalScorersList />
           </Stack>
         ) : (
-          <Typography>Select a tournament to view details.</Typography>
+          <Typography>No current tournament available.</Typography>
         )}
       </Box>
     </SimpleLayout>
