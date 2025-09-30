@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
+// Common Django development server URLs to try
 const DJANGO_API_BASE = process.env.DJANGO_API_BASE || (isDevelopment 
-  ? 'http://localhost:8000/api' 
+  ? (process.env.DJANGO_LOCAL_URL || 'http://localhost:8000/api')
   : 'https://fociapi.szlg.info/api');
 
 export async function GET() {
   try {
     console.log('📢 Fetching active announcements from backend...');
+    console.log('📢 NODE_ENV:', process.env.NODE_ENV);
+    console.log('📢 isDevelopment:', isDevelopment);
     console.log('📢 DJANGO_API_BASE:', DJANGO_API_BASE);
     console.log('📢 Full URL:', `${DJANGO_API_BASE}/kozlemenyek/active`);
     

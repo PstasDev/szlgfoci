@@ -176,13 +176,13 @@ export default function HomePage() {
               </motion.div>
 
               {/* Statistics Charts */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <StatisticsCharts />
-              </motion.div>
+              </motion.div> */}
               
               {/* Matches List */}
               <motion.div
