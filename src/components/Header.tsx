@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   AppBar,
   Toolbar,
@@ -15,27 +16,23 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Sports as SportsIcon,
-  EmojiEvents as TrophyIcon,
   People as PeopleIcon,
-  Schedule as ScheduleIcon,
   Home as HomeIcon,
   SportsScore as ScoreIcon,
 } from '@mui/icons-material';
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface HeaderProps {
-  // Removed selectedSeason and onSeasonChange props since dropdown is moving to homepage
+  // Empty interface for future extensibility
 }
 
 const Header: React.FC<HeaderProps> = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [showLogo, setShowLogo] = React.useState(true);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -50,14 +47,30 @@ const Header: React.FC<HeaderProps> = () => {
 
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', height: '100%' }}>
-      <Typography variant="h6" sx={{ 
+      <Box sx={{ 
         my: 3, 
         color: 'primary.main', 
         fontWeight: 'bold',
-        px: 2
+        px: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1
       }}>
-        ⚽ SZLG FOCI
-      </Typography>
+        {showLogo && (
+          <Image 
+            src="/favicon.svg" 
+            alt="" 
+            width={24} 
+            height={24}
+            style={{ flexShrink: 0 }}
+            onError={() => setShowLogo(false)}
+          />
+        )}
+        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+          SZLG FOCI
+        </Typography>
+      </Box>
       
       <List sx={{ px: 1 }}>
         {menuItems.map((item) => (
@@ -129,7 +142,17 @@ const Header: React.FC<HeaderProps> = () => {
               fontSize: { xs: '1.2rem', sm: '1.5rem' }
             }}
           >
-            ⚽ SZLG FOCI
+            {showLogo && (
+              <Image 
+                src="/favicon.svg" 
+                alt="" 
+                width={28} 
+                height={28}
+                style={{ flexShrink: 0 }}
+                onError={() => setShowLogo(false)}
+              />
+            )}
+            SZLG FOCI
             <Typography 
               variant="caption" 
               sx={{ 
