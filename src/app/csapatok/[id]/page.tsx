@@ -29,26 +29,66 @@ import {
 import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { tournamentService } from '@/services/apiService';
 import { getClassColor, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import EmptyDataDisplay from '@/components/EmptyDataDisplay';
+import type { Team } from '@/types/api';
 
 export default function TeamPage() {
   const params = useParams();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
+  const [fallbackTeams, setFallbackTeams] = React.useState<Team[]>([]);
+  const [fallbackLoading, setFallbackLoading] = React.useState(false);
   
   const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentContext();
   
   const teamId = parseInt(params.id as string);
-  const team = teams.find(t => t.id === teamId);
+  
+  // Use teams from context or fallback teams
+  const allTeams = teams.length > 0 ? teams : fallbackTeams;
+  const team = allTeams.find(t => t.id === teamId);
+  
   const standing = standings.find(s => s.team_id === teamId);
   const teamDisplayName = team ? getTeamDisplayName(team) : '';
-  const teamClassName = team ? getTeamClassName(team) : '';
   const teamMatches = matches.filter(match => 
     match.homeTeam === teamDisplayName || match.awayTeam === teamDisplayName
   );
   const teamPlayers = topScorers.filter(player => player.team_name === teamDisplayName);
+  
+  // Get actual team players from the team data
+  const actualTeamPlayers = team?.players || [];
+
+  // Fallback: If no teams are loaded (e.g., tournament hasn't started), load teams directly
+  React.useEffect(() => {
+    if (mounted && !loading && teams.length === 0 && fallbackTeams.length === 0 && !fallbackLoading) {
+      setFallbackLoading(true);
+      
+      tournamentService.getTeams()
+        .then((teamsData) => {
+          setFallbackTeams(teamsData);
+        })
+        .catch((err) => {
+          console.error('Failed to load teams directly:', err);
+          // If loading all teams fails, try to load the specific team
+          return tournamentService.getTeam(teamId);
+        })
+        .then((teamData) => {
+          if (teamData && !Array.isArray(teamData)) {
+            // Single team returned, add it to the fallback teams array
+            setFallbackTeams([teamData]);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load specific team:', err);
+          // Don't set error, just continue without teams data
+        })
+        .finally(() => {
+          setFallbackLoading(false);
+        });
+    }
+  }, [teamId, mounted, loading, teams.length, fallbackTeams.length, fallbackLoading]);
 
   React.useEffect(() => {
     setMounted(true);
@@ -63,8 +103,8 @@ export default function TeamPage() {
     );
   }
 
-  // Show loading state
-  if (loading) {
+  // Show loading state (either main loading or fallback loading)
+  if (loading || fallbackLoading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
@@ -79,7 +119,7 @@ export default function TeamPage() {
   }
 
   // Show error state - handle empty data scenario vs actual errors
-  if (isEmptyDataScenario(error ? new Error(error) : null, teams) && !loading) {
+  if (isEmptyDataScenario(error ? new Error(error) : null, allTeams) && !loading && !fallbackLoading) {
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
@@ -95,7 +135,7 @@ export default function TeamPage() {
   }
 
   // Handle actual errors
-  if (error && !loading) {
+  if (error && !loading && !fallbackLoading) {
     const errorInfo = getErrorInfo('teams', new Error(error));
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
@@ -112,15 +152,35 @@ export default function TeamPage() {
   }
 
   if (!team) {
-    const errorInfo = getErrorInfo('team');
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
-        <Container maxWidth="lg" sx={{ py: 8, textAlign: 'center' }}>
-          <ErrorDisplay 
-            errorInfo={errorInfo}
-            fullPage
-          />
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <Stack spacing={4} alignItems="center">
+            <Button
+              startIcon={<BackIcon />}
+              onClick={() => router.push('/csapatok')}
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Vissza a csapatokhoz
+            </Button>
+            
+            <Paper sx={{ p: 6, textAlign: 'center', maxWidth: 600 }}>
+              <Typography variant="h4" color="text.primary" sx={{ mb: 2, fontWeight: 'bold' }}>
+                Csapat nem található
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                A {teamId}. számú csapat nem létezik, vagy még nem érhető el nyilvánosan.
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => router.push('/csapatok')}
+                sx={{ mt: 2 }}
+              >
+                Vissza a csapatokhoz
+              </Button>
+            </Paper>
+          </Stack>
         </Container>
       </Box>
     );
@@ -163,16 +223,26 @@ export default function TeamPage() {
                   {team ? `${team.start_year}. évfolyam ${team.tagozat} tagozat` : 'Ismeretlen osztály'}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <Chip
-                    icon={<TrophyIcon />}
-                    label={`${standing?.position || '?'}. hely`}
-                    color={(standing?.position || 0) <= 3 ? 'success' : 'default'}
-                    sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
-                  />
-                  <Chip
-                    label={`${standing?.points || 0} pont`}
-                    sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
-                  />
+                  {standing && (
+                    <>
+                      <Chip
+                        icon={<TrophyIcon />}
+                        label={`${standing.position || '?'}. hely`}
+                        color={(standing.position || 0) <= 3 ? 'success' : 'default'}
+                        sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
+                      />
+                      <Chip
+                        label={`${standing.points || 0} pont`}
+                        sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
+                      />
+                    </>
+                  )}
+                  {!standing && (
+                    <Chip
+                      label="Még nincs rangsor adat"
+                      sx={{ color: 'white', backgroundColor: 'rgba(255,255,255,0.2)' }}
+                    />
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -239,10 +309,94 @@ export default function TeamPage() {
           {/* Team Players */}
           <Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Csapat Játékosai ({teamPlayers.length})
+              Csapat Játékosai ({actualTeamPlayers.length})
             </Typography>
             
-            {teamPlayers.length > 0 ? (
+            {actualTeamPlayers.length > 0 ? (
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead sx={{ backgroundColor: '#fafafa' }}>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Játékos</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Szerepkör</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 'bold' }}>Gólok</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {actualTeamPlayers.map((player) => {
+                      // Find goal data for this player
+                      const goalData = teamPlayers.find(scorer => 
+                        scorer.player_name === player.name || scorer.player_id === player.id
+                      );
+                      
+                      return (
+                        <TableRow 
+                          key={player.id}
+                          sx={{ 
+                            '&:hover': { backgroundColor: '#f0f0f0' },
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => router.push(`/jatekosok/${player.id}`)}
+                        >
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                {player.name}
+                              </Typography>
+                              {player.csk && (
+                                <Chip 
+                                  label="Kapitány" 
+                                  size="small" 
+                                  color="primary"
+                                  sx={{ fontSize: '0.7rem', height: '20px' }}
+                                />
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" color="text.secondary">
+                              {player.csk ? 'Csapatkapitány' : 'Játékos'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            {goalData ? (
+                              <Chip
+                                icon={<GoalIcon />}
+                                label={goalData.goals}
+                                size="small"
+                                color={goalData.goals >= 5 ? 'success' : 'default'}
+                              />
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">
+                                0
+                              </Typography>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  Még nincsenek regisztrált játékosok
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  A csapat játékosai itt jelennek majd meg, amikor befejeződik a regisztráció.
+                </Typography>
+              </Paper>
+            )}
+          </Box>
+
+          {/* Top Goal Scorers from Team */}
+          {teamPlayers.length > 0 && (
+            <Box>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
+                Góllövők ({teamPlayers.length})
+              </Typography>
+              
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead sx={{ backgroundColor: '#fafafa' }}>
@@ -253,91 +407,98 @@ export default function TeamPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {teamPlayers.map((player) => (
-                      <TableRow 
-                        key={player.id}
-                        sx={{ 
-                          '&:hover': { backgroundColor: '#f0f0f0' },
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => router.push(`/jatekosok/${player.id}`)}
-                      >
-                        <TableCell>
-                          <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                            {player.name}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          <Chip
-                            icon={<GoalIcon />}
-                            label={player.goals}
-                            size="small"
-                            color={player.goals >= 5 ? 'success' : 'default'}
-                          />
-                        </TableCell>
-                        <TableCell align="center">
-                          <Typography variant="body2" color="text.secondary">
-                            #{player.position}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {teamPlayers
+                      .sort((a, b) => b.goals - a.goals) // Sort by goals descending
+                      .map((player) => (
+                        <TableRow 
+                          key={player.id}
+                          sx={{ 
+                            '&:hover': { backgroundColor: '#f0f0f0' },
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => router.push(`/jatekosok/${player.id}`)}
+                        >
+                          <TableCell>
+                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                              {player.name}
+                            </Typography>
+                          </TableCell>
+                          <TableCell align="center">
+                            <Chip
+                              icon={<GoalIcon />}
+                              label={player.goals}
+                              size="small"
+                              color={player.goals >= 5 ? 'success' : player.goals >= 3 ? 'warning' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            <Typography variant="body2" color="text.secondary">
+                              #{player.position}
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </TableContainer>
-            ) : (
-              <Paper sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h6" color="text.secondary">
-                  Nincs regisztrált góllövő játékos
-                </Typography>
-              </Paper>
-            )}
-          </Box>
+            </Box>
+          )}
 
           {/* Recent Matches */}
           <Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
-              Legutóbbi Meccsek ({teamMatches.length})
+              Meccsek ({teamMatches.length})
             </Typography>
             
-            <Stack spacing={2}>
-              {teamMatches.slice(0, 5).map((match) => (
-                <Card 
-                  key={match.id}
-                  sx={{ 
-                    cursor: 'pointer',
-                    '&:hover': { boxShadow: 4, transform: 'translateY(-1px)' },
-                    transition: 'all 0.2s ease'
-                  }}
-                  onClick={() => router.push(`/merkozesek/${match.id}`)}
-                >
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          {match.date}
-                        </Typography>
-                        <Typography variant="h6">
-                          {match.homeTeam} vs {match.awayTeam}
-                        </Typography>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        {match.status === 'finished' && (
-                          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                            {match.homeScore} - {match.awayScore}
+            {teamMatches.length > 0 ? (
+              <Stack spacing={2}>
+                {teamMatches.slice(0, 5).map((match) => (
+                  <Card 
+                    key={match.id}
+                    sx={{ 
+                      cursor: 'pointer',
+                      '&:hover': { boxShadow: 4, transform: 'translateY(-1px)' },
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={() => router.push(`/merkozesek/${match.id}`)}
+                  >
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Typography variant="body2" color="text.secondary">
+                            {match.date}
                           </Typography>
-                        )}
-                        <Chip
-                          label={match.status === 'finished' ? 'Befejezett' : match.status === 'live' ? 'Élő' : 'Közelgő'}
-                          size="small"
-                          color={match.status === 'finished' ? 'default' : match.status === 'live' ? 'success' : 'info'}
-                        />
+                          <Typography variant="h6">
+                            {match.homeTeam} vs {match.awayTeam}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {match.status === 'finished' && (
+                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                              {match.homeScore} - {match.awayScore}
+                            </Typography>
+                          )}
+                          <Chip
+                            label={match.status === 'finished' ? 'Befejezett' : match.status === 'live' ? 'Élő' : 'Közelgő'}
+                            size="small"
+                            color={match.status === 'finished' ? 'default' : match.status === 'live' ? 'success' : 'info'}
+                          />
+                        </Box>
                       </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </Stack>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Stack>
+            ) : (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  Még nincsenek meccsek meghirdetve
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  A csapat meccsei itt jelennek majd meg, amikor elkezd működni a bajnokság.
+                </Typography>
+              </Paper>
+            )}
           </Box>
 
           {/* Footer */}
