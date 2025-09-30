@@ -25,7 +25,7 @@ import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { tournamentService } from '@/services/apiService';
-import { getClassColor, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
+import { getTeamColor, getTeamDisplayName } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import type { Team } from '@/types/api';
 
@@ -197,7 +197,7 @@ export default function PlayerPage() {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: playerTeam ? getClassColor(getTeamClassName(playerTeam)) : 'grey.500',
+                  bgcolor: getTeamColor(playerTeam),
                   fontSize: '2rem',
                   fontWeight: 'bold',
                 }}

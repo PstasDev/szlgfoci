@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 import Header from '@/components/Header';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
-import { getClassColor, hasTournamentStarted, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
+import { getTeamColor, hasTournamentStarted, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
 
 function CsapatokContent() {
   const router = useRouter();
@@ -238,7 +238,7 @@ function CsapatokContent() {
                   key={team.id}
                   sx={{ 
                     height: '100%',
-                    border: `3px solid ${getClassColor(teamClassName)}`,
+                    border: `3px solid ${getTeamColor(team)}`,
                     backgroundColor: 'background.paper',
                     cursor: 'pointer',
                     borderRadius: 3,
@@ -255,7 +255,7 @@ function CsapatokContent() {
                   {/* Team Header with Class Color */}
                   <Box 
                     sx={{ 
-                      background: `linear-gradient(135deg, ${getClassColor(teamClassName)} 0%, ${getClassColor(teamClassName)}dd 100%)`,
+                      background: `linear-gradient(135deg, ${getTeamColor(team)} 0%, ${getTeamColor(team)}dd 100%)`,
                       color: 'white',
                       p: 3,
                       position: 'relative'
@@ -368,7 +368,7 @@ function CsapatokContent() {
                         
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
                           <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: getClassColor(teamClassName) }}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: getTeamColor(team) }}>
                               {teamStats.points}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
@@ -402,7 +402,7 @@ function CsapatokContent() {
                             borderRadius: 1,
                             backgroundColor: 'grey.200',
                             '& .MuiLinearProgress-bar': {
-                              backgroundColor: getClassColor(teamClassName)
+                              backgroundColor: getTeamColor(team)
                             }
                           }}
                         />
@@ -441,12 +441,12 @@ function CsapatokContent() {
                         router.push(`/csapatok/${team.id}`);
                       }}
                       sx={{ 
-                        backgroundColor: getClassColor(teamClassName),
+                        backgroundColor: getTeamColor(team),
                         color: 'white',
                         fontWeight: 'bold',
                         py: 1.5,
                         '&:hover': {
-                          backgroundColor: getClassColor(teamClassName),
+                          backgroundColor: getTeamColor(team),
                           filter: 'brightness(0.9)'
                         }
                       }}

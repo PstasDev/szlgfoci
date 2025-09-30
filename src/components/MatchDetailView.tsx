@@ -20,7 +20,7 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getClassColor, MatchEvent } from '@/utils/dataUtils';
+import { Match, getTeamColor, getClassColor, MatchEvent } from '@/utils/dataUtils';
 import LiveMatchTimer from './LiveMatchTimer';
 
 interface MatchDetailViewProps {
@@ -28,21 +28,24 @@ interface MatchDetailViewProps {
 }
 
 const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
-  // Create team objects from available match data since we don't have standings array
-  const homeTeam = {
-    id: match.homeTeamId,
-    className: match.homeTeam,
-    name: match.homeTeam
-  };
-  const awayTeam = {
-    id: match.awayTeamId,
-    className: match.awayTeam,
-    name: match.awayTeam
-  };
+  // Use team objects from match data (includes colors from backend)
+  const homeTeam = match.homeTeamObj;
+  const awayTeam = match.awayTeamObj;
 
   // Helper function to get event type consistently
   const getEventType = (event: MatchEvent): string => {
     return event.type || event.event_type;
+  };
+
+  // Helper function to get team avatar letter
+  const getTeamAvatarLetter = (team: typeof homeTeam, isHome: boolean): string => {
+    if (team?.tagozat) {
+      return team.tagozat.charAt(0);
+    }
+    if (team?.name) {
+      return team.name.charAt(0);
+    }
+    return isHome ? 'H' : 'A';
   };
 
   const getEventIcon = (eventType: string) => {
@@ -175,14 +178,14 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                 sx={{
                   width: 56,
                   height: 56,
-                  bgcolor: homeTeam ? getClassColor(homeTeam.className) : '#9aa0a6',
+                  bgcolor: getTeamColor(homeTeam),
                   color: 'white',
                   fontWeight: 'bold',
                   fontSize: '1.2rem',
                   border: '3px solid rgba(255,255,255,0.1)'
                 }}
               >
-                {homeTeam?.className.split(' ')[1] || 'H'}
+                {homeTeam?.tagozat?.charAt(0) || homeTeam?.name?.charAt(0) || 'H'}
               </Avatar>
               <Box>
                 <Typography variant="h5" sx={{ 
@@ -259,14 +262,14 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                 sx={{
                   width: 56,
                   height: 56,
-                  bgcolor: awayTeam ? getClassColor(awayTeam.className) : '#9aa0a6',
+                  bgcolor: getTeamColor(awayTeam),
                   color: 'white',
                   fontWeight: 'bold',
                   fontSize: '1.2rem',
                   border: '3px solid rgba(255,255,255,0.1)'
                 }}
               >
-                {awayTeam?.className.split(' ')[1] || 'A'}
+                {awayTeam?.tagozat?.charAt(0) || awayTeam?.name?.charAt(0) || 'A'}
               </Avatar>
             </Box>
           </Box>
@@ -341,8 +344,8 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
               {sortedEvents.map((event, index) => {
                 const isHomeTeam = event.team === 'home';
                 const teamColor = isHomeTeam 
-                  ? (homeTeam ? getClassColor(homeTeam.className) : '#4285f4')
-                  : (awayTeam ? getClassColor(awayTeam.className) : '#ea4335');
+                  ? getTeamColor(homeTeam)
+                  : getTeamColor(awayTeam);
 
                 return (
                   <Box 
@@ -435,7 +438,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             bgcolor: teamColor,
                             fontWeight: 'bold'
                           }}>
-                            {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
+                            {getTeamAvatarLetter(isHomeTeam ? homeTeam : awayTeam, isHomeTeam)}
                           </Avatar>
                           <Box>
                             <Typography variant="body1" sx={{ fontWeight: 600 }}>
@@ -531,7 +534,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             BE
                           </Typography>
                           <Avatar sx={{ width: 40, height: 40, bgcolor: teamColor, color: 'white', fontWeight: 'bold' }}>
-                            {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
+                            {getTeamAvatarLetter(isHomeTeam ? homeTeam : awayTeam, isHomeTeam)}
                           </Avatar>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 600 }}>
@@ -575,7 +578,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             LE
                           </Typography>
                           <Avatar sx={{ width: 40, height: 40, bgcolor: teamColor, color: 'white', fontWeight: 'bold' }}>
-                            {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
+                            {getTeamAvatarLetter(isHomeTeam ? homeTeam : awayTeam, isHomeTeam)}
                           </Avatar>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 600 }}>
@@ -641,7 +644,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             color: 'white',
                             fontWeight: 'bold'
                           }}>
-                            {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
+                            {getTeamAvatarLetter(isHomeTeam ? homeTeam : awayTeam, isHomeTeam)}
                           </Avatar>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="h6" sx={{ color: '#e8eaed', fontWeight: 600 }}>
@@ -707,7 +710,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                             color: 'white',
                             fontWeight: 'bold'
                           }}>
-                            {isHomeTeam ? homeTeam?.className.split(' ')[1] || 'H' : awayTeam?.className.split(' ')[1] || 'A'}
+                            {getTeamAvatarLetter(isHomeTeam ? homeTeam : awayTeam, isHomeTeam)}
                           </Avatar>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="h6" sx={{ color: '#e8eaed', fontWeight: 600 }}>
@@ -821,7 +824,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2" sx={{ 
                   fontWeight: 'bold', 
-                  color: homeTeam ? getClassColor(homeTeam.className) : '#4285f4',
+                  color: getTeamColor(homeTeam),
                   mb: 1
                 }}>
                   {match.events.filter(e => e.type === 'goal' && e.team === 'home').length}
@@ -846,7 +849,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h2" sx={{ 
                   fontWeight: 'bold', 
-                  color: awayTeam ? getClassColor(awayTeam.className) : '#ea4335',
+                  color: getTeamColor(awayTeam),
                   mb: 1
                 }}>
                   {match.events.filter(e => e.type === 'goal' && e.team === 'away').length}

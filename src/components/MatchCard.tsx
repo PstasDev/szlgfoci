@@ -16,7 +16,7 @@ import {
   LocationOn as LocationIcon,
   SportsSoccer as SoccerIcon,
 } from '@mui/icons-material';
-import { Match, getClassColor } from '@/utils/dataUtils';
+import { Match, getTeamColor } from '@/utils/dataUtils';
 
 interface MatchCardProps {
   match: Match;
@@ -156,7 +156,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: getClassColor(match.homeTeam),
+                  bgcolor: getTeamColor(match.homeTeamObj),
                   fontSize: '0.8rem',
                   fontWeight: 'bold',
                 }}
@@ -172,7 +172,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: getClassColor(match.awayTeam),
+                  bgcolor: getTeamColor(match.awayTeamObj),
                   fontSize: '0.8rem',
                   fontWeight: 'bold',
                 }}
@@ -356,7 +356,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               sx={{
                 width: 56,
                 height: 56,
-                bgcolor: getClassColor(match.homeTeam),
+                bgcolor: getTeamColor(match.homeTeamObj),
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 border: '2px solid rgba(255,255,255,0.1)'
@@ -438,7 +438,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               sx={{
                 width: 56,
                 height: 56,
-                bgcolor: getClassColor(match.awayTeam),
+                bgcolor: getTeamColor(match.awayTeamObj),
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 border: '2px solid rgba(255,255,255,0.1)'

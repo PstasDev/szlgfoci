@@ -4,8 +4,33 @@ import type { Team, Standing, ApiMatch, Match, TopScorer, MatchEvent, StandingSc
 // Re-export types for convenience
 export type { Match, MatchEvent, Team, Standing, TopScorer, Tournament } from '@/types/api';
 
-// Class color coding system - optimized for dark mode with better contrast
+// Get team color from the team object (backend provides the color)
+export const getTeamColor = (team: Team | null | undefined): string => {
+  if (team?.color) {
+    return team.color;
+  }
+  // Fallback color if team or color is not available
+  return '#42a5f5'; // Default blue
+};
+
+// Get team color with transparency for backgrounds
+export const getTeamColorLight = (team: Team | null | undefined): string => {
+  if (team?.color) {
+    // Extract RGB from hex color and add transparency
+    const hex = team.color.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return `rgba(${r}, ${g}, ${b}, 0.15)`;
+  }
+  // Fallback color with transparency
+  return 'rgba(66, 165, 245, 0.15)'; // Default blue with transparency
+};
+
+// DEPRECATED: Class color coding system - use getTeamColor instead
+// These functions are kept for backward compatibility but should not be used
 export const getClassColor = (className: string): string => {
+  console.warn('getClassColor is deprecated. Use getTeamColor with team object instead.');
   const classLetter = className?.split(' ')[1] || className?.charAt(className.length - 1); // Gets the letter part (A, B, C, etc.)
   
   switch (classLetter) {
@@ -20,6 +45,7 @@ export const getClassColor = (className: string): string => {
 };
 
 export const getClassColorLight = (className: string): string => {
+  console.warn('getClassColorLight is deprecated. Use getTeamColorLight with team object instead.');
   const classLetter = className?.split(' ')[1] || className?.charAt(className.length - 1);
   
   // Return darker variants for light backgrounds/accents in dark mode
@@ -110,7 +136,10 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     status: getMatchStatus(match),
     time: formatTime(match.datetime) || '00:00',
     round: `${match.round_obj?.number || 1}. forduló`,
-    events: []
+    events: [],
+    // Include full team objects for accessing colors and other data
+    homeTeamObj: homeTeam,
+    awayTeamObj: awayTeam
   };
 };
 
@@ -208,6 +237,7 @@ export const convertStandingToTeam = (standing: Standing, index: number): Team =
     id: standing.team_id,
     start_year: new Date().getFullYear(), // Default to current year
     tagozat: standing.team_name,
+    color: '#42a5f5', // Default color, should be provided by backend
     name: standing.team_name,
     className: standing.team_name,
     position: index + 1,

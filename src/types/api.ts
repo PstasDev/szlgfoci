@@ -14,6 +14,7 @@ export interface Team {
   id?: number | null;
   start_year: number;
   tagozat: string;
+  color: string; // Team color from backend (e.g., "#5c6bc0")
   registration_time?: string | null;
   active?: boolean;
   tournament?: Tournament | null;
@@ -82,6 +83,9 @@ export interface Match {
   round: string;
   status: 'upcoming' | 'live' | 'finished';
   events: MatchEvent[];
+  // Team objects with full data including colors
+  homeTeamObj?: Team | null;
+  awayTeamObj?: Team | null;
 }
 
 export interface EventSchema {

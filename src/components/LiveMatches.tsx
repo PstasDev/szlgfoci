@@ -17,7 +17,7 @@ import {
   Schedule as ClockIcon,
   Rectangle as CardIcon,
 } from '@mui/icons-material';
-import { getClassColor, Match, MatchEvent } from '@/utils/dataUtils';
+import { getTeamColor, Match, MatchEvent } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { useMatchesByStatus } from '@/hooks/useMatchesByStatus';
@@ -119,7 +119,7 @@ const LiveMatches: React.FC = () => {
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: getClassColor(match.homeTeam),
+                bgcolor: getTeamColor(match.homeTeamObj),
                 fontSize: '0.8rem',
                 fontWeight: 'bold',
                 color: 'white'
@@ -177,7 +177,7 @@ const LiveMatches: React.FC = () => {
               sx={{
                 width: 32,
                 height: 32,
-                bgcolor: getClassColor(match.awayTeam),
+                bgcolor: getTeamColor(match.awayTeamObj),
                 fontSize: '0.8rem',
                 fontWeight: 'bold',
                 color: 'white'

@@ -104,6 +104,9 @@ export function useTournamentData(): UseTournamentDataReturn {
           })
         ]);
 
+        console.log('🔍 Teams data received:', teamsData);
+        console.log('🔍 First team structure:', teamsData[0]);
+
         const formattedMatches = matchesData.map(match => formatMatch(match, teamsData));
         const formattedStandings = standingsData.map(convertStandingSchemaToStanding);
         const formattedTopScorers = topScorersData.map((scorer) => 

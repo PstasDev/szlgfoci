@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
         {showLogo && (
           <Image 
             src="/favicon.svg" 
-            alt="" 
+            alt="Focikupa logo" 
             width={24} 
             height={24}
             style={{ flexShrink: 0 }}
@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
           />
         )}
         <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-          SZLG FOCI
+          Focikupa
         </Typography>
       </Box>
       
@@ -145,25 +145,14 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
             {showLogo && (
               <Image 
                 src="/favicon.svg" 
-                alt="" 
+                alt="Focikupa logo" 
                 width={28} 
                 height={28}
                 style={{ flexShrink: 0 }}
                 onError={() => setShowLogo(false)}
               />
             )}
-            SZLG FOCI
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                opacity: 0.7, 
-                fontSize: { xs: '0.6rem', sm: '0.7rem' },
-                display: { xs: 'none', sm: 'block' },
-                color: 'text.secondary',
-              }}
-            >
-              Labdarúgó Bajnokság
-            </Typography>
+            Focikupa
           </Typography>
           
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5 }}>

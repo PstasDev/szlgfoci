@@ -30,7 +30,7 @@ import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { tournamentService } from '@/services/apiService';
-import { getClassColor, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
+import { getTeamColor, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import EmptyDataDisplay from '@/components/EmptyDataDisplay';
 import type { Team } from '@/types/api';
@@ -206,7 +206,7 @@ export default function TeamPage() {
             elevation={2} 
             sx={{ 
               p: 4, 
-              background: `linear-gradient(135deg, ${team ? getClassColor(getTeamClassName(team)) : '#4285f4'} 0%, rgba(0,0,0,0.7) 100%)`,
+              background: `linear-gradient(135deg, ${getTeamColor(team)} 0%, rgba(0,0,0,0.7) 100%)`,
               color: 'white',
               position: 'relative',
               '&::before': {
@@ -231,7 +231,7 @@ export default function TeamPage() {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: team ? getClassColor(getTeamClassName(team)) : 'grey.500',
+                  bgcolor: getTeamColor(team),
                   fontSize: '2rem',
                   fontWeight: 'bold',
                 }}
