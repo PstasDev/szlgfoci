@@ -22,7 +22,7 @@ import {
 import { Search as SearchIcon, EmojiEvents } from '@mui/icons-material';
 import SimpleLayout from '@/components/SimpleLayout';
 import ErrorDisplay from '@/components/ErrorDisplay';
-import { getClassColor, hasTournamentStarted, getTournamentStatusMessage } from '@/utils/dataUtils';
+import { getClassColor, hasTournamentStarted } from '@/utils/dataUtils';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { convertTopScorerToPlayer } from '@/utils/dataUtils';
@@ -33,9 +33,9 @@ export default function GoalListPage() {
   const allScorers = topScorers.map(convertTopScorerToPlayer); // Convert to display format
   
   // Filter scorers based on search term
-  const filteredScorers = allScorers.filter((scorer: any) => 
+  const filteredScorers = allScorers.filter((scorer: import('@/types/api').Player) => 
     scorer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    scorer.teamName.toLowerCase().includes(searchTerm.toLowerCase())
+    (scorer.teamName?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
