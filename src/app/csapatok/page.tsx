@@ -24,8 +24,8 @@ import {
 import { ArrowBack, EmojiEvents, Person } from '@mui/icons-material';
 import Header from '@/components/Header';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
-import { getClassColor, getClassColorLight, hasTournamentStarted } from '@/utils/dataUtils';
-import type { TeamRoster } from '@/types/api';
+import { getClassColor, getClassColorLight, hasTournamentStarted, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
+import type { TeamRoster, Team } from '@/types/api';
 
 function CsapatokContent() {
   const [selectedTeam, setSelectedTeam] = useState<TeamRoster | null>(null);
@@ -117,8 +117,8 @@ function CsapatokContent() {
     );
   }
 
-  const getTeamStats = (teamName: string) => {
-    return standings.find(standing => standing.team_name === teamName);
+  const getTeamStats = (teamId: number) => {
+    return standings.find(standing => standing.team_id === teamId);
   };
 
   const getPlayerGoalPosition = (playerName: string, teamName: string) => {
@@ -127,11 +127,12 @@ function CsapatokContent() {
     );
   };
 
-  const handleTeamSelect = (team: any) => {
+  const handleTeamSelect = (team: Team) => {
+    const teamDisplayName = getTeamDisplayName(team);
     setSelectedTeam({
       teamId: team.id || 0,
-      teamName: team.tagozat,
-      className: team.tagozat,
+      teamName: teamDisplayName,
+      className: getTeamClassName(team),
       players: [] // Would need to fetch players separately
     });
   };
@@ -141,7 +142,8 @@ function CsapatokContent() {
   };
 
   if (selectedTeam) {
-    const teamStats = getTeamStats(selectedTeam.teamName);
+    const team = teams.find(t => t.id === selectedTeam.teamId);
+    const teamStats = team ? getTeamStats(team.id || 0) : null;
 
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -248,20 +250,22 @@ function CsapatokContent() {
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }, gap: 3 }}>
           {teams
             .sort((a, b) => {
-              const teamA = getTeamStats(a.tagozat);
-              const teamB = getTeamStats(b.tagozat);
+              const teamA = getTeamStats(a.id || 0);
+              const teamB = getTeamStats(b.id || 0);
               return (teamA?.position || 999) - (teamB?.position || 999);
             })
             .map((team) => {
-              const teamStats = getTeamStats(team.tagozat);
-              const teamScorers = topScorers.filter(scorer => scorer.team_name === team.tagozat).length;
+              const teamStats = getTeamStats(team.id || 0);
+              const teamDisplayName = getTeamDisplayName(team);
+              const teamClassName = getTeamClassName(team);
+              const teamScorers = topScorers.filter(scorer => scorer.team_name === teamDisplayName).length;
 
               return (
                 <Card 
                   key={team.id}
                   sx={{ 
                     height: '100%',
-                    border: `2px solid ${getClassColor(team.tagozat)}`,
+                    border: `2px solid ${getClassColor(teamClassName)}`,
                     backgroundColor: 'background.paper',
                     cursor: 'pointer',
                     borderRadius: 2,
@@ -269,7 +273,7 @@ function CsapatokContent() {
                       boxShadow: 6,
                       transform: 'translateY(-2px)',
                       transition: 'all 0.2s ease-in-out',
-                      borderColor: getClassColor(team.tagozat)
+                      borderColor: getClassColor(teamClassName)
                     }
                   }}
                   onClick={() => handleTeamSelect(team)}
@@ -281,17 +285,17 @@ function CsapatokContent() {
                         component="h2" 
                         sx={{ 
                           fontWeight: 'bold',
-                          color: getClassColor(team.tagozat)
+                          color: getClassColor(teamClassName)
                         }}
                       >
-                        {team.tagozat}
+                        {teamDisplayName}
                       </Typography>
                       {teamStats && (
                         <Chip 
                           label={`${teamStats.position}.`}
                           size="small"
                           sx={{ 
-                            backgroundColor: getClassColor(team.tagozat),
+                            backgroundColor: getClassColor(teamClassName),
                             color: 'white',
                             fontWeight: 'bold'
                           }}
@@ -316,7 +320,7 @@ function CsapatokContent() {
                             <Typography variant="body2" color="text.secondary">
                               Helyezés
                             </Typography>
-                            <Typography variant="h6" sx={{ color: getClassColor(team.tagozat), fontWeight: 'bold' }}>
+                            <Typography variant="h6" sx={{ color: getClassColor(teamClassName), fontWeight: 'bold' }}>
                               {teamStats.position}.
                             </Typography>
                           </Box>
@@ -337,11 +341,11 @@ function CsapatokContent() {
                       fullWidth 
                       sx={{ 
                         mt: 1,
-                        backgroundColor: getClassColor(team.tagozat),
+                        backgroundColor: getClassColor(teamClassName),
                         color: 'white',
                         fontWeight: 'bold',
                         '&:hover': {
-                          backgroundColor: getClassColor(team.tagozat),
+                          backgroundColor: getClassColor(teamClassName),
                           filter: 'brightness(0.9)'
                         }
                       }}

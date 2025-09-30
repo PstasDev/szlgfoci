@@ -29,8 +29,9 @@ import {
 import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
-import { getClassColor } from '@/utils/dataUtils';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import { getClassColor, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
+import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
+import EmptyDataDisplay from '@/components/EmptyDataDisplay';
 
 export default function TeamPage() {
   const params = useParams();
@@ -42,10 +43,12 @@ export default function TeamPage() {
   const teamId = parseInt(params.id as string);
   const team = teams.find(t => t.id === teamId);
   const standing = standings.find(s => s.team_id === teamId);
+  const teamDisplayName = team ? getTeamDisplayName(team) : '';
+  const teamClassName = team ? getTeamClassName(team) : '';
   const teamMatches = matches.filter(match => 
-    match.homeTeam === team?.name || match.awayTeam === team?.name
+    match.homeTeam === teamDisplayName || match.awayTeam === teamDisplayName
   );
-  const teamPlayers = topScorers.filter(player => player.teamId === teamId);
+  const teamPlayers = topScorers.filter(player => player.team_name === teamDisplayName);
 
   React.useEffect(() => {
     setMounted(true);
@@ -75,9 +78,25 @@ export default function TeamPage() {
     );
   }
 
-  // Show error state
-  if (error || (isEmptyDataError(teams) && !loading)) {
-    const errorInfo = getErrorInfo('teams', error);
+  // Show error state - handle empty data scenario vs actual errors
+  if (isEmptyDataScenario(error ? new Error(error) : null, teams) && !loading) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
+        <Header />
+        <Container maxWidth="lg" sx={{ py: 8 }}>
+          <EmptyDataDisplay 
+            type="teams"
+            onRetry={refetch}
+            variant="paper"
+          />
+        </Container>
+      </Box>
+    );
+  }
+
+  // Handle actual errors
+  if (error && !loading) {
+    const errorInfo = getErrorInfo('teams', new Error(error));
     return (
       <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
         <Header />
@@ -129,19 +148,19 @@ export default function TeamPage() {
                 sx={{
                   width: 80,
                   height: 80,
-                  bgcolor: team?.className ? getClassColor(team.className) : 'grey.500',
+                  bgcolor: team ? getClassColor(getTeamClassName(team)) : 'grey.500',
                   fontSize: '2rem',
                   fontWeight: 'bold',
                 }}
               >
-                {team?.className ? team.className.split(' ')[1] : 'T'}
+                {team ? getTeamClassName(team) : 'T'}
               </Avatar>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  {team.name}
+                  {teamDisplayName}
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9, mb: 2 }}>
-                  {team?.className || 'Ismeretlen osztály'}
+                  {team ? `${team.start_year}. évfolyam ${team.tagozat} tagozat` : 'Ismeretlen osztály'}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                   <Chip

@@ -317,6 +317,21 @@ export const hasTournamentStarted = (tournament: Tournament): boolean => {
   return now >= startDate;
 };
 
+// Get the display name for a team (custom name or generated from start_year + tagozat)
+export const getTeamDisplayName = (team: Team): string => {
+  if (team.name && team.name.trim() !== '') {
+    return team.name;
+  }
+  // Generate name from start_year and tagozat: e.g., "23F", "24A"
+  return `${team.start_year}${team.tagozat}`;
+};
+
+// Get the class identifier for a team (used for colors and identification)
+export const getTeamClassName = (team: Team): string => {
+  // Use tagozat as the class identifier for styling
+  return team.tagozat;
+};
+
 // Get tournament status message
 export const getTournamentStatusMessage = (tournament: Tournament | null): string => {
   if (!tournament) return 'Nincs aktív torna';
