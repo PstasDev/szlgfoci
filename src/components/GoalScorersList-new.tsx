@@ -20,6 +20,7 @@ import {
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
 import { getClassColor, convertTopScorerToPlayer } from '@/utils/dataUtils';
 import { useTournamentData } from '@/hooks/useTournamentData';
+import type { Player } from '@/types/api';
 
 const GoalScorersList: React.FC = () => {
   const { topScorers, loading, error } = useTournamentData();
@@ -117,7 +118,7 @@ const GoalScorersList: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {topScorersData.map((player: any, index: number) => (
+              {topScorersData.map((player: Player, index: number) => (
                 <TableRow
                   key={player.id}
                   hover
