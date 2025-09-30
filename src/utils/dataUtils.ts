@@ -1,5 +1,5 @@
 // Utility functions for data processing and formatting
-import type { Team, Standing, ApiMatch, Match, TopScorer, MatchEvent, StandingSchema, TopScorerSchema, Tournament } from '@/types/api';
+import type { Team, Standing, ApiMatch, Match, TopScorer, MatchEvent, StandingSchema, TopScorerSchema, Tournament, Player } from '@/types/api';
 
 // Re-export types for convenience
 export type { Match, MatchEvent, Team, Standing, TopScorer, Tournament } from '@/types/api';
@@ -75,11 +75,10 @@ export const convertTopScorerSchemaToTopScorer = (topScorerSchema: TopScorerSche
 };
 
 // Convert API TopScorer to Player format for compatibility
-export const convertTopScorerToPlayer = (topScorer: TopScorer, index: number): any => {
+export const convertTopScorerToPlayer = (topScorer: TopScorer, index: number): Player => {
   return {
     id: topScorer.player_id,
     name: topScorer.player_name,
-    teamId: topScorer.player_id, // Placeholder
     teamName: topScorer.team_name,
     goals: topScorer.goals,
     position: index + 1
@@ -191,20 +190,24 @@ export const getTeamByName = (standings: Standing[], name: string): Standing | u
 };
 
 // Convert match events for display
-export const formatMatchEvent = (event: MatchEvent): any => {
+export const formatMatchEvent = (event: MatchEvent): MatchEvent => {
   return {
     id: event.id,
-    type: event.event_type,
+    match: event.match,
+    player: event.player,
+    event_type: event.event_type,
     minute: event.minute,
-    player: event.playerName || `Player ${event.player}`,
+    playerName: event.playerName || `Player ${event.player}`,
     team: event.team || 'home' // Default to home team
   };
 };
 
 // Convert Standing to Team format for compatibility with Google Sports layout
-export const convertStandingToTeam = (standing: Standing, index: number): any => {
+export const convertStandingToTeam = (standing: Standing, index: number): Team => {
   return {
     id: standing.team_id,
+    start_year: new Date().getFullYear(), // Default to current year
+    tagozat: standing.team_name,
     name: standing.team_name,
     className: standing.team_name,
     position: index + 1,
@@ -220,7 +223,7 @@ export const convertStandingToTeam = (standing: Standing, index: number): any =>
 };
 
 // Smart tournament selection logic
-export const selectMostRelevantTournament = (tournaments: any[]): any | null => {
+export const selectMostRelevantTournament = (tournaments: Tournament[]): Tournament | null => {
   if (!tournaments || tournaments.length === 0) {
     console.log('⚠️ No tournaments available');
     return null;
@@ -298,7 +301,7 @@ export const selectMostRelevantTournament = (tournaments: any[]): any | null => 
 export const DEFAULT_TOURNAMENT_ID = 1; // Deprecated - use getCurrentTournament() instead
 
 // Check if tournament has started
-export const hasTournamentStarted = (tournament: any): boolean => {
+export const hasTournamentStarted = (tournament: Tournament): boolean => {
   if (!tournament?.start_date) {
     console.log(`⚠️ No start_date found in tournament`);
     return false;
@@ -315,7 +318,7 @@ export const hasTournamentStarted = (tournament: any): boolean => {
 };
 
 // Get tournament status message
-export const getTournamentStatusMessage = (tournament: any): string => {
+export const getTournamentStatusMessage = (tournament: Tournament | null): string => {
   if (!tournament) return 'Nincs aktív torna';
   
   if (!hasTournamentStarted(tournament)) {

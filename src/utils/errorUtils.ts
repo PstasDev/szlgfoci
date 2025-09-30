@@ -7,11 +7,12 @@ export interface ErrorInfo {
   actionHref?: string;
 }
 
-export const getErrorInfo = (context: string, error?: any): ErrorInfo => {
+export const getErrorInfo = (context: string, error?: Error | { message?: string; status?: number; response?: { status?: number } }): ErrorInfo => {
   // Check if it's a 404 error or related to not found
   const is404 = error?.message?.includes('404') || 
-                error?.status === 404 || 
-                error?.message?.includes('Not Found');
+                (error as { status?: number })?.status === 404 || 
+                error?.message?.includes('Not Found') ||
+                (error as { response?: { status?: number } })?.response?.status === 404;
 
   switch (context) {
     case 'tournaments':
@@ -177,14 +178,14 @@ export const getErrorInfo = (context: string, error?: any): ErrorInfo => {
 };
 
 // Function to check if error is 404
-export const is404Error = (error: any): boolean => {
+export const is404Error = (error: Error | { message?: string; status?: number; response?: { status?: number } }): boolean => {
   return error?.message?.includes('404') || 
-         error?.status === 404 || 
+         (error as { status?: number })?.status === 404 || 
          error?.message?.includes('Not Found') ||
-         error?.response?.status === 404;
+         (error as { response?: { status?: number } })?.response?.status === 404;
 };
 
 // Function to check if data is empty (could indicate 404 or no data)
-export const isEmptyDataError = (data: any[]): boolean => {
+export const isEmptyDataError = (data: unknown[]): boolean => {
   return Array.isArray(data) && data.length === 0;
 };
