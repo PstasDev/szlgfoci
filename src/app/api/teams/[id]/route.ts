@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const DJANGO_API_BASE = process.env.DJANGO_API_BASE || 'http://localhost:8000/api';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  const teamId = params.id;
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id: teamId } = await params;
   
   try {
     console.log(`🔄 Next.js API Route: Fetching team ${teamId} from Django backend...`);

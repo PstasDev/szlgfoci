@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const DJANGO_API_BASE = process.env.DJANGO_API_BASE || 'http://localhost:8000/api';
 
-export async function GET(request: NextRequest, { params }: { params: { rest: string[] } }) {
-  const rest = params?.rest || [];
+export async function GET(request: NextRequest, { params }: { params: Promise<{ rest: string[] }> }) {
+  const { rest } = await params;
   const suffix = rest.length > 0 ? `/${rest.join('/')}` : '';
 
   const url = `${DJANGO_API_BASE}/tournaments${suffix}${request.nextUrl.search ?? ''}`;
