@@ -189,3 +189,24 @@ export const is404Error = (error: Error | { message?: string; status?: number; r
 export const isEmptyDataError = (data: unknown[]): boolean => {
   return Array.isArray(data) && data.length === 0;
 };
+
+// Function to determine if error should be treated as "no data yet" vs actual error
+export const isEmptyDataScenario = (error: Error | { message?: string; status?: number; response?: { status?: number } } | null, data?: unknown[]): boolean => {
+  // If there's actual data, it's not empty
+  if (data && Array.isArray(data) && data.length > 0) {
+    return false;
+  }
+  
+  // If there's no error but empty array, treat as empty data scenario
+  if (!error && data && Array.isArray(data) && data.length === 0) {
+    return true;
+  }
+  
+  // If it's a 404 error, treat as empty data scenario (no data available yet)
+  if (error && is404Error(error)) {
+    return true;
+  }
+  
+  // All other errors are actual errors
+  return false;
+};

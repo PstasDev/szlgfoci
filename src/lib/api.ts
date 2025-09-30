@@ -1,4 +1,10 @@
 // API configuration and utilities for SZLG Foci application
+
+interface ApiError extends Error {
+  status?: number;
+  statusText?: string;
+}
+
 const isDevelopment = process.env.NODE_ENV === 'development';
 // Use Next.js API routes as proxy to Django backend to avoid CORS issues.
 // In development the client should use the relative '/api' path so the browser hits Next.js
@@ -27,9 +33,9 @@ export const api = {
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
       console.error(`❌ API Error: ${response.status} ${response.statusText}`, errorText);
-      const error = new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
-      (error as any).status = response.status;
-      (error as any).statusText = response.statusText;
+      const error: ApiError = new Error(`API Error: ${response.status} ${response.statusText} - ${errorText}`);
+      error.status = response.status;
+      error.statusText = response.statusText;
       throw error;
     }
 
@@ -38,7 +44,7 @@ export const api = {
     return data;
   },
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: {
@@ -49,9 +55,9 @@ export const api = {
     });
 
     if (!response.ok) {
-      const error = new Error(`API Error: ${response.status} ${response.statusText}`);
-      (error as any).status = response.status;
-      (error as any).statusText = response.statusText;
+      const error: ApiError = new Error(`API Error: ${response.status} ${response.statusText}`);
+      error.status = response.status;
+      error.statusText = response.statusText;
       throw error;
     }
 
@@ -59,7 +65,7 @@ export const api = {
   },
 
   // Utility method for handling errors
-  handleError(error: any) {
+  handleError(error: unknown) {
     console.error('API Error:', error);
     if (error instanceof Error) {
       return error.message;

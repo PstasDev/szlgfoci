@@ -10,7 +10,6 @@ import {
   Avatar,
   Stack,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import {
   Sports as SportsIcon,
@@ -19,11 +18,12 @@ import {
   Rectangle as CardIcon,
 } from '@mui/icons-material';
 import { getClassColor, Match, MatchEvent } from '@/utils/dataUtils';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { useMatchesByStatus } from '@/hooks/useMatchesByStatus';
 import LiveMatchTimer from './LiveMatchTimer';
 import ErrorDisplay from './ErrorDisplay';
+import EmptyDataDisplay from './EmptyDataDisplay';
 
 const LiveMatches: React.FC = () => {
   const router = useRouter();
@@ -42,8 +42,24 @@ const LiveMatches: React.FC = () => {
     );
   }
 
-  if (error || (isEmptyDataError(matches) && !loading)) {
-    const errorInfo = getErrorInfo('matches', error);
+  // Handle empty data scenario vs actual errors
+  if (isEmptyDataScenario(error ? new Error(error) : null, matches) && !loading) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <EmptyDataDisplay 
+            type="matches"
+            onRetry={refetch}
+            variant="box"
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle actual errors
+  if (error && !loading) {
+    const errorInfo = getErrorInfo('matches', new Error(error));
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>

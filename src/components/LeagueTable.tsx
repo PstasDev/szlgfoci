@@ -16,15 +16,14 @@ import {
   Avatar,
   ButtonBase,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import { getClassColor } from '@/utils/dataUtils';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import ErrorDisplay from './ErrorDisplay';
-import type { Standing } from '@/types/api';
+import EmptyDataDisplay from './EmptyDataDisplay';
 
 const LeagueTable: React.FC = () => {
   const { standings, loading, error, refetch } = useTournamentContext();
@@ -54,8 +53,24 @@ const LeagueTable: React.FC = () => {
     );
   }
 
-  if (error || isEmptyDataError(standings)) {
-    const errorInfo = getErrorInfo('standings', error);
+  // Handle empty data scenario vs actual errors
+  if (isEmptyDataScenario(error ? new Error(error) : null, standings)) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <EmptyDataDisplay 
+            type="standings"
+            onRetry={refetch}
+            variant="box"
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle actual errors
+  if (error) {
+    const errorInfo = getErrorInfo('standings', new Error(error));
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>

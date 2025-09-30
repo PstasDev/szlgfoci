@@ -15,13 +15,14 @@ import {
   Avatar,
   Chip,
   CircularProgress,
-  Alert,
 } from '@mui/material';
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
 import { getClassColor, convertTopScorerToPlayer } from '@/utils/dataUtils';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
 import ErrorDisplay from './ErrorDisplay';
+import EmptyDataDisplay from './EmptyDataDisplay';
+import type { Player } from '@/types/api';
 
 const GoalScorersList: React.FC = () => {
   const { topScorers, loading, error, refetch } = useTournamentContext();
@@ -73,8 +74,24 @@ const GoalScorersList: React.FC = () => {
     );
   }
 
-  if (error || (isEmptyDataError(topScorers) && !loading)) {
-    const errorInfo = getErrorInfo('goalscorers', error);
+  // Handle empty data scenario vs actual errors
+  if (isEmptyDataScenario(error ? new Error(error) : null, topScorers) && !loading) {
+    return (
+      <Card sx={{ backgroundColor: 'background.paper' }}>
+        <CardContent>
+          <EmptyDataDisplay 
+            type="goalscorers"
+            onRetry={refetch}
+            variant="box"
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Handle actual errors
+  if (error && !loading) {
+    const errorInfo = getErrorInfo('goalscorers', new Error(error));
     return (
       <Card sx={{ backgroundColor: 'background.paper' }}>
         <CardContent>
@@ -122,7 +139,7 @@ const GoalScorersList: React.FC = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {topScorersData.map((player: any, index: number) => (
+              {topScorersData.map((player: Player, index: number) => (
                 <TableRow
                   key={player.id}
                   hover
