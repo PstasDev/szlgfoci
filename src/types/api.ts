@@ -15,12 +15,13 @@ export interface Team {
   start_year: number;
   tagozat: string;
   color: string; // Team color from backend (e.g., "#5c6bc0")
+  name?: string | null;
+  logo_url?: string | null; // NEW: Logo URL support
   registration_time?: string | null;
   active?: boolean;
   tournament?: Tournament | null;
   players?: Player[];
   // Additional calculated fields for standings
-  name?: string;
   className?: string;
   played?: number;
   won?: number;
@@ -37,10 +38,83 @@ export interface Player {
   id?: number | null;
   name: string;
   csk?: boolean; // captain
+  start_year?: number | null;
+  tagozat?: string | null;
   // For display purposes
   teamName?: string;
   goals?: number;
   position?: number;
+}
+
+// NEW: Extended player schema with computed fields
+export interface PlayerExtendedSchema {
+  id: number;
+  name: string;
+  csk: boolean;
+  start_year?: number | null;
+  tagozat?: string | null;
+  effective_start_year?: number | null; // From get_start_year()
+  effective_tagozat?: string | null;     // From get_tagozat()
+}
+
+// NEW: Extended team schema with computed fields
+export interface TeamExtendedSchema {
+  id: number;
+  name?: string | null;
+  start_year: number;
+  tagozat: string;
+  color: string; // Always returns computed color from get_team_color()
+  logo_url?: string | null;
+  active: boolean;
+  players: PlayerExtendedSchema[];
+}
+
+// NEW: Photo schemas for gallery support
+export interface PhotoSchema {
+  id?: number | null;
+  url: string;
+  title?: string | null;
+  description?: string | null;
+  uploaded_by?: Profile | null;
+  uploaded_at?: string;
+}
+
+export interface PhotoCreateSchema {
+  url: string;
+  title?: string | null;
+  description?: string | null;
+}
+
+export interface PhotoUpdateSchema {
+  url?: string | null;
+  title?: string | null;
+  description?: string | null;
+}
+
+// NEW: Közlemény (announcement) schemas
+export interface KozlemenySchema {
+  id?: number | null;
+  title: string;
+  content: string;
+  date_created?: string;
+  date_updated?: string;
+  active?: boolean;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  author?: Profile | null;
+}
+
+export interface KozlemenyCreateSchema {
+  title: string;
+  content: string;
+  active?: boolean;
+  priority?: 'normal' | 'low' | 'high' | 'urgent';
+}
+
+export interface KozlemenyUpdateSchema {
+  title?: string | null;
+  content?: string | null;
+  active?: boolean | null;
+  priority?: string | null;
 }
 
 export interface Profile {
@@ -71,6 +145,7 @@ export interface ApiMatch {
   round_obj?: Round | null;
   referee?: Profile | null;
   events?: EventSchema[];
+  photos?: PhotoSchema[]; // NEW: Photo gallery support
 }
 
 export interface Match {
@@ -104,6 +179,7 @@ export interface EventSchema {
   id?: number | null;
   event_type: string;
   minute: number;
+  minute_extra_time?: number | null; // Extra time minutes (e.g., 22 for "10+22")
   exact_time?: string | null;
   extra_time?: number | null;
   player?: Player | null;
@@ -115,6 +191,7 @@ export interface MatchEvent {
   player: number;
   event_type: 'goal' | 'yellow_card' | 'red_card';
   minute: number;
+  minute_extra_time?: number | null; // Support for extra time display (e.g., "45+3")
   // For display purposes
   playerName?: string;
   team?: 'home' | 'away';
@@ -227,4 +304,242 @@ export interface Announcement {
     player?: Player | null;
     user_details?: User; // Populated user data
   } | null;
+}
+
+// NEW: Live Match Status for real-time tracking
+export interface LiveMatchStatus {
+  match_id: number;
+  status: 'not_started' | 'first_half' | 'half_time' | 'second_half' | 'extra_time' | 'finished' | 'postponed' | 'cancelled';
+  current_minute: number;
+  extra_time_minutes: number;
+  last_updated: string;
+  goals_team1: number;
+  goals_team2: number;
+  is_live: boolean;
+  is_finished: boolean;
+}
+
+// NEW: Enhanced Live Match with real-time data
+export interface LiveMatch extends Omit<Match, 'status'> {
+  live_status: LiveMatchStatus;
+  recent_events: MatchEvent[]; // Last 10 events
+  is_featured: boolean;
+  cache_priority: number;
+  last_event_time?: string;
+  display_time: string; // Formatted time like "45+2"
+}
+
+// NEW: Optimized Match with caching support
+export interface OptimizedMatch extends Match {
+  cache_metadata?: {
+    last_updated: string;
+    cache_version: number;
+    is_valid: boolean;
+    source: 'cache' | 'api' | 'live';
+  };
+  performance_data?: {
+    load_time_ms: number;
+    queries_count: number;
+    cache_hit: boolean;
+  };
+  total_events: number;
+  yellow_cards_count: number;
+  red_cards_count: number;
+}
+
+// NEW: Bulk live matches response
+export interface LiveMatchesBulk {
+  matches: {
+    match_id: number;
+    team1_name: string;
+    team2_name: string;
+    status: LiveMatchStatus['status'];
+    current_minute: number;
+    goals_team1: number;
+    goals_team2: number;
+    recent_events: {
+      id: number;
+      type: string;
+      minute: number;
+      player?: string;
+    }[];
+  }[];
+  total_live_matches: number;
+  last_updated: string;
+}
+
+// NEW: Performance metrics
+export interface MatchPerformance {
+  match_id: number;
+  total_api_calls: number;
+  cache_hits: number;
+  cache_misses: number;
+  cache_hit_ratio: number;
+  average_response_time_ms: number;
+  last_24h_calls: number;
+}
+
+// NEW: Cache control interface
+export interface CacheControl {
+  key: string;
+  ttl: number; // Time to live in seconds
+  priority: 'low' | 'normal' | 'high' | 'critical';
+  auto_refresh: boolean;
+  last_refresh: string;
+}
+
+// NEW: Live match subscription data
+export interface LiveMatchSubscription {
+  match_id: number;
+  user_id?: string;
+  subscribed_at: string;
+  notifications_enabled: boolean;
+  event_types: ('goal' | 'card' | 'status_change')[];
+}
+
+// NEW: Match event with enhanced data
+export interface EnhancedMatchEvent extends MatchEvent {
+  timestamp: string;
+  match_status: LiveMatchStatus['status'];
+  team_name: string;
+  player_details?: {
+    id: number;
+    name: string;
+    team_id: number;
+    is_captain: boolean;
+  };
+  impact_score?: number; // 1-10 rating of event importance
+}
+
+// NEW: Real-time update payload
+export interface LiveUpdatePayload {
+  type: 'event' | 'status' | 'time' | 'score';
+  match_id: number;
+  timestamp: string;
+  data: {
+    event?: EnhancedMatchEvent;
+    status?: LiveMatchStatus['status'];
+    minute?: number;
+    score?: {
+      team1: number;
+      team2: number;
+    };
+  };
+}
+
+// NEW: Enhanced API responses with caching
+export interface CachedApiResponse<T> {
+  data: T;
+  meta: {
+    cached: boolean;
+    cache_key: string;
+    expires_at: string;
+    generated_at: string;
+    version: number;
+  };
+  performance: {
+    response_time_ms: number;
+    db_queries: number;
+    cache_operations: number;
+  };
+}
+
+// NEW: Live matches dashboard data
+export interface LiveMatchesDashboard {
+  live_matches: LiveMatch[];
+  featured_matches: OptimizedMatch[];
+  recent_events: EnhancedMatchEvent[];
+  standings_preview: Standing[];
+  top_scorers_preview: TopScorer[];
+  announcements: Announcement[];
+  performance_summary: {
+    total_matches_today: number;
+    live_matches_count: number;
+    total_events_today: number;
+    cache_hit_rate: number;
+  };
+}
+
+// NEW: Match filter and sort options
+export interface MatchFilters {
+  status?: ('upcoming' | 'live' | 'finished')[];
+  teams?: number[];
+  rounds?: number[];
+  date_from?: string;
+  date_to?: string;
+  has_events?: boolean;
+  is_featured?: boolean;
+}
+
+export interface MatchSortOptions {
+  field: 'datetime' | 'status' | 'round' | 'cache_priority';
+  direction: 'asc' | 'desc';
+}
+
+// NEW: Team creation and update schemas
+export interface TeamCreateSchema {
+  name?: string | null;
+  start_year: number;
+  tagozat: string;
+  color?: string | null;
+  logo_url?: string | null;
+  active?: boolean;
+}
+
+export interface TeamUpdateSchema {
+  name?: string | null;
+  start_year?: number | null;
+  tagozat?: string | null;
+  color?: string | null;
+  logo_url?: string | null;
+  active?: boolean | null;
+}
+
+// NEW: Time synchronization for accurate match timing
+export interface TimeSyncSchema {
+  server_time: string; // ISO string
+  timezone: string;
+  timestamp: number; // Unix timestamp
+}
+
+// NEW: Time synchronization for accurate match timing
+export interface TimeSyncSchema {
+  server_time: string; // ISO string
+  timezone: string;
+  timestamp: number; // Unix timestamp
+}
+
+// NEW: Enhanced event with all supported types
+export interface EnhancedEventSchema {
+  id: number;
+  player?: Player | null;
+  match?: number | null;
+  event_type: 'match_start' | 'goal' | 'yellow_card' | 'red_card' | 'half_time' | 'full_time' | 'extra_time' | 'match_end';
+  half: number;
+  minute: number;
+  minute_extra_time?: number | null;
+  exact_time?: string | null;
+  extra_time?: number | null;
+}
+
+// NEW: Match timing information
+export interface MatchTiming {
+  current_minute: number;
+  current_half: number;
+  status: 'not_started' | 'first_half' | 'half_time' | 'second_half' | 'extra_time' | 'finished';
+  extra_time_minutes?: number;
+  is_live: boolean;
+  last_event_time?: string;
+}
+
+// Optimized query parameters
+export interface OptimizedQueryParams {
+  include_cache?: boolean;
+  include_performance?: boolean;
+  prefetch_events?: boolean;
+  live_only?: boolean;
+  featured_only?: boolean;
+  limit?: number;
+  offset?: number;
+  fields?: string[]; // Specific fields to return
 }

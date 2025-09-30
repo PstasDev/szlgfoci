@@ -58,21 +58,9 @@ export function usePerformanceOptimization() {
  */
 export function useResourcePreloader() {
   useEffect(() => {
-    // Preload critical API endpoints
-    const preloadEndpoints = [
-      '/api/tournament/current',
-      '/api/announcements',
-    ];
-
-    preloadEndpoints.forEach(endpoint => {
-      // Use fetch with { priority: 'high' } for critical resources
-      fetch(endpoint, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-      }).catch(() => {
-        // Silently fail - this is just preloading
-      });
-    });
+    // Note: We no longer preload API endpoints since we're using direct API calls
+    // and don't want to make unnecessary requests during initialization.
+    // The TournamentDataContext handles data fetching efficiently.
   }, []);
 }
 

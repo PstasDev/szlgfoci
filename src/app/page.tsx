@@ -1,39 +1,19 @@
 "use client";
 
 import React from "react";
-import { Box, Stack, Typography, Card, CardContent, Button, Paper } from "@mui/material";
-import { BugReport as BugIcon } from "@mui/icons-material";
+import { Box, Stack, Typography, Card, CardContent, Button } from "@mui/material";
 import { motion } from "framer-motion";
 import SimpleLayout from "../components/SimpleLayout";
 import AnnouncementsWidget from "../components/AnnouncementsWidget";
 import LiveMatches from "../components/LiveMatches";
-import MatchesList from "../components/MatchesList";
 import LeagueTable from "../components/LeagueTable";
 import GoalScorersList from "../components/GoalScorersList";
-import StatisticsCharts from "../components/StatisticsCharts";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { useTournamentData } from "../contexts/TournamentDataContext";
 import { hasTournamentStarted } from "../utils/dataUtils";
 
 export default function HomePage() {
-  const { tournament, matches, loading, error } = useTournamentData();
-  const [debugInfo, setDebugInfo] = React.useState<Record<string, unknown> | null>(null);
-  const [showDebug, setShowDebug] = React.useState(false);
-
-  const fetchDebugInfo = async () => {
-    try {
-      console.log('🔍 Fetching debug info...');
-      const response = await fetch('/api/debug');
-      const data = await response.json();
-      console.log('🔍 Debug info:', data);
-      setDebugInfo(data);
-      setShowDebug(true);
-    } catch (err) {
-      console.error('🔍 Error fetching debug info:', err);
-      setDebugInfo({ error: 'Failed to fetch debug info' });
-      setShowDebug(true);
-    }
-  };
+  const { tournament, matches: _matches, loading, error } = useTournamentData();
 
   const showPreTournament = tournament ? !hasTournamentStarted(tournament) : false;
 
@@ -41,25 +21,7 @@ export default function HomePage() {
     return (
       <SimpleLayout>
         <Box sx={{ p: 3 }}>
-          <Stack spacing={2}>
-            <Typography color="error">{error}</Typography>
-            {debugInfo && showDebug && (
-              <Paper sx={{ p: 2, bgcolor: 'background.default' }}>
-                <Typography variant="h6" gutterBottom>Debug Information:</Typography>
-                <pre style={{ fontSize: '12px', whiteSpace: 'pre-wrap' }}>
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </Paper>
-            )}
-            <Button 
-              variant="outlined" 
-              startIcon={<BugIcon />}
-              onClick={fetchDebugInfo}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              Show Debug Info
-            </Button>
-          </Stack>
+          <Typography color="error">{error}</Typography>
         </Box>
       </SimpleLayout>
     );
@@ -150,17 +112,74 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <Typography 
-                  variant="h4" 
-                  sx={{ 
-                    color: 'primary.main',
-                    textAlign: 'center',
-                    fontWeight: 600,
-                    mb: 2,
-                  }}
-                >
-                  {tournament.name}
-                </Typography>
+                <Box sx={{ textAlign: 'center', mb: 3 }}>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      color: 'primary.main',
+                      fontWeight: 700,
+                      mb: 1,
+                      background: 'linear-gradient(45deg, #1976d2, #42a5f5)',
+                      backgroundClip: 'text',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {tournament.name}
+                  </Typography>
+                  
+                  {/* Tournament details */}
+                  <Stack 
+                    direction={{ xs: 'column', sm: 'row' }} 
+                    spacing={2} 
+                    sx={{ justifyContent: 'center', alignItems: 'center' }}
+                  >
+                    {tournament.start_date && (
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          color: 'text.secondary',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5
+                        }}
+                      >
+                        📅 Kezdés: {new Date(tournament.start_date).toLocaleDateString('hu-HU')}
+                      </Typography>
+                    )}
+                    
+                    {tournament.end_date && (
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          color: 'text.secondary',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5
+                        }}
+                      >
+                        🏁 Befejezés: {new Date(tournament.end_date).toLocaleDateString('hu-HU')}
+                      </Typography>
+                    )}
+                    
+                    <Box
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: '20px',
+                        backgroundColor: hasTournamentStarted(tournament) ? 'success.main' : 'warning.main',
+                        color: 'white',
+                        fontSize: '0.875rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {hasTournamentStarted(tournament) ? '🟢 Folyamatban' : '🟡 Hamarosan'}
+                    </Box>
+                  </Stack>
+                </Box>
               </motion.div>
 
               {/* Announcements */}
@@ -185,19 +204,23 @@ export default function HomePage() {
               </motion.div> */}
               
               {/* Matches List */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <MatchesList matches={matches ?? []} />
-              </motion.div>
+              </motion.div> */}
 
               {/* League Table and Top Scorers */}
               <Box sx={{ 
                 display: 'grid', 
                 gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' }, 
-                gap: 3 
+                gap: 3,
+                overflowX: 'hidden',
+                '& > *': {
+                  minWidth: 0 // Prevents grid items from overflowing
+                }
               }}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

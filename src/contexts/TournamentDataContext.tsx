@@ -162,9 +162,35 @@ export function TournamentDataProvider({ children }: TournamentDataProviderProps
       // Format data
       const formattedMatches = processedMatches.map(match => formatMatch(match, processedTeams));
       const formattedStandings = processedStandings.map(convertStandingSchemaToStanding);
-      const formattedTopScorers = processedTopScorers.map((scorer) => 
-        convertTopScorerSchemaToTopScorer(scorer, `Team ${scorer.id}`)
-      );
+      
+      // Create a mapping of player ID to team for top scorers
+      const playerTeamMap = new Map<number, string>();
+      processedTeams.forEach(team => {
+        team.players?.forEach(player => {
+          if (player.id) {
+            const teamName = team.name && team.name.trim() !== '' 
+              ? team.name 
+              : `${team.start_year}${team.tagozat}`;
+            playerTeamMap.set(player.id, teamName);
+          }
+        });
+      });
+      
+      const formattedTopScorers = processedTopScorers.map((scorer) => {
+        let teamName = playerTeamMap.get(scorer.id);
+        // Try to find the team by searching all teams' players if not found
+        if (!teamName) {
+          const foundTeam = processedTeams.find(team => team.players?.some(p => p.id === scorer.id));
+          if (foundTeam) {
+            teamName = foundTeam.name && foundTeam.name.trim() !== ''
+              ? foundTeam.name
+              : `${foundTeam.start_year}${foundTeam.tagozat}`;
+          }
+        }
+        // Fallback to empty string or 'Ismeretlen' if still not found
+        if (!teamName) teamName = '';
+        return convertTopScorerSchemaToTopScorer(scorer, teamName);
+      });
       
       // Process announcements and fetch user data for authors
       const formattedAnnouncements = await Promise.all(

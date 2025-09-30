@@ -126,14 +126,51 @@ const GoalScorersList: React.FC = () => {
           </Typography>
         </Box>
 
-        <TableContainer sx={{ backgroundColor: 'background.paper' }}>
-          <Table size="small">
+        <TableContainer sx={{ 
+          backgroundColor: 'background.paper', 
+          overflowX: 'auto',
+          '& .MuiTable-root': {
+            minWidth: { xs: 500, sm: 600 }
+          }
+        }}>
+          <Table size="small" sx={{ 
+            minWidth: { xs: 500, sm: 600 },
+            '& .MuiTableCell-root': {
+              px: { xs: 0.5, sm: 1 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }
+          }}>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                <TableCell sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>H</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary' }}>JÁTÉKOS</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary' }}>CSAPAT</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 80, color: 'text.primary' }}>GÓLOK</TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 40, sm: 50 }, 
+                  color: 'text.primary' 
+                }}>
+                  H
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 'bold', 
+                  color: 'text.primary',
+                  minWidth: { xs: 120, sm: 150 }
+                }}>
+                  JÁTÉKOS
+                </TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 'bold', 
+                  color: 'text.primary',
+                  minWidth: { xs: 100, sm: 120 },
+                  display: { xs: 'none', sm: 'table-cell' }
+                }}>
+                  CSAPAT
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 60, sm: 80 }, 
+                  color: 'text.primary' 
+                }}>
+                  GÓLOK
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -156,20 +193,39 @@ const GoalScorersList: React.FC = () => {
                   </TableCell>
 
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                       <Typography 
                         variant="body2" 
                         fontWeight={index < 3 ? 'bold' : 'normal'}
                         sx={{ 
                           color: 'text.primary',
+                          fontSize: { xs: '0.8rem', sm: '0.875rem' }
                         }}
                       >
                         {player.name}
                       </Typography>
+                      {/* Show team on mobile under player name */}
+                      <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 1 }}>
+                        <Avatar
+                          sx={{
+                            width: 16,
+                            height: 16,
+                            bgcolor: getClassColor(player.teamName || ''),
+                            fontSize: '0.5rem',
+                            fontWeight: 'bold',
+                            color: 'white'
+                          }}
+                        >
+                          {(player.teamName || '').split(' ')[1] || (player.teamName || '').charAt((player.teamName || '').length - 1)}
+                        </Avatar>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                          {player.teamName}
+                        </Typography>
+                      </Box>
                     </Box>
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Avatar
                         sx={{

@@ -14,7 +14,7 @@ import {
   PlayArrow as PlayIcon,
   AccessTime as TimeIcon,
   LocationOn as LocationIcon,
-  SportsSoccer as SoccerIcon,
+  SportsSoccer
 } from '@mui/icons-material';
 import { Match, getTeamColor } from '@/utils/dataUtils';
 
@@ -107,11 +107,12 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   label="ÉLŐ" 
                   size="small" 
                   sx={{ 
-                    backgroundColor: '#ea4335', 
+                    backgroundColor: 'success.main', 
                     color: 'white',
                     fontWeight: 'bold',
                     fontSize: '0.6rem',
-                    height: 20
+                    height: 20,
+                    boxShadow: '0 2px 4px rgba(76, 175, 80, 0.3)'
                   }} 
                 />
                 <Typography variant="caption" sx={{ color: '#4caf50', fontSize: '0.7rem', display: 'block' }}>
@@ -203,10 +204,11 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   label="ÉLŐ" 
                   size="small" 
                   sx={{ 
-                    backgroundColor: '#ea4335', 
+                    backgroundColor: 'success.main', 
                     color: 'white',
                     fontWeight: 'bold',
-                    mb: 1
+                    mb: 1,
+                    boxShadow: '0 2px 4px rgba(76, 175, 80, 0.3)'
                   }} 
                 />
                 <Typography variant="h5" fontWeight="bold" sx={{ color: '#4caf50' }}>
@@ -300,14 +302,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 width: 8, 
                 height: 8, 
                 borderRadius: '50%', 
-                backgroundColor: '#ea4335',
+                backgroundColor: 'success.main',
                 animation: 'pulse 2s infinite'
               }} />
               <Chip 
                 label={`ÉLŐ • ${match.time}`}
                 size="small" 
                 sx={{ 
-                  backgroundColor: '#ea4335', 
+                  backgroundColor: 'success.main', 
                   color: 'white',
                   fontWeight: 'bold',
                   fontSize: '0.75rem'
@@ -400,7 +402,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               </Typography>
             ) : (
               <Box>
-                <SoccerIcon sx={{ fontSize: 40, color: '#4285f4', mb: 1 }} />
+                <SportsSoccer sx={{ fontSize: 40, color: '#4285f4', mb: 1 }} />
                 <Typography 
                   variant="h5" 
                   sx={{ 

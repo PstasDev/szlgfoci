@@ -75,9 +75,12 @@ const Footer: React.FC = () => {
                   textDecoration: 'none',
                   padding: '8px 16px',
                   borderRadius: '8px',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
                     color: theme.palette.primary.main,
                     backgroundColor: `${theme.palette.primary.main}10`,
+                    boxShadow: `0 0 20px ${theme.palette.primary.main}40`,
+                    transform: 'translateY(-2px)',
                   },
                 }}
               >
@@ -99,9 +102,12 @@ const Footer: React.FC = () => {
                   textDecoration: 'none',
                   padding: '8px 16px',
                   borderRadius: '8px',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
                     color: theme.palette.secondary.main,
                     backgroundColor: `${theme.palette.secondary.main}10`,
+                    boxShadow: `0 0 20px ${theme.palette.secondary.main}40`,
+                    transform: 'translateY(-2px)',
                   },
                 }}
               >
@@ -123,9 +129,12 @@ const Footer: React.FC = () => {
                   textDecoration: 'none',
                   padding: '8px 16px',
                   borderRadius: '8px',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
                     color: theme.palette.info.main,
                     backgroundColor: `${theme.palette.info.main}10`,
+                    boxShadow: `0 0 20px ${theme.palette.info.main}40`,
+                    transform: 'translateY(-2px)',
                   },
                 }}
               >
@@ -147,9 +156,12 @@ const Footer: React.FC = () => {
                   textDecoration: 'none',
                   padding: '8px 16px',
                   borderRadius: '8px',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
                     color: theme.palette.grey[200],
                     backgroundColor: `${theme.palette.grey[200]}10`,
+                    boxShadow: `0 0 20px ${theme.palette.grey[200]}40`,
+                    transform: 'translateY(-2px)',
                   },
                 }}
               >

@@ -13,32 +13,26 @@ import {
   TableRow,
   Box,
   Chip,
-  Avatar,
   ButtonBase,
 } from '@mui/material';
 import { EmojiEvents as TrophyIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useTournamentData } from '@/contexts/TournamentDataContext';
 import LoadingSkeleton from './LoadingSkeleton';
-import { getClassColor } from '@/utils/dataUtils';
+import TeamLogo from './TeamLogo';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
 
 const LeagueTable: React.FC = () => {
-  const { standings, loading, error, refetch } = useTournamentData();
+  const { standings, teams, loading, error, refetch } = useTournamentData();
   const router = useRouter();
 
-  const getPositionColor = (position: number) => {
-    if (position === 1) return 'warning.main'; // Gold for champion
-    if (position <= 3) return 'success.main'; // Green for top 3
-    if (position >= 15) return 'error.main'; // Red for relegation
-    return 'transparent';
-  };
 
-  const handleTeamClick = (teamName: string) => {
-    // Navigate to the Csapatok page with team selection
-    router.push(`/csapatok?team=${encodeURIComponent(teamName)}`);
+
+  const handleTeamClick = (teamId: number) => {
+    // Navigate to the Csapatok page for the team
+    router.push(`/csapatok/${teamId}`);
   };
 
   if (loading) {
@@ -83,7 +77,14 @@ const LeagueTable: React.FC = () => {
   }
 
   // The standings data already contains the needed information
-  const teams = standings;
+  // Merge standings with teams data to get complete team information including tagozat
+  const teamsWithStandings = standings.map(standing => {
+    const teamData = teams.find(team => team.id === standing.team_id);
+    return {
+      ...standing,
+      teamData: teamData || null
+    };
+  });
 
   return (
     <Card sx={{ backgroundColor: 'background.paper' }}>
@@ -106,26 +107,91 @@ const LeagueTable: React.FC = () => {
           </Typography>
         </Box>
         
-        <TableContainer sx={{ backgroundColor: 'background.paper' }}>
-          <Table size="small">
+        <TableContainer sx={{ 
+          backgroundColor: 'background.paper', 
+          overflowX: 'auto',
+          '& .MuiTable-root': {
+            minWidth: { xs: 650, sm: 700 }
+          }
+        }}>
+          <Table size="small" sx={{ 
+            minWidth: { xs: 650, sm: 700 },
+            '& .MuiTableCell-root': {
+              px: { xs: 0.5, sm: 1 },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' }
+            }
+          }}>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                <TableCell sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>H</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: 'text.primary' }}>OSZT</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>M</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>GY</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>D</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>V</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 60, color: 'text.primary' }}>LG</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 60, color: 'text.primary' }}>KG</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 60, color: 'text.primary' }}>GA</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 'bold', width: 50, color: 'text.primary' }}>P</TableCell>
+                <TableCell sx={{ 
+                  fontWeight: 'bold', 
+                  color: 'text.primary',
+                  minWidth: { xs: 80, sm: 100 }
+                }}>
+                  OSZT
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 35, sm: 50 }, 
+                  color: 'text.primary' 
+                }}>
+                  M
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 35, sm: 50 }, 
+                  color: 'text.primary' 
+                }}>
+                  GY
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 35, sm: 50 }, 
+                  color: 'text.primary' 
+                }}>
+                  D
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 35, sm: 50 }, 
+                  color: 'text.primary' 
+                }}>
+                  V
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 45, sm: 60 }, 
+                  color: 'text.primary' 
+                }}>
+                  LG
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 45, sm: 60 }, 
+                  color: 'text.primary' 
+                }}>
+                  KG
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 45, sm: 60 }, 
+                  color: 'text.primary' 
+                }}>
+                  GA
+                </TableCell>
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 40, sm: 50 }, 
+                  color: 'text.primary' 
+                }}>
+                  P
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {teams.map((team) => (
+              {teamsWithStandings.map((teamStanding) => (
                 <TableRow
-                  key={team.id}
+                  key={teamStanding.id}
                   hover
                   sx={{
                     '&:hover': {
@@ -135,91 +201,87 @@ const LeagueTable: React.FC = () => {
                     borderBottomColor: 'divider',
                   }}
                 >
-                  <TableCell sx={{ color: 'text.primary' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Box
-                        sx={{
-                          width: 4,
-                          height: 20,
-                          backgroundColor: getPositionColor(team.position || 0),
-                          borderRadius: 1,
-                        }}
-                      />
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: 'text.primary' }}>
-                        {team.position}.
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  
                   <TableCell>
                     <ButtonBase
-                      onClick={() => handleTeamClick(team.className || team.name || team.team_name)}
+                      onClick={() => handleTeamClick(teamStanding.team_id || 0)}
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
+                        gap: { xs: 0.5, sm: 1.5 },
                         p: 0.5,
                         borderRadius: 1,
+                        width: '100%',
+                        justifyContent: 'flex-start',
                         '&:hover': {
                           backgroundColor: 'action.hover',
                         },
                       }}
                     >
-                      <Avatar
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          bgcolor: getClassColor(team.className || team.name || team.team_name),
-                          fontSize: '0.7rem',
-                          fontWeight: 'bold',
-                          color: 'white'
-                        }}
-                      >
-                        {((team.className || team.name || team.team_name || '').split(' ')[1] || (team.className || team.name || team.team_name || '').charAt((team.className || team.name || team.team_name || '').length - 1))}
-                      </Avatar>
-                      <Typography 
-                        variant="body2" 
-                        fontWeight={(team.position || 0) <= 3 ? 'bold' : 'normal'}
-                        sx={{ 
-                          color: 'text.primary',
-                          '&:hover': {
-                            color: 'primary.main',
-                            textDecoration: 'underline',
-                          }
-                        }}
-                      >
-                        {team.className || team.name}
-                      </Typography>
+                      <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
+                        <TeamLogo
+                          team={teamStanding.teamData}
+                          size={24}
+                          fontSize="0.7rem"
+                          showBorder={true}
+                        />
+                      </Box>
+                      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+                        <TeamLogo
+                          team={teamStanding.teamData}
+                          size={32}
+                          fontSize="0.9rem"
+                          showBorder={true}
+                        />
+                      </Box>
+                      {/* Team name and tagozat */}
+                      <Box sx={{ ml: 1, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 'bold',
+                            color: 'text.primary',
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                          }}
+                        >
+                          {teamStanding.teamData?.name || teamStanding.name || `${teamStanding.teamData?.tagozat || 'N/A'} osztály`}
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: 'text.secondary',
+                            fontSize: { xs: '0.65rem', sm: '0.75rem' }
+                          }}
+                        >
+                          {teamStanding.teamData?.tagozat || 'N/A'} tagozat
+                        </Typography>
+                      </Box>
                     </ButtonBase>
                   </TableCell>
-                  
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.played || 0}</TableCell>
+                  <TableCell align="center" sx={{ color: 'text.primary' }}>{teamStanding.played || 0}</TableCell>
                   <TableCell align="center" sx={{ color: 'success.main', fontWeight: 'bold' }}>
-                    {team.won || 0}
+                    {teamStanding.won || 0}
                   </TableCell>
                   <TableCell align="center" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
-                    {team.drawn || 0}
+                    {teamStanding.drawn || 0}
                   </TableCell>
                   <TableCell align="center" sx={{ color: 'error.main', fontWeight: 'bold' }}>
-                    {team.lost || 0}
+                    {teamStanding.lost || 0}
                   </TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.goalsFor || 0}</TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{team.goalsAgainst || 0}</TableCell>
+                  <TableCell align="center" sx={{ color: 'text.primary' }}>{teamStanding.goalsFor || 0}</TableCell>
+                  <TableCell align="center" sx={{ color: 'text.primary' }}>{teamStanding.goalsAgainst || 0}</TableCell>
                   <TableCell align="center" sx={{ 
-                    color: (team.goalDifference || 0) > 0 ? 'success.main' : (team.goalDifference || 0) < 0 ? 'error.main' : 'text.primary',
+                    color: (teamStanding.goalDifference || 0) > 0 ? 'success.main' : (teamStanding.goalDifference || 0) < 0 ? 'error.main' : 'text.primary',
                     fontWeight: 'bold'
                   }}>
-                    {(team.goalDifference || 0) > 0 ? '+' : ''}{team.goalDifference || 0}
+                    {(teamStanding.goalDifference || 0) > 0 ? '+' : ''}{teamStanding.goalDifference || 0}
                   </TableCell>
                   <TableCell align="center">
                     <Chip
-                      label={team.points || 0}
+                      label={teamStanding.points || 0}
                       size="small"
                       sx={{
                         fontWeight: 'bold',
-                        backgroundColor: (team.position || 0) === 1 ? 'warning.main' : 
-                                       (team.position || 0) <= 3 ? 'success.main' : 
-                                       (team.position || 0) >= 15 ? 'error.main' : 'primary.main',
+                        backgroundColor: 'primary.main',
                         color: 'white',
                         minWidth: '35px'
                       }}
@@ -231,29 +293,7 @@ const LeagueTable: React.FC = () => {
           </Table>
         </TableContainer>
 
-        <Box sx={{ 
-          p: 2, 
-          display: 'flex', 
-          gap: 2, 
-          flexWrap: 'wrap', 
-          fontSize: '0.8rem',
-          borderTop: '1px solid',
-          borderTopColor: 'divider',
-          backgroundColor: 'action.hover'
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 12, height: 3, bgcolor: 'warning.main', borderRadius: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Bajnok (1.)</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 12, height: 3, bgcolor: 'success.main', borderRadius: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Döntő (2-3.)</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 12, height: 3, bgcolor: 'error.main', borderRadius: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Kiesés (15-17.)</Typography>
-          </Box>
-        </Box>
+
       </CardContent>
     </Card>
   );

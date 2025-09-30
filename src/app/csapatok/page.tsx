@@ -16,11 +16,9 @@ import {
   Stack,
   Avatar,
   LinearProgress,
-  Badge,
   Paper
 } from '@mui/material';
 import {
-  EmojiEvents as TrophyIcon,
   SportsScore as GoalIcon,
   Group as GroupIcon,
   Shield as ShieldIcon,
@@ -119,41 +117,10 @@ function CsapatokContent() {
     ) : null;
   };
 
-  // Calculate team form/performance indicators
-  const getTeamPerformanceLevel = (teamStats: any) => {
-    if (!teamStats) return 'new';
-    const winRate = teamStats.played > 0 ? (teamStats.won / teamStats.played) : 0;
-    if (winRate >= 0.7) return 'excellent';
-    if (winRate >= 0.5) return 'good';
-    if (winRate >= 0.3) return 'average';
-    return 'poor';
-  };
-
-  const getPerformanceColor = (level: string) => {
-    switch (level) {
-      case 'excellent': return '#4caf50';
-      case 'good': return '#8bc34a';
-      case 'average': return '#ff9800';
-      case 'poor': return '#f44336';
-      default: return '#9e9e9e';
-    }
-  };
-
-  const getPerformanceLabel = (level: string) => {
-    switch (level) {
-      case 'excellent': return 'Kiváló';
-      case 'good': return 'Jó';
-      case 'average': return 'Átlagos';
-      case 'poor': return 'Gyenge';
-      default: return 'Új csapat';
-    }
-  };
-
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Header />
-      
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+  <Header />
+  <Container maxWidth="xl" sx={{ py: 3 }}>
         {/* Tournament Overview Header */}
         <Paper elevation={2} sx={{ p: 4, mb: 4, background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)', color: 'white' }}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
@@ -218,11 +185,6 @@ function CsapatokContent() {
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }, gap: 4 }}>
           {teams
-            .sort((a, b) => {
-              const teamA = getTeamStats(a.id || 0);
-              const teamB = getTeamStats(b.id || 0);
-              return (teamA?.position || 999) - (teamB?.position || 999);
-            })
             .map((team) => {
               const teamStats = getTeamStats(team.id || 0);
               const teamDisplayName = getTeamDisplayName(team);
@@ -231,7 +193,6 @@ function CsapatokContent() {
               const topScorer = getTeamTopScorer(teamDisplayName);
               const playersCount = getTeamPlayersCount(team);
               const captainsCount = getTeamCaptainsCount(team);
-              const performanceLevel = getTeamPerformanceLevel(teamStats);
 
               return (
                 <Card 
@@ -239,13 +200,14 @@ function CsapatokContent() {
                   sx={{ 
                     height: '100%',
                     border: `3px solid ${getTeamColor(team)}`,
-                    backgroundColor: 'background.paper',
+                    backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#181c24' : 'background.paper',
                     cursor: 'pointer',
                     borderRadius: 3,
                     overflow: 'hidden',
                     position: 'relative',
+                    boxShadow: (theme) => theme.palette.mode === 'dark' ? 4 : 2,
                     '&:hover': {
-                      boxShadow: 8,
+                      boxShadow: 12,
                       transform: 'translateY(-4px)',
                       transition: 'all 0.3s ease-in-out',
                     }
@@ -255,7 +217,9 @@ function CsapatokContent() {
                   {/* Team Header with Class Color */}
                   <Box 
                     sx={{ 
-                      background: `linear-gradient(135deg, ${getTeamColor(team)} 0%, ${getTeamColor(team)}dd 100%)`,
+                      background: (theme) => theme.palette.mode === 'dark'
+                        ? `linear-gradient(135deg, ${getTeamColor(team)} 0%, #232a36 100%)`
+                        : `linear-gradient(135deg, ${getTeamColor(team)} 0%, ${getTeamColor(team)}dd 100%)`,
                       color: 'white',
                       p: 3,
                       position: 'relative'
@@ -274,22 +238,6 @@ function CsapatokContent() {
                       >
                         {teamClassName}
                       </Avatar>
-                      {teamStats && (
-                        <Badge
-                          badgeContent={teamStats.position}
-                          color="secondary"
-                          sx={{ 
-                            '& .MuiBadge-badge': { 
-                              fontSize: '1rem',
-                              height: '28px',
-                              minWidth: '28px',
-                              fontWeight: 'bold'
-                            }
-                          }}
-                        >
-                          <TrophyIcon sx={{ fontSize: '2rem' }} />
-                        </Badge>
-                      )}
                     </Box>
                     
                     <Typography 
@@ -306,20 +254,6 @@ function CsapatokContent() {
                     <Typography variant="body2" sx={{ opacity: 0.9 }}>
                       {team.start_year}. évfolyam • {team.tagozat} tagozat
                     </Typography>
-
-                    {/* Performance Indicator */}
-                    <Chip
-                      label={getPerformanceLabel(performanceLevel)}
-                      size="small"
-                      sx={{ 
-                        position: 'absolute',
-                        top: 12,
-                        right: 12,
-                        backgroundColor: getPerformanceColor(performanceLevel),
-                        color: 'white',
-                        fontWeight: 'bold'
-                      }}
-                    />
                   </Box>
 
                   <CardContent sx={{ p: 3 }}>
@@ -335,6 +269,11 @@ function CsapatokContent() {
                           label={`${playersCount} játékos`}
                           variant="outlined"
                           size="small"
+                          sx={{
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'background.paper',
+                            color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
+                            borderColor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'divider',
+                          }}
                         />
                         {captainsCount > 0 && (
                           <Chip
@@ -343,6 +282,11 @@ function CsapatokContent() {
                             variant="outlined"
                             size="small"
                             color="primary"
+                            sx={{
+                              bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'background.paper',
+                              color: (theme) => theme.palette.mode === 'dark' ? 'white' : 'text.primary',
+                              borderColor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'divider',
+                            }}
                           />
                         )}
                       </Box>
@@ -365,9 +309,8 @@ function CsapatokContent() {
                         <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: 'text.primary' }}>
                           Bajnoki statisztikák
                         </Typography>
-                        
                         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
+                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'action.hover', borderRadius: 1 }}>
                             <Typography variant="h6" sx={{ fontWeight: 'bold', color: getTeamColor(team) }}>
                               {teamStats.points}
                             </Typography>
@@ -375,8 +318,8 @@ function CsapatokContent() {
                               Pont
                             </Typography>
                           </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'action.hover', borderRadius: 1 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
                               {teamStats.played}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
@@ -384,52 +327,94 @@ function CsapatokContent() {
                             </Typography>
                           </Box>
                         </Box>
-
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                           <Typography variant="body2" color="text.secondary">
                             Győzelmek aránya
                           </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
                             {teamStats.played > 0 ? Math.round((teamStats.won / teamStats.played) * 100) : 0}%
                           </Typography>
                         </Box>
-                        
                         <LinearProgress 
                           variant="determinate" 
                           value={teamStats.played > 0 ? (teamStats.won / teamStats.played) * 100 : 0}
                           sx={{ 
                             height: 8, 
                             borderRadius: 1,
-                            backgroundColor: 'grey.200',
+                            backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'action.hover',
                             '& .MuiLinearProgress-bar': {
                               backgroundColor: getTeamColor(team)
                             }
                           }}
                         />
-
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, fontSize: '0.875rem' }}>
-                          <Chip label={`${teamStats.won}G`} size="small" color="success" />
-                          <Chip label={`${teamStats.drawn}D`} size="small" color="warning" />
-                          <Chip label={`${teamStats.lost}V`} size="small" color="error" />
-                          <Typography variant="caption" color="text.secondary">
-                            {teamStats.goals_for}:{teamStats.goals_against}
-                          </Typography>
+                        {/* Combined G:D:V Format with Color Coding */}
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? '#232a36' : 'action.hover',
+                            borderRadius: 2,
+                            p: 1.5,
+                            gap: 0.5
+                          }}>
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: '#4caf50',
+                                minWidth: '20px',
+                                textAlign: 'center'
+                              }}
+                            >
+                              {teamStats.won}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">:</Typography>
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: '#ff9800',
+                                minWidth: '20px',
+                                textAlign: 'center'
+                              }}
+                            >
+                              {teamStats.drawn}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">:</Typography>
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                fontWeight: 'bold',
+                                color: '#f44336',
+                                minWidth: '20px',
+                                textAlign: 'center'
+                              }}
+                            >
+                              {teamStats.lost}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mx: 1 }}>
+                              •
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                              {teamStats.goals_for}:{teamStats.goals_against}
+                            </Typography>
+                          </Box>
                         </Box>
                       </Box>
                     ) : null}
 
-                    {/* Goal Scorers Summary */}
-                    {teamScorers.length > 0 && (
-                      <Box sx={{ mt: 3 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <GoalIcon sx={{ color: 'success.main' }} />
-                          <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                            {teamScorers.length} góllövő • {teamScorers.reduce((sum, s) => sum + s.goals, 0)} gól
-                          </Typography>
-                        </Box>
-                      </Box>
-                    )}
-                  </CardContent>
+                {/* Goal Scorers Summary */}
+                {teamScorers.length > 0 && (
+                  <Box sx={{ mt: 3 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <GoalIcon sx={{ color: 'success.main' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                        {teamScorers.length} góllövő • {teamScorers.reduce((sum, s) => sum + s.goals, 0)} gól
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+              </CardContent>
 
                   {/* Action Button */}
                   <Box sx={{ p: 2, pt: 0 }}>

@@ -3,7 +3,11 @@ import { api } from '@/lib/api';
 import type {
   Tournament,
   Team,
+  TeamExtendedSchema,
+  TeamCreateSchema,
+  TeamUpdateSchema,
   Player,
+  PlayerExtendedSchema,
   ApiMatch,
   EventSchema,
   MatchEvent,
@@ -14,7 +18,17 @@ import type {
   AllEvents,
   Profile,
   Announcement,
-  User
+  User,
+  TimeSyncSchema,
+  PhotoSchema,
+  PhotoCreateSchema,
+  PhotoUpdateSchema,
+  KozlemenySchema,
+  KozlemenyCreateSchema,
+  KozlemenyUpdateSchema,
+  LiveMatchStatus,
+  LiveMatch,
+  LiveUpdatePayload
 } from '@/types/api';
 
 // Tournament endpoints
@@ -292,7 +306,7 @@ export const announcementService = {
   async getActive(): Promise<Announcement[]> {
     try {
       console.log('🔥 announcementService.getActive() called');
-      const result = await api.get<Announcement[]>('/announcements');
+      const result = await api.get<Announcement[]>('/kozlemenyek');
       console.log('🔥 announcementService.getActive() success:', result);
       return result;
     } catch (error) {
@@ -304,7 +318,7 @@ export const announcementService = {
   async getById(id: number): Promise<Announcement> {
     try {
       console.log(`🔥 announcementService.getById(${id}) called`);
-      const result = await api.get<Announcement>(`/announcements/${id}`);
+      const result = await api.get<Announcement>(`/kozlemenyek/${id}`);
       console.log(`🔥 announcementService.getById(${id}) success:`, result);
       return result;
     } catch (error) {
@@ -316,7 +330,7 @@ export const announcementService = {
   async getByPriority(priority: 'low' | 'normal' | 'high' | 'urgent'): Promise<Announcement[]> {
     try {
       console.log(`🔥 announcementService.getByPriority(${priority}) called`);
-      const result = await api.get<Announcement[]>(`/announcements/priority/${priority}`);
+      const result = await api.get<Announcement[]>(`/kozlemenyek/priority/${priority}`);
       console.log(`🔥 announcementService.getByPriority(${priority}) success:`, result);
       return result;
     } catch (error) {
@@ -336,6 +350,260 @@ export const userService = {
       return result;
     } catch (error) {
       console.error(`🔥 userService.getById(${id}) failed:`, error);
+      throw error;
+    }
+  }
+};
+
+// Time synchronization service
+export const timeService = {
+  async getServerTime(): Promise<TimeSyncSchema> {
+    try {
+      console.log('🕐 timeService.getServerTime() called');
+      const result = await api.get<TimeSyncSchema>('/time');
+      console.log('🕐 timeService.getServerTime() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🕐 timeService.getServerTime() failed:', error);
+      throw error;
+    }
+  }
+};
+
+// NEW: Live match services for real-time updates
+export const liveMatchService = {
+  async getLiveMatches(): Promise<LiveMatch[]> {
+    try {
+      console.log('🔴 liveMatchService.getLiveMatches() called');
+      // Use the matches endpoint and filter for live matches
+      const allMatches = await api.get<ApiMatch[]>('/matches');
+      
+      // Filter for live matches and convert to LiveMatch format
+      const liveMatches: LiveMatch[] = allMatches
+        .filter(match => {
+          // A match is considered live if it's between start and end time
+          const now = new Date();
+          const matchStart = new Date(`${match.datetime}`);
+          const matchEnd = new Date(matchStart.getTime() + (2 * 60 * 60 * 1000)); // 2 hours duration
+          
+          return now >= matchStart && now <= matchEnd;
+        })
+        .map(match => {
+          // Calculate current minute from match start
+          const now = new Date();
+          const matchStart = new Date(`${match.datetime}`);
+          const minutesElapsed = Math.floor((now.getTime() - matchStart.getTime()) / (1000 * 60));
+          const currentMinute = Math.max(0, Math.min(minutesElapsed, 120)); // Cap at 120 minutes
+          
+          return {
+            id: match.id || 0,
+            tournament: match.tournament?.id || 0,
+            team1: match.team1?.id || 0,
+            team2: match.team2?.id || 0,
+            team1_score: null,
+            team2_score: null,
+            date: match.datetime.split('T')[0],
+            venue: 'Helyszín',
+            referee: match.referee?.id || null,
+            round_obj: match.round_obj?.id || 0,
+            homeTeam: match.team1?.name || match.team1?.tagozat || 'Hazai csapat',
+            awayTeam: match.team2?.name || match.team2?.tagozat || 'Vendég csapat',
+            homeTeamId: match.team1?.id || 0,
+            awayTeamId: match.team2?.id || 0,
+            homeScore: null,
+            awayScore: null,
+            time: match.datetime.split('T')[1].substring(0, 5),
+            round: match.round_obj?.number ? `${match.round_obj.number}. forduló` : 'Forduló',
+            events: match.events?.map(e => ({
+              id: e.id || 0,
+              match: match.id || 0,
+              player: e.player?.id || 0,
+              event_type: e.event_type as any,
+              minute: e.minute,
+              playerName: e.player?.name,
+              team: Math.random() > 0.5 ? 'home' : 'away' // TODO: Determine correct team
+            })) || [],
+            homeTeamObj: match.team1,
+            awayTeamObj: match.team2,
+            live_status: {
+              match_id: match.id || 0,
+              status: currentMinute < 45 ? 'first_half' : currentMinute < 60 ? 'half_time' : 'second_half',
+              current_minute: currentMinute,
+              extra_time_minutes: Math.max(0, currentMinute - 90),
+              last_updated: new Date().toISOString(),
+              goals_team1: 0,
+              goals_team2: 0,
+              is_live: true,
+              is_finished: false
+            },
+            recent_events: [],
+            is_featured: true,
+            cache_priority: 1,
+            display_time: `${Math.min(currentMinute, 90)}'${currentMinute > 90 ? `+${currentMinute - 90}` : ''}`
+          } as LiveMatch;
+        });
+      
+      console.log('🔴 liveMatchService.getLiveMatches() success:', liveMatches);
+      return liveMatches;
+    } catch (error) {
+      console.error('🔴 liveMatchService.getLiveMatches() failed:', error);
+      throw error;
+    }
+  },
+
+  async getLiveMatchById(matchId: number): Promise<LiveMatch> {
+    try {
+      console.log(`🔴 liveMatchService.getLiveMatchById(${matchId}) called`);
+      // Use the matches endpoint to get specific match
+      const match = await api.get<ApiMatch>(`/matches/${matchId}`);
+      
+      // Calculate current minute from match start
+      const now = new Date();
+      const matchStart = new Date(`${match.datetime}`);
+      const minutesElapsed = Math.floor((now.getTime() - matchStart.getTime()) / (1000 * 60));
+      const currentMinute = Math.max(0, Math.min(minutesElapsed, 120)); // Cap at 120 minutes
+      
+      const liveMatch: LiveMatch = {
+        id: match.id || 0,
+        tournament: match.tournament?.id || 0,
+        team1: match.team1?.id || 0,
+        team2: match.team2?.id || 0,
+        team1_score: null,
+        team2_score: null,
+        date: match.datetime.split('T')[0],
+        venue: 'Helyszín',
+        referee: match.referee?.id || null,
+        round_obj: match.round_obj?.id || 0,
+        homeTeam: match.team1?.name || match.team1?.tagozat || 'Hazai csapat',
+        awayTeam: match.team2?.name || match.team2?.tagozat || 'Vendég csapat',
+        homeTeamId: match.team1?.id || 0,
+        awayTeamId: match.team2?.id || 0,
+        homeScore: null,
+        awayScore: null,
+        time: match.datetime.split('T')[1].substring(0, 5),
+        round: match.round_obj?.number ? `${match.round_obj.number}. forduló` : 'Forduló',
+        events: match.events?.map(e => ({
+          id: e.id || 0,
+          match: match.id || 0,
+          player: e.player?.id || 0,
+          event_type: e.event_type as any,
+          minute: e.minute,
+          playerName: e.player?.name,
+          team: Math.random() > 0.5 ? 'home' : 'away' // TODO: Determine correct team
+        })) || [],
+        homeTeamObj: match.team1,
+        awayTeamObj: match.team2,
+        live_status: {
+          match_id: match.id || 0,
+          status: currentMinute < 45 ? 'first_half' : currentMinute < 60 ? 'half_time' : 'second_half',
+          current_minute: currentMinute,
+          extra_time_minutes: Math.max(0, currentMinute - 90),
+          last_updated: new Date().toISOString(),
+          goals_team1: 0,
+          goals_team2: 0,
+          is_live: true,
+          is_finished: false
+        },
+        recent_events: [],
+        is_featured: true,
+        cache_priority: 1,
+        display_time: `${Math.min(currentMinute, 90)}'${currentMinute > 90 ? `+${currentMinute - 90}` : ''}`
+      };
+      
+      console.log(`🔴 liveMatchService.getLiveMatchById(${matchId}) success:`, liveMatch);
+      return liveMatch;
+    } catch (error) {
+      console.error(`🔴 liveMatchService.getLiveMatchById(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  async getLiveMatchStatus(matchId: number): Promise<LiveMatchStatus> {
+    try {
+      console.log(`🔴 liveMatchService.getLiveMatchStatus(${matchId}) called`);
+      const result = await api.get<LiveMatchStatus>(`/live-matches/${matchId}/status`);
+      console.log(`🔴 liveMatchService.getLiveMatchStatus(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔴 liveMatchService.getLiveMatchStatus(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  async getMatchTiming(matchId: number): Promise<{ current_minute: number; extra_time: number; status: string }> {
+    try {
+      console.log(`⏱️ liveMatchService.getMatchTiming(${matchId}) called`);
+      const result = await api.get<{ current_minute: number; extra_time: number; status: string }>(`/matches/${matchId}/timing`);
+      console.log(`⏱️ liveMatchService.getMatchTiming(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`⏱️ liveMatchService.getMatchTiming(${matchId}) failed:`, error);
+      throw error;
+    }
+  }
+};
+
+// NEW: Enhanced team service with logo support
+export const enhancedTeamService = {
+  async getTeamsWithLogos(): Promise<TeamExtendedSchema[]> {
+    try {
+      console.log('🏆 enhancedTeamService.getTeamsWithLogos() called');
+      const result = await api.get<TeamExtendedSchema[]>('/teams/extended');
+      console.log('🏆 enhancedTeamService.getTeamsWithLogos() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🏆 enhancedTeamService.getTeamsWithLogos() failed:', error);
+      throw error;
+    }
+  },
+
+  async createTeam(teamData: TeamCreateSchema): Promise<TeamExtendedSchema> {
+    try {
+      console.log('🏆 enhancedTeamService.createTeam() called', teamData);
+      const result = await api.post<TeamExtendedSchema>('/teams', teamData);
+      console.log('🏆 enhancedTeamService.createTeam() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🏆 enhancedTeamService.createTeam() failed:', error);
+      throw error;
+    }
+  },
+
+  async updateTeam(teamId: number, teamData: TeamUpdateSchema): Promise<TeamExtendedSchema> {
+    try {
+      console.log(`🏆 enhancedTeamService.updateTeam(${teamId}) called`, teamData);
+      const result = await api.put<TeamExtendedSchema>(`/teams/${teamId}`, teamData);
+      console.log(`🏆 enhancedTeamService.updateTeam(${teamId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🏆 enhancedTeamService.updateTeam(${teamId}) failed:`, error);
+      throw error;
+    }
+  }
+};
+
+// NEW: Photo gallery service
+export const photoService = {
+  async getMatchPhotos(matchId: number): Promise<PhotoSchema[]> {
+    try {
+      console.log(`📸 photoService.getMatchPhotos(${matchId}) called`);
+      const result = await api.get<PhotoSchema[]>(`/matches/${matchId}/photos`);
+      console.log(`📸 photoService.getMatchPhotos(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`📸 photoService.getMatchPhotos(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  async uploadPhoto(matchId: number, photoData: PhotoCreateSchema): Promise<PhotoSchema> {
+    try {
+      console.log(`📸 photoService.uploadPhoto(${matchId}) called`, photoData);
+      const result = await api.post<PhotoSchema>(`/matches/${matchId}/photos`, photoData);
+      console.log(`📸 photoService.uploadPhoto(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`📸 photoService.uploadPhoto(${matchId}) failed:`, error);
       throw error;
     }
   }

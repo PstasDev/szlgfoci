@@ -5,10 +5,27 @@ interface ApiError extends Error {
   statusText?: string;
 }
 
-// Use Next.js API routes as proxy to Django backend to avoid CORS issues.
-// In development: use local Next.js API routes that can proxy to local Django server
-// In production: use Next.js API routes that proxy to production Django server
-const API_BASE_URL = '/api';
+// Direct API calls to Django backend
+// In development: localhost:8000/api
+// In production: fociapi.szlg.info/api
+const getApiBaseUrl = () => {
+  // Check if we're in browser environment
+  if (typeof window !== 'undefined') {
+    // Client-side: detect based on hostname
+    const isLocalhost = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.startsWith('192.168.') ||
+                       window.location.hostname.startsWith('10.') ||
+                       window.location.hostname.startsWith('172.');
+    return isLocalhost ? 'http://localhost:8000/api' : 'https://fociapi.szlg.info/api';
+  } else {
+    // Server-side: use environment variable
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    return isDevelopment ? 'http://localhost:8000/api' : 'https://fociapi.szlg.info/api';
+  }
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Export base so other modules can reuse it if needed
 export const baseURL = API_BASE_URL;
@@ -26,6 +43,7 @@ export const api = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
+      mode: 'cors', // Enable CORS for cross-origin requests
       cache: 'no-store', // Always fetch fresh data
     });
 
@@ -50,7 +68,49 @@ export const api = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
+      mode: 'cors', // Enable CORS for cross-origin requests
       body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+      const error: ApiError = new Error(`API Error: ${response.status} ${response.statusText}`);
+      error.status = response.status;
+      error.statusText = response.statusText;
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      mode: 'cors', // Enable CORS for cross-origin requests
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+      const error: ApiError = new Error(`API Error: ${response.status} ${response.statusText}`);
+      error.status = response.status;
+      error.statusText = response.statusText;
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  async delete<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      mode: 'cors', // Enable CORS for cross-origin requests
     });
 
     if (!response.ok) {

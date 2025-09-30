@@ -54,7 +54,7 @@ export default function MatchesPage() {
             {liveMatches.length > 0 ? (
               <MatchesList
                 matches={liveMatches}
-                title="🔴 Élő Mérkőzések"
+                title="� Élő Mérkőzések"
                 variant="detailed"
                 layout="list"
               />

@@ -16,16 +16,16 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getTeamColor } from '@/utils/dataUtils';
+import { Match, getTeamColor, getTeamColorLight } from '@/utils/dataUtils';
 import LiveMatchTimer from './LiveMatchTimer';
 import EnhancedEventDisplay from './EnhancedEventDisplay';
 import type { EnhancedEventSchema } from '@/types/api';
 
-interface MatchDetailViewProps {
+interface BentoMatchDetailProps {
   match: Match;
 }
 
-const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
+const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
   // Use team objects from match data (includes colors from backend)
   const homeTeam = match.homeTeamObj;
   const awayTeam = match.awayTeamObj;
@@ -36,6 +36,14 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
   // Debug logging
   console.log('MatchDetailView - match.events:', match.events);
   console.log('MatchDetailView - sortedEvents:', sortedEvents);
+  console.log('🔍 RAW EVENT DATA DEBUG:', match.events.map(e => ({
+    id: e.id,
+    event_type: (e as any).event_type,
+    minute: e.minute,
+    exact_time: (e as any).exact_time,
+    minute_extra_time: (e as any).minute_extra_time,
+    half: (e as any).half
+  })));
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -44,7 +52,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
         elevation={2} 
         sx={{ 
           overflow: 'hidden', 
-          backgroundColor: '#2d2d2d',
+          background: `linear-gradient(135deg, ${getTeamColorLight(homeTeam)} 0%, ${getTeamColorLight(awayTeam)} 100%)`,
           border: '1px solid #404040',
           borderRadius: '16px'
         }}
@@ -288,18 +296,22 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
             <Stack spacing={2}>
               {sortedEvents.map((event) => {
                 // Convert legacy event to enhanced event format
+                // Cast to any to access extended properties from API
+                const eventData = event as any;
+                
                 const enhancedEvent: EnhancedEventSchema = {
-                  id: event.id,
-                  match: event.match,
-                  event_type: event.event_type || event.type as any || 'goal',
-                  minute: event.minute,
-                  minute_extra_time: null, // Not available in legacy format
-                  player: event.player ? { 
-                    id: event.player, 
-                    name: event.playerName || 'Unknown Player'
+                  id: eventData.id,
+                  match: eventData.match,
+                  event_type: eventData.event_type || eventData.type || 'goal',
+                  minute: eventData.minute,
+                  minute_extra_time: eventData.minute_extra_time || eventData.minuteExtraTime || null,
+                  player: eventData.player ? { 
+                    id: typeof eventData.player === 'object' ? eventData.player.id : eventData.player, 
+                    name: typeof eventData.player === 'object' ? eventData.player.name : (eventData.playerName || 'Unknown Player')
                   } : null,
-                  half: 1, // Default to first half for legacy events
-                  extra_time: null
+                  half: eventData.half || 1,
+                  extra_time: eventData.extra_time || eventData.extraTime || null,
+                  exact_time: eventData.exact_time || null
                 };
 
                 return (
@@ -430,8 +442,207 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
           </Box>
         </Paper>
       )}
+
+      {/* Team Lineups */}
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          backgroundColor: '#2d2d2d',
+          border: '1px solid #404040',
+          borderRadius: '16px',
+          overflow: 'hidden'
+        }}
+      >
+        <Box sx={{ 
+          p: 3, 
+          backgroundColor: '#1e1e1e',
+          borderBottom: '1px solid #404040'
+        }}>
+          <Typography variant="h5" sx={{ 
+            fontWeight: 700, 
+            color: '#e8eaed',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            👥 Csapat Felállások
+          </Typography>
+        </Box>
+        
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', md: '1fr auto 1fr' }, 
+            gap: 4 
+          }}>
+            {/* Home Team Players */}
+            <Box>
+              <Typography variant="h6" sx={{ 
+                color: getTeamColor(homeTeam), 
+                mb: 2, 
+                fontWeight: 600,
+                textAlign: 'center'
+              }}>
+                {match.homeTeam}
+              </Typography>
+              <Stack spacing={1}>
+                {homeTeam?.players?.slice(0, 11).map((player, index) => (
+                  <Box key={player.id} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: 'rgba(255,255,255,0.02)'
+                  }}>
+                    <Box sx={{ 
+                      minWidth: 24, 
+                      height: 24, 
+                      borderRadius: '50%', 
+                      backgroundColor: getTeamColor(homeTeam),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      color: 'white'
+                    }}>
+                      {index + 1}
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#e8eaed' }}>
+                      {player.name}
+                    </Typography>
+                    {player.csk && (
+                      <Chip label="CSK" size="small" sx={{ 
+                        backgroundColor: '#4285f4', 
+                        color: 'white',
+                        fontSize: '0.6rem',
+                        height: 20
+                      }} />
+                    )}
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+
+            {/* VS Divider */}
+            <Box sx={{ 
+              display: { xs: 'none', md: 'flex' },
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Typography variant="h4" sx={{ color: '#9aa0a6', fontWeight: 'bold' }}>
+                VS
+              </Typography>
+            </Box>
+
+            {/* Away Team Players */}
+            <Box>
+              <Typography variant="h6" sx={{ 
+                color: getTeamColor(awayTeam), 
+                mb: 2, 
+                fontWeight: 600,
+                textAlign: 'center'
+              }}>
+                {match.awayTeam}
+              </Typography>
+              <Stack spacing={1}>
+                {awayTeam?.players?.slice(0, 11).map((player, index) => (
+                  <Box key={player.id} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    p: 1,
+                    borderRadius: 1,
+                    backgroundColor: 'rgba(255,255,255,0.02)'
+                  }}>
+                    <Box sx={{ 
+                      minWidth: 24, 
+                      height: 24, 
+                      borderRadius: '50%', 
+                      backgroundColor: getTeamColor(awayTeam),
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      color: 'white'
+                    }}>
+                      {index + 1}
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#e8eaed' }}>
+                      {player.name}
+                    </Typography>
+                    {player.csk && (
+                      <Chip label="CSK" size="small" sx={{ 
+                        backgroundColor: '#4285f4', 
+                        color: 'white',
+                        fontSize: '0.6rem',
+                        height: 20
+                      }} />
+                    )}
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Match Photos */}
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          backgroundColor: '#2d2d2d',
+          border: '1px solid #404040',
+          borderRadius: '16px',
+          overflow: 'hidden'
+        }}
+      >
+        <Box sx={{ 
+          p: 3, 
+          backgroundColor: '#1e1e1e',
+          borderBottom: '1px solid #404040'
+        }}>
+          <Typography variant="h5" sx={{ 
+            fontWeight: 700, 
+            color: '#e8eaed',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            📸 Mérkőzés Fotók
+            <Badge 
+              badgeContent={0} 
+              color="primary"
+              sx={{
+                '& .MuiBadge-badge': {
+                  backgroundColor: '#4285f4',
+                  color: 'white'
+                }
+              }}
+            >
+              <Box />
+            </Badge>
+          </Typography>
+        </Box>
+        
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ 
+            textAlign: 'center',
+            py: 4
+          }}>
+            <Typography variant="body1" sx={{ color: '#9aa0a6', mb: 2 }}>
+              📷 Még nincsenek feltöltött fotók ehhez a mérkőzéshez
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666' }}>
+              A fotók hamarosan elérhetőek lesznek!
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
     </Box>
   );
 };
 
-export default MatchDetailView;
+export default BentoMatchDetail;

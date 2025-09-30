@@ -14,7 +14,7 @@ import {
   ArrowBack as BackIcon,
 } from '@mui/icons-material';
 import SimpleLayout from '@/components/SimpleLayout';
-import MatchDetailView from '@/components/MatchDetailView';
+import BentoMatchDetail from '@/components/BentoMatchDetail';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
@@ -108,7 +108,7 @@ export default function MatchPage() {
           </Button>
 
           {/* Match Detail */}
-          <MatchDetailView match={match} />
+          <BentoMatchDetail match={match} />
         </Stack>
       </Container>
     </SimpleLayout>

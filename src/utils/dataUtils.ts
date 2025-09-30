@@ -116,40 +116,124 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
   const homeTeam = match.team1 ? (teams.find(t => t.id === match.team1?.id) || match.team1) : null;
   const awayTeam = match.team2 ? (teams.find(t => t.id === match.team2?.id) || match.team2) : null;
   
+  // Get proper team display names
+  const getTeamDisplayName = (team: Team | null): string => {
+    if (!team) return 'Unknown Team';
+    
+    // Priority: custom name > generated name from start_year+tagozat > tagozat only > fallback
+    if (team.name && team.name.trim() !== '') {
+      return team.name;
+    }
+    
+    // Generate name from start_year and tagozat if available
+    if (team.start_year && team.tagozat) {
+      return `${team.start_year}${team.tagozat}`;
+    }
+    
+    // Fallback to just tagozat
+    if (team.tagozat) {
+      return team.tagozat;
+    }
+    
+    // Last resort fallback
+    return `Team ${team.id || 'Unknown'}`;
+  };
+
+  // Calculate scores from events if available
+  const events = match.events || [];
+  const goalEvents = events.filter(event => event.event_type === 'goal');
+  
+  // Calculate scores based on goals
+  let homeScore = null;
+  let awayScore = null;
+  
+  if (goalEvents.length > 0) {
+    // Count goals for each team
+    const homeGoals = goalEvents.filter(goal => {
+      // Check if the goal player belongs to home team
+      if (homeTeam?.players && goal.player) {
+        return homeTeam.players.some(player => player.id === goal.player?.id);
+      }
+      return false;
+    }).length;
+    
+    const awayGoals = goalEvents.filter(goal => {
+      // Check if the goal player belongs to away team
+      if (awayTeam?.players && goal.player) {
+        return awayTeam.players.some(player => player.id === goal.player?.id);
+      }
+      return false;
+    }).length;
+    
+    homeScore = homeGoals;
+    awayScore = awayGoals;
+  }
+
+  // Format events for display
+  const formattedEvents: MatchEvent[] = events.map(event => ({
+    id: event.id || Math.random(),
+    match: match.id || 0,
+    player: event.player?.id || 0,
+    event_type: event.event_type as 'goal' | 'yellow_card' | 'red_card',
+    minute: event.minute,
+    minute_extra_time: event.minute_extra_time || null, // Preserve minute_extra_time from API
+    playerName: event.player?.name || 'Unknown Player',
+    team: event.player && homeTeam?.players?.some(p => p.id === event.player?.id) ? 'home' as const : 'away' as const,
+    type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'substitution'
+  }));
+  
   return {
     id: match.id || 0,
     tournament: match.tournament?.id || 1,
     team1: match.team1?.id || 0,
     team2: match.team2?.id || 0,
-    team1_score: null,
-    team2_score: null,
-    date: match.datetime,
+    team1_score: homeScore,
+    team2_score: awayScore,
+    date: formatDate(match.datetime),
     venue: 'SZLG Sportpálya',
     referee: match.referee?.id || null,
     round_obj: match.round_obj?.number || 1,
-    homeTeam: homeTeam?.tagozat || homeTeam?.name || `Team ${match.team1?.id || 0}`,
-    awayTeam: awayTeam?.tagozat || awayTeam?.name || `Team ${match.team2?.id || 0}`,
+    homeTeam: getTeamDisplayName(homeTeam),
+    awayTeam: getTeamDisplayName(awayTeam),
     homeTeamId: match.team1?.id || 0,
     awayTeamId: match.team2?.id || 0,
-    homeScore: null,
-    awayScore: null,
+    homeScore: homeScore,
+    awayScore: awayScore,
     status: getMatchStatus(match),
     time: formatTime(match.datetime) || '00:00',
     round: `${match.round_obj?.number || 1}. forduló`,
-    events: [],
+    events: formattedEvents,
     // Include full team objects for accessing colors and other data
     homeTeamObj: homeTeam,
     awayTeamObj: awayTeam
   };
 };
 
-// Determine match status based on datetime
+// Determine match status based on datetime and events
 export const getMatchStatus = (match: ApiMatch): 'upcoming' | 'live' | 'finished' => {
+  // First check for events that indicate match status
+  const events = match.events || [];
+  
+  // If there's a full_time or match_end event, the match is finished
+  const hasFullTimeEvent = events.some(e => e.event_type === 'full_time');
+  const hasMatchEndEvent = events.some(e => e.event_type === 'match_end');
+  
+  if (hasFullTimeEvent || hasMatchEndEvent) {
+    return 'finished';
+  }
+  
+  // If there's a match_start event, the match has started
+  const hasMatchStartEvent = events.some(e => e.event_type === 'match_start');
+  
+  // Fallback to datetime-based logic
   const matchDate = new Date(match.datetime);
   const now = new Date();
   const hoursDiff = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
   
-  if (hoursDiff < -2) {
+  if (hasMatchStartEvent && hoursDiff < 2) {
+    // Match has started and is within reasonable time window
+    return 'live';
+  } else if (hoursDiff < -2) {
     return 'finished';
   } else if (hoursDiff < 2) {
     return 'live';
@@ -349,17 +433,82 @@ export const hasTournamentStarted = (tournament: Tournament): boolean => {
 
 // Get the display name for a team (custom name or generated from start_year + tagozat)
 export const getTeamDisplayName = (team: Team): string => {
+  if (!team) return 'Unknown Team';
+  
+  // Priority: custom name > generated name from start_year+tagozat > tagozat only > fallback
   if (team.name && team.name.trim() !== '') {
     return team.name;
   }
-  // Generate name from start_year and tagozat: e.g., "23F", "24A"
-  return `${team.start_year}${team.tagozat}`;
+  
+  // Generate name from start_year and tagozat if available
+  if (team.start_year && team.tagozat) {
+    return `${team.start_year}${team.tagozat}`;
+  }
+  
+  // Fallback to just tagozat
+  if (team.tagozat) {
+    return team.tagozat;
+  }
+  
+  // Last resort fallback
+  return `Team ${team.id || 'Unknown'}`;
 };
 
 // Get the class identifier for a team (used for colors and identification)
 export const getTeamClassName = (team: Team): string => {
   // Use tagozat as the class identifier for styling
   return team.tagozat;
+};
+
+// NEW: Get tagozat letter from team for display
+export const getTeamTagozatLetter = (team: Team | Standing | { tagozat: string } | string): string => {
+  // Handle string input (team name)
+  if (typeof team === 'string') {
+    const match = team.match(/([A-Z])$/);
+    if (match) {
+      return match[1];
+    }
+    return team.charAt(0).toUpperCase();
+  }
+  
+  // For teams with direct tagozat field
+  if ('tagozat' in team && team.tagozat) {
+    return team.tagozat.toUpperCase();
+  }
+  
+  // For standings data that might have team_name containing tagozat
+  if ('team_name' in team && team.team_name) {
+    // Extract the letter part (like "A" from "2025A" or just "A")
+    const match = team.team_name.match(/([A-Z])$/);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  // Fallback for existing data structure
+  if ('className' in team && team.className) {
+    const match = team.className.match(/([A-Z])$/);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  return '?';
+};
+
+// NEW: Get theme color for team based on tagozat
+export const getTagozatColor = (tagozatLetter: string): string => {
+  switch (tagozatLetter.toUpperCase()) {
+    case 'A': return '#66bb6a'; // Green
+    case 'B': return '#ffca28'; // Yellow/Gold
+    case 'C': return '#ba68c8'; // Purple
+    case 'D': return '#ef5350'; // Red
+    case 'E': return '#bdbdbd'; // Gray
+    case 'F': return '#5c6bc0'; // Navy blue
+    case 'G': return '#ff7043'; // Orange
+    case 'H': return '#26c6da'; // Cyan
+    default: return '#42a5f5'; // Default blue
+  }
 };
 
 // Get tournament status message
