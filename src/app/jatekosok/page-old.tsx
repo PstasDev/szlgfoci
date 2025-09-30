@@ -19,21 +19,16 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress,
-  Alert,
 } from '@mui/material';
 import Header from '@/components/Header';
-import SimpleLayout from '@/components/SimpleLayout';
-import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentData } from '@/hooks/useTournamentData';
 import { getClassColor } from '@/utils/dataUtils';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 
 export default function PlayersPage() {
   const router = useRouter();
   const [selectedSeason, setSelectedSeason] = React.useState('2024-25');
   const [mounted, setMounted] = React.useState(false);
-  const { topScorers, teams, loading, error, refetch } = useTournamentData();
+  const { topScorers, teams } = useTournamentData();
 
   React.useEffect(() => {
     // Load selected season from localStorage
@@ -89,10 +84,11 @@ export default function PlayersPage() {
 
   // Group players by team
   const playersByTeam = playersWithTeamInfo.reduce((acc, player) => {
-    if (!acc[player.teamName]) {
-      acc[player.teamName] = [];
+    const teamName = player.teamName || 'Unknown Team';
+    if (!acc[teamName]) {
+      acc[teamName] = [];
     }
-    acc[player.teamName].push(player);
+    acc[teamName].push(player);
     return acc;
   }, {} as Record<string, typeof playersWithTeamInfo>);
 
