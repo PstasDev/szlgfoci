@@ -25,12 +25,12 @@ import {
   SportsScore as ScoreIcon,
 } from '@mui/icons-material';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface HeaderProps {
-  // Empty interface for future extensibility
+  selectedSeason?: string;
+  onSeasonChange?: (season: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = () => {
+const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeasonChange: _onSeasonChange }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [showLogo, setShowLogo] = React.useState(true);
 

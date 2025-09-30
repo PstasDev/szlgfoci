@@ -101,7 +101,7 @@ export default function GoalListPage() {
   }
 
   if (error || (isEmptyDataError(topScorers) && !loading)) {
-    const errorInfo = getErrorInfo('goalscorers', error);
+    const errorInfo = getErrorInfo('goalscorers', error ? { message: error } : undefined);
     return (
       <SimpleLayout>
         <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
@@ -192,7 +192,7 @@ export default function GoalListPage() {
               key={scorer.id}
               sx={{ 
                 backgroundColor: 'background.paper',
-                border: `2px solid ${getPositionColor(scorer.position)}`,
+                border: `2px solid ${getPositionColor(scorer.position || 1)}`,
                 position: 'relative',
                 overflow: 'visible'
               }}
@@ -202,7 +202,7 @@ export default function GoalListPage() {
                   sx={{
                     width: 60,
                     height: 60,
-                    backgroundColor: getPositionColor(scorer.position),
+                    backgroundColor: getPositionColor(scorer.position || 1),
                     color: 'white',
                     fontSize: '1.5rem',
                     fontWeight: 'bold',
@@ -216,10 +216,10 @@ export default function GoalListPage() {
                   {scorer.name}
                 </Typography>
                 <Chip 
-                  label={scorer.teamName}
+                  label={scorer.teamName || 'Unknown Team'}
                   size="small"
                   sx={{
-                    backgroundColor: getClassColor(scorer.teamName),
+                    backgroundColor: getClassColor(scorer.teamName || 'Unknown'),
                     color: 'white',
                     fontWeight: 'bold',
                     mb: 1
@@ -227,10 +227,10 @@ export default function GoalListPage() {
                 />
                 <Typography variant="h4" sx={{ 
                   fontWeight: 'bold', 
-                  color: getPositionColor(scorer.position),
+                  color: getPositionColor(scorer.position || 1),
                   mb: 0
                 }}>
-                  {scorer.goals}
+                  {scorer.goals || 0}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   gól
@@ -286,7 +286,7 @@ export default function GoalListPage() {
                       key={scorer.id}
                       sx={{ 
                         '&:hover': { backgroundColor: 'action.hover' },
-                        backgroundColor: scorer.position <= 3 ? `${getPositionColor(scorer.position)}15` : 'inherit'
+                        backgroundColor: (scorer.position || 1) <= 3 ? `${getPositionColor(scorer.position || 1)}15` : 'inherit'
                       }}
                     >
                       <TableCell>
@@ -296,18 +296,18 @@ export default function GoalListPage() {
                               variant="h6" 
                               sx={{ 
                                 fontWeight: 'bold',
-                                color: getPositionColor(scorer.position),
+                                color: getPositionColor(scorer.position || 1),
                                 minWidth: '40px'
                               }}
                             >
-                              {scorer.position}.
+                              {(scorer.position || 1)}.
                             </Typography>
                           )}
-                          {scorer.position <= 3 && showRank && (
+                          {(scorer.position || 1) <= 3 && showRank && (
                             <EmojiEvents 
                               sx={{ 
                                 ml: 1, 
-                                color: getPositionColor(scorer.position),
+                                color: getPositionColor(scorer.position || 1),
                                 fontSize: 20 
                               }} 
                             />
@@ -331,10 +331,10 @@ export default function GoalListPage() {
                       </TableCell>
                       <TableCell>
                         <Chip 
-                          label={scorer.teamName}
+                          label={scorer.teamName || 'Unknown Team'}
                           size="small"
                           sx={{
-                            backgroundColor: getClassColor(scorer.teamName),
+                            backgroundColor: getClassColor(scorer.teamName || 'Unknown'),
                             color: 'white',
                             fontWeight: 'bold'
                           }}
@@ -364,7 +364,7 @@ export default function GoalListPage() {
             </Box>
             <Box>
               <Typography variant="h4" color="success.main" sx={{ fontWeight: 'bold' }}>
-                {allScorers.reduce((sum, scorer) => sum + scorer.goals, 0)}
+                {allScorers.reduce((sum, scorer) => sum + (scorer.goals || 0), 0)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Összes gól
@@ -380,7 +380,7 @@ export default function GoalListPage() {
             </Box>
             <Box>
               <Typography variant="h4" color="info.main" sx={{ fontWeight: 'bold' }}>
-                {Math.round((allScorers.reduce((sum, scorer) => sum + scorer.goals, 0) / allScorers.length) * 10) / 10}
+                {Math.round((allScorers.reduce((sum, scorer) => sum + (scorer.goals || 0), 0) / allScorers.length) * 10) / 10}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Átlagos gólszám
