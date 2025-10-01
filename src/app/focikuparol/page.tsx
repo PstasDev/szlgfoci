@@ -71,7 +71,7 @@ const CreditsPage: React.FC = () => {
 
                 <Paper sx={{ p: 2, bgcolor: 'info.dark', color: 'info.contrastText' }}>
                   <Typography variant="body2">
-                    <strong>Történelem:</strong> Korábban éveken át a 20F osztály szervezte a bajnokságot.
+                    <strong>Történelem:</strong> Korábban éveken át a 19F osztály szervezte a bajnokságot.
                   </Typography>
                 </Paper>
               </Stack>
