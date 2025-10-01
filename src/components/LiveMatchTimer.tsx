@@ -74,42 +74,6 @@ const LiveMatchTimer: React.FC<LiveMatchTimerProps> = ({
       
       if (!memoizedEvents || memoizedEvents.length === 0) {
         console.log('⚠️ No events available, using fallback calculation');
-        // Fallback to time-based calculation if no events
-        if (memoizedStartTime) {
-          const now = new Date(Date.now() + serverTimeOffset);
-          const start = new Date(memoizedStartTime);
-          
-          if (isNaN(start.getTime()) || isNaN(now.getTime())) {
-            return { current_minute: 1, current_half: 1, status: 'not_started', is_live: false };
-          }
-          
-          const diff = now.getTime() - start.getTime();
-          const minutesSinceStart = Math.max(0, Math.floor(diff / (1000 * 60)));
-          const currentMinute = Math.max(1, minutesSinceStart + 1); // Football starts at minute 1
-          
-          if (currentMinute <= 10) {
-            return {
-              current_minute: currentMinute,
-              current_half: 1,
-              status: 'first_half',
-              is_live: true
-            };
-          } else if (currentMinute <= 20) {
-            return {
-              current_minute: currentMinute,
-              current_half: 2,
-              status: 'second_half',
-              is_live: true
-            };
-          } else {
-            return {
-              current_minute: currentMinute,
-              current_half: 2,
-              status: 'finished',
-              is_live: false
-            };
-          }
-        }
         return { current_minute: 1, current_half: 1, status: 'not_started', is_live: false };
       }
 

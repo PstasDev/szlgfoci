@@ -115,29 +115,6 @@ export const convertTopScorerToPlayer = (topScorer: TopScorer, index: number): P
 export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
   const homeTeam = match.team1 ? (teams.find(t => t.id === match.team1?.id) || match.team1) : null;
   const awayTeam = match.team2 ? (teams.find(t => t.id === match.team2?.id) || match.team2) : null;
-  
-  // Get proper team display names
-  const getTeamDisplayName = (team: Team | null): string => {
-    if (!team) return 'Unknown Team';
-    
-    // Priority: custom name > generated name from start_year+tagozat > tagozat only > fallback
-    if (team.name && team.name.trim() !== '') {
-      return team.name;
-    }
-    
-    // Generate name from start_year and tagozat if available
-    if (team.start_year && team.tagozat) {
-      return `${team.start_year}${team.tagozat}`;
-    }
-    
-    // Fallback to just tagozat
-    if (team.tagozat) {
-      return team.tagozat;
-    }
-    
-    // Last resort fallback
-    return `Team ${team.id || 'Unknown'}`;
-  };
 
   // Calculate scores from events if available
   const events = match.events || [];
@@ -169,18 +146,22 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     awayScore = awayGoals;
   }
 
-  // Format events for display
+  // Format events for display (preserve exact_time for live timers)
   const formattedEvents: MatchEvent[] = events.map(event => ({
     id: event.id || Math.random(),
     match: match.id || 0,
     player: event.player?.id || 0,
-    event_type: event.event_type as 'goal' | 'yellow_card' | 'red_card',
+    event_type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time',
     minute: event.minute,
     minute_extra_time: event.minute_extra_time || null, // Preserve minute_extra_time from API
     playerName: event.player?.name || 'Unknown Player',
     team: event.player && homeTeam?.players?.some(p => p.id === event.player?.id) ? 'home' as const : 'away' as const,
-    type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'substitution'
-  }));
+    type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'substitution',
+    // Preserve timing data for live timers
+    exact_time: (event as any).exact_time || null,
+    half: (event as any).half || 1,
+    extra_time: (event as any).extra_time || null
+  } as any));
   
   return {
     id: match.id || 0,
@@ -205,7 +186,9 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     events: formattedEvents,
     // Include full team objects for accessing colors and other data
     homeTeamObj: homeTeam,
-    awayTeamObj: awayTeam
+    awayTeamObj: awayTeam,
+    // Include full referee profile
+    refereeObj: match.referee
   };
 };
 
@@ -432,7 +415,7 @@ export const hasTournamentStarted = (tournament: Tournament): boolean => {
 };
 
 // Get the display name for a team (custom name or generated from start_year + tagozat)
-export const getTeamDisplayName = (team: Team): string => {
+export const getTeamDisplayName = (team: Team | null): string => {
   if (!team) return 'Unknown Team';
   
   // Priority: custom name > generated name from start_year+tagozat > tagozat only > fallback
@@ -520,4 +503,30 @@ export const getTournamentStatusMessage = (tournament: Tournament | null): strin
   }
   
   return 'A torna folyamatban van';
+};
+
+// Format referee name in "Vezetéknév Keresztnév" format
+export const formatRefereeName = (referee: any): string => {
+  if (!referee) return '';
+  
+  // Check if we have separate first_name and last_name fields
+  if (referee.last_name && referee.first_name) {
+    return `${referee.last_name} ${referee.first_name}`;
+  }
+  
+  // Fallback to full_name if available
+  if (referee.full_name) {
+    return referee.full_name;
+  }
+  
+  // Fallback to username or email if no proper name
+  if (referee.username) {
+    return referee.username;
+  }
+  
+  if (referee.email) {
+    return referee.email;
+  }
+  
+  return `Bíró #${referee.id || 'Unknown'}`;
 };

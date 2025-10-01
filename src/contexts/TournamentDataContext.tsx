@@ -97,7 +97,26 @@ export function TournamentDataProvider({ children }: TournamentDataProviderProps
             announcementsData.map(async (announcement) => {
               if (announcement.author && announcement.author.user) {
                 try {
-                  const userData = await userService.getById(announcement.author.user);
+                  // Debug logging to understand the data structure
+                  console.log('🔍 Announcement author data:', {
+                    announcement_id: announcement.id,
+                    author: announcement.author,
+                    user_field: announcement.author.user,
+                    user_type: typeof announcement.author.user
+                  });
+
+                  // Ensure user ID is a number, not an object
+                  const userId = typeof announcement.author.user === 'number' 
+                    ? announcement.author.user 
+                    : (announcement.author.user as any).id || announcement.author.user;
+                  
+                  if (typeof userId !== 'number') {
+                    console.warn(`⚠️ Invalid user ID type for announcement ${announcement.id}:`, typeof userId, userId);
+                    return announcement;
+                  }
+                  
+                  console.log(`✅ Fetching user data for ID: ${userId}`);
+                  const userData = await userService.getById(userId);
                   return {
                     ...announcement,
                     author: {

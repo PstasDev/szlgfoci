@@ -26,6 +26,7 @@ interface EnhancedEventDisplayProps {
   awayTeam?: Team | null;
   variant?: 'compact' | 'detailed' | 'timeline';
   legacyTeam?: 'home' | 'away'; // For backward compatibility with legacy events
+  referee?: any; // Referee object for match_start events
 }
 
 const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
@@ -33,7 +34,8 @@ const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
   homeTeam,
   awayTeam,
   variant = 'compact',
-  legacyTeam
+  legacyTeam,
+  referee
 }) => {
   // Get event type info
   const getEventInfo = (eventType: string) => {
@@ -124,7 +126,7 @@ const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
 
   // Get display time
   const getDisplayTime = () => {
-    const baseMinute = event.minute;
+    const baseMinute = Math.max(1, event.minute); // Ensure minimum of 1 minute
     const extraTime = event.minute_extra_time;
     
     if (extraTime && extraTime > 0) {
@@ -268,47 +270,144 @@ const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
           backgroundColor: '#2d2d2d',
           border: `2px solid ${eventInfo.color}`,
           borderRadius: '16px',
-          p: 2,
+          p: 3,
           mb: 2,
-          textAlign: 'center'
+          position: 'relative',
+          overflow: 'hidden'
         }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: 2,
-            mb: 1
-          }}>
+          {/* Background gradient for match_start */}
+          {event.event_type === 'match_start' && (
             <Box sx={{
-              backgroundColor: eventInfo.color,
-              borderRadius: '50%',
-              width: 48,
-              height: 48,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '1.5rem'
-            }}>
-              {eventInfo.emoji}
-            </Box>
-            <Typography variant="h5" sx={{ 
-              color: '#e8eaed', 
-              fontWeight: 600 
-            }}>
-              {eventInfo.label}
-            </Typography>
-          </Box>
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(76, 175, 80, 0.15) 100%)',
+              zIndex: 0
+            }} />
+          )}
           
-          <Typography variant="h6" sx={{ 
-            color: eventInfo.color, 
-            fontWeight: 'bold' 
-          }}>
-            {getDisplayTime()}
-            {event.event_type === 'extra_time' && event.extra_time && (
-              <span> (+{event.extra_time} perc)</span>
+          <Box sx={{ position: 'relative', zIndex: 1 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              gap: 2,
+              mb: 2
+            }}>
+              <Box sx={{
+                backgroundColor: eventInfo.color,
+                borderRadius: '50%',
+                width: 56,
+                height: 56,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '1.5rem',
+                boxShadow: `0 4px 12px ${eventInfo.color}40`
+              }}>
+                {eventInfo.emoji}
+              </Box>
+              <Typography variant="h5" sx={{ 
+                color: '#e8eaed', 
+                fontWeight: 700,
+                textAlign: 'center'
+              }}>
+                {eventInfo.label}
+              </Typography>
+            </Box>
+            
+            <Typography variant="h6" sx={{ 
+              color: eventInfo.color, 
+              fontWeight: 'bold',
+              textAlign: 'center',
+              mb: 2
+            }}>
+              {getDisplayTime()}
+              {event.event_type === 'extra_time' && event.extra_time && (
+                <span> (+{event.extra_time} perc)</span>
+              )}
+            </Typography>
+
+            {/* Enhanced details for match_start event */}
+            {event.event_type === 'match_start' && (
+              <Box sx={{ 
+                mt: 2, 
+                pt: 2, 
+                borderTop: '1px solid #404040',
+                textAlign: 'center'
+              }}>
+                <Typography variant="body2" sx={{ 
+                  color: '#9aa0a6', 
+                  mb: 1,
+                  fontWeight: 500
+                }}>
+                  📅 Mérkőzés kezdési időpontja
+                </Typography>
+                {event.exact_time && (
+                  <Typography variant="body1" sx={{ 
+                    color: '#e8eaed',
+                    fontWeight: 600,
+                    mb: 2
+                  }}>
+                    {new Date(event.exact_time).toLocaleString('hu-HU', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    })}
+                  </Typography>
+                )}
+                
+                {/* Referee information - check if available */}
+                {referee && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2" sx={{ 
+                      color: '#9aa0a6', 
+                      fontWeight: 500
+                    }}>
+                      👨‍⚖️ Mérkőzést vezeti: 
+                      <span style={{ color: '#e8eaed', fontWeight: 600, marginLeft: '4px' }}>
+                        {(() => {
+                          // Handle referee object properly to avoid [object Object] error
+                          if (typeof referee === 'string') {
+                            return referee;
+                          }
+                          if (referee && typeof referee === 'object') {
+                            // Try to get name in order of preference
+                            if (referee.last_name && referee.first_name) {
+                              return `${referee.last_name} ${referee.first_name}`;
+                            }
+                            if (referee.full_name) {
+                              return referee.full_name;
+                            }
+                            if (referee.username) {
+                              return referee.username;
+                            }
+                            if (referee.email) {
+                              return referee.email;
+                            }
+                            // Ensure we get the ID as a number, not object
+                            const refereeId = typeof referee.id === 'number' 
+                              ? referee.id 
+                              : (typeof referee === 'object' && referee.id) 
+                              ? referee.id 
+                              : 'Ismeretlen';
+                            return `Bíró #${refereeId}`;
+                          }
+                          return 'Játékvezető';
+                        })()}
+                      </span>
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             )}
-          </Typography>
+          </Box>
         </Paper>
       );
     }

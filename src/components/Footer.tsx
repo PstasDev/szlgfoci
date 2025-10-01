@@ -7,7 +7,8 @@ import {
   AdminPanelSettings as AdminIcon,
   GitHub as GitHubIcon,
   School as SchoolIcon,
-  SportsSoccer as SoccerIcon
+  SportsSoccer as SoccerIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 
 const Footer: React.FC = () => {
@@ -91,9 +92,7 @@ const Footer: React.FC = () => {
               </Link>
 
               <Link
-                href={getAdminUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/elo-jegyzokonyv"
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -113,7 +112,7 @@ const Footer: React.FC = () => {
               >
                 <AdminIcon fontSize="small" />
                 <Typography variant="body2" fontWeight="500">
-                  Bíró vagyok
+                  Élő jegyzőkönyv
                 </Typography>
               </Link>
 
@@ -171,6 +170,31 @@ const Footer: React.FC = () => {
                 </Typography>
               </Link>
             </Stack>
+
+            <Divider sx={{ borderColor: theme.palette.grey[700] }} />
+
+            {/* Data Usage Disclaimer */}
+            <Box 
+              sx={{ 
+                textAlign: 'center',
+                backgroundColor: `${theme.palette.warning.main}15`,
+                border: `1px solid ${theme.palette.warning.main}30`,
+                borderRadius: 2,
+                p: 2,
+                mx: { xs: 0, sm: 4 }
+              }}
+            >
+              <Stack direction="row" spacing={1} justifyContent="center" alignItems="center" sx={{ mb: 1 }}>
+                <WarningIcon sx={{ color: theme.palette.warning.main, fontSize: 20 }} />
+                <Typography variant="body2" fontWeight="600" color={theme.palette.warning.main}>
+                  Adatforgalmi figyelmeztetés
+                </Typography>
+              </Stack>
+              <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.8 }}>
+                Ez az oldal valós idejű adatokat használ, ezért gyakran frissít. 
+                Korlátozott adatforgalommal rendelkező felhasználók körültekintően használják!
+              </Typography>
+            </Box>
 
             <Divider sx={{ borderColor: theme.palette.grey[700] }} />
 

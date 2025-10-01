@@ -173,6 +173,8 @@ export interface Match {
   // Team objects with full data including colors
   homeTeamObj?: Team | null;
   awayTeamObj?: Team | null;
+  // Referee profile with full data
+  refereeObj?: Profile | null;
 }
 
 export interface EventSchema {
@@ -189,13 +191,17 @@ export interface MatchEvent {
   id: number;
   match: number;
   player: number;
-  event_type: 'goal' | 'yellow_card' | 'red_card';
+  event_type: 'goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time';
   minute: number;
   minute_extra_time?: number | null; // Support for extra time display (e.g., "45+3")
   // For display purposes
   playerName?: string;
   team?: 'home' | 'away';
   type?: 'goal' | 'yellow_card' | 'red_card' | 'substitution';
+  // Additional timing fields for live timers (extended from EnhancedEventSchema)
+  exact_time?: string | null;
+  half?: number;
+  extra_time?: number | null;
 }
 
 export interface Round {

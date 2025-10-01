@@ -16,8 +16,8 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getTeamColor } from '@/utils/dataUtils';
-import LiveMatchTimer from './LiveMatchTimer';
+import { Match, getTeamColor, formatRefereeName } from '@/utils/dataUtils';
+import ImprovedLiveMatchTimer from './ImprovedLiveMatchTimer';
 import EnhancedEventDisplay from './EnhancedEventDisplay';
 import type { EnhancedEventSchema } from '@/types/api';
 
@@ -70,7 +70,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                 bgcolor: 'success.main',
                 animation: 'pulse 2s infinite'
               }} />
-              <LiveMatchTimer 
+              <ImprovedLiveMatchTimer 
                 startTime={`${match.date}T${match.time}`}
                 events={match.events as unknown as EnhancedEventSchema[]}
               />
@@ -233,11 +233,11 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                 {match.venue}
               </Typography>
             </Box>
-            {match.referee && (
+            {(match.referee || match.refereeObj) && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <RefereeIcon sx={{ fontSize: 18, color: '#9aa0a6' }} />
                 <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
-                  Bíró: {match.referee}
+                  Bíró: {match.refereeObj ? formatRefereeName(match.refereeObj) : match.referee}
                 </Typography>
               </Box>
             )}

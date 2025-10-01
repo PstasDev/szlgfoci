@@ -20,7 +20,7 @@ export const useOptimizedLiveMatches = (
   options: UseOptimizedLiveMatchesOptions = {}
 ) => {
   const {
-    refreshInterval = 30000, // 30 seconds for live matches
+    refreshInterval = 1000, // 1 second for real-time updates
     maxRetries = 3,
     enabled = true
   } = options;

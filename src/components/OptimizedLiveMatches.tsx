@@ -26,7 +26,7 @@ import { useOptimizedTournamentData } from '@/contexts/OptimizedTournamentDataCo
 import { useOptimizedLiveMatches } from '@/hooks/useOptimizedLiveMatches';
 import { usePerformanceOptimizedMatches } from '@/hooks/usePerformanceOptimizedMatches';
 import LoadingSkeleton from './LoadingSkeleton';
-import LiveMatchTimer from './LiveMatchTimer';
+import ImprovedLiveMatchTimer from './ImprovedLiveMatchTimer';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
 
@@ -121,9 +121,9 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
               <Typography variant="h5" fontWeight="bold" color="success.main">
                 {match.homeScore} - {match.awayScore}
               </Typography>
-              <LiveMatchTimer 
+              <ImprovedLiveMatchTimer 
                 startTime={`${match.date}T${match.time}`}
-                events={match.events as any}
+                events={match.events}
               />
             </Box>
           ) : (
@@ -177,7 +177,7 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
                 <CardIcon sx={{ fontSize: 16, color: 'error.main' }} />
               )}
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {event.minute}&apos; {event.playerName || event.player}
+                {Math.max(1, event.minute)}&apos; {event.playerName || event.player}
               </Typography>
             </Box>
           ))}

@@ -158,6 +158,22 @@ export const tournamentService = {
     return api.get<EventSchema[]>('/red_cards');
   },
 
+  async addGoal(data: { match: number; player: number; minute: number; team: number }): Promise<EventSchema> {
+    return api.post<EventSchema>('/goals', data);
+  },
+
+  async addYellowCard(data: { match: number; player: number; minute: number; team: number }): Promise<EventSchema> {
+    return api.post<EventSchema>('/yellow_cards', data);
+  },
+
+  async addRedCard(data: { match: number; player: number; minute: number; team: number }): Promise<EventSchema> {
+    return api.post<EventSchema>('/red_cards', data);
+  },
+
+  async addSubstitution(data: { match: number; player: number; minute: number; team: number }): Promise<EventSchema> {
+    return api.post<EventSchema>('/substitutions', data);
+  },
+
   async getPlayers(): Promise<Player[]> {
     return api.get<Player[]>('/players');
   },

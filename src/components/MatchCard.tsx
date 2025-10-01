@@ -536,7 +536,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 fontWeight: 'bold',
                 minWidth: 30
               }}>
-                {event.minute}&apos;
+                {Math.max(1, event.minute)}&apos;
               </Typography>
               <Typography variant="body2" sx={{ color: '#e8eaed' }}>
                 {event.type === 'goal' ? '⚽' : event.type === 'yellow_card' ? '🟨' : '🟥'} {event.player}

@@ -16,9 +16,8 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
 } from '@mui/icons-material';
-import { Match, getTeamColor, getTeamColorLight } from '@/utils/dataUtils';
-import LiveMatchTimer from './LiveMatchTimer';
-import EnhancedEventDisplay from './EnhancedEventDisplay';
+import { Match, getTeamColor, getTeamColorLight, formatRefereeName } from '@/utils/dataUtils';
+import ImprovedLiveMatchTimer from './ImprovedLiveMatchTimer';
 import type { EnhancedEventSchema } from '@/types/api';
 
 interface BentoMatchDetailProps {
@@ -78,9 +77,9 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 bgcolor: 'success.main',
                 animation: 'pulse 2s infinite'
               }} />
-              <LiveMatchTimer 
+              <ImprovedLiveMatchTimer 
                 startTime={`${match.date}T${match.time}`}
-                events={match.events as unknown as EnhancedEventSchema[]}
+                events={match.events}
               />
               <Chip 
                 label="ÉLŐ" 
@@ -241,11 +240,11 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 {match.venue}
               </Typography>
             </Box>
-            {match.referee && (
+            {(match.referee || match.refereeObj) && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <RefereeIcon sx={{ fontSize: 18, color: '#9aa0a6' }} />
                 <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
-                  Bíró: {match.referee}
+                  Bíró: {match.refereeObj ? formatRefereeName(match.refereeObj) : match.referee}
                 </Typography>
               </Box>
             )}
@@ -253,50 +252,77 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
         </Box>
       </Paper>
 
-      {/* Match Events Timeline */}
+      {/* Match Protocol / Jegyzőkönyv */}
       {sortedEvents.length > 0 && (
         <Paper 
-          elevation={2} 
+          elevation={0} 
           sx={{ 
-            backgroundColor: '#2d2d2d',
-            border: '1px solid #404040',
-            borderRadius: '16px',
-            overflow: 'hidden'
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderRadius: 0,
+            overflow: 'visible',
           }}
         >
+          {/* Modern Header Section */}
           <Box sx={{ 
-            p: 3, 
-            backgroundColor: '#1e1e1e',
-            borderBottom: '1px solid #404040'
+            mb: 3,
+            p: 0
           }}>
-            <Typography variant="h5" sx={{ 
-              fontWeight: 700, 
-              color: '#e8eaed',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1
-            }}>
-              📋 Mérkőzés Eseményei
-              <Badge 
-                badgeContent={sortedEvents.length} 
-                color="primary"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    backgroundColor: '#4285f4',
-                    color: 'white'
-                  }
-                }}
-              >
-                <Box />
-              </Badge>
-            </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 3 }}>
+              <Box>
+                <Typography variant="h4" sx={{ 
+                  fontWeight: 900, 
+                  color: '#e8eaed',
+                  letterSpacing: '-1px',
+                  fontSize: { xs: '1.75rem', sm: '2.125rem' },
+                  mb: 1
+                }}>
+                  Jegyzőkönyv
+                </Typography>
+                <Typography variant="body1" sx={{ 
+                  color: '#9aa0a6',
+                  fontWeight: 400,
+                  fontSize: '0.95rem'
+                }}>
+                  Mérkőzés eseményei időrendi sorrendben
+                </Typography>
+              </Box>
+              
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                backgroundColor: '#2d2d2d',
+                borderRadius: '12px',
+                px: 3,
+                py: 1.5,
+                border: '1px solid #404040'
+              }}>
+                <Typography variant="h6" sx={{ 
+                  fontWeight: 700, 
+                  color: '#e8eaed',
+                  fontSize: '1.1rem'
+                }}>
+                  {sortedEvents.length}
+                </Typography>
+                <Typography variant="body2" sx={{ 
+                  color: '#9aa0a6',
+                  fontWeight: 500,
+                  fontSize: '0.85rem'
+                }}>
+                  esemény
+                </Typography>
+              </Box>
+            </Stack>
           </Box>
 
-          <Box sx={{ p: 3 }}>
-            <Stack spacing={2}>
-              {sortedEvents.map((event) => {
+          {/* Enhanced Events List (Dark Mode Style) */}
+          <Box sx={{ 
+            position: 'relative'
+          }}>
+            <Stack spacing={1}>
+              {[...sortedEvents].reverse().map((event) => { // Create copy before reversing
                 // Convert legacy event to enhanced event format
-                // Cast to any to access extended properties from API
                 const eventData = event as any;
                 
                 const enhancedEvent: EnhancedEventSchema = {
@@ -314,16 +340,103 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                   exact_time: eventData.exact_time || null
                 };
 
+                const getEventColor = (eventType: string) => {
+                  switch (eventType) {
+                    case 'goal': return '#10b981';
+                    case 'yellow_card': return '#f59e0b';
+                    case 'red_card': return '#ef4444';
+                    case 'match_start': return '#4caf50';
+                    case 'half_time': return '#ff9800';
+                    case 'second_half_start': return '#2196f3';
+                    case 'full_time': 
+                    case 'match_end': return '#9e9e9e';
+                    case 'extra_time': return '#9c27b0';
+                    case 'substitution': return '#03a9f4';
+                    default: return '#64748b';
+                  }
+                };
+
+                const getEventLabel = (eventType: string, event: any) => {
+                  switch (eventType) {
+                    case 'goal': return 'GÓL';
+                    case 'yellow_card': return 'SÁRGA LAP';
+                    case 'red_card': return 'PIROS LAP';
+                    case 'match_start': 
+                      // Check if this is actually second half start (minute 11+)
+                      return event.minute >= 11 ? 'MÁSODIK FÉLIDŐ KEZDETE' : 'KEZDŐRUGÁS';
+                    case 'half_time': return 'FÉLIDŐ VÉGE';
+                    case 'second_half_start': return 'MÁSODIK FÉLIDŐ KEZDETE';
+                    case 'full_time': return 'RENDES JÁTÉKIDŐ VÉGE';
+                    case 'match_end': return 'MECCS VÉGE';
+                    case 'extra_time': return 'HOSSZABBÍTÁS';
+                    case 'substitution': return 'CSERE';
+                    default: return eventType?.toUpperCase() || 'ESEMÉNY';
+                  }
+                };
+
                 return (
-                  <EnhancedEventDisplay
+                  <Box 
                     key={event.id}
-                    event={enhancedEvent}
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    variant="detailed"
-                    // Pass legacy team info for compatibility
-                    legacyTeam={event.team}
-                  />
+                    sx={{
+                      backgroundColor: '#1e1e1e',
+                      border: '1px solid #404040',
+                      borderRadius: 2,
+                      p: 2,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        backgroundColor: '#2a2a2a',
+                        borderColor: getEventColor(enhancedEvent.event_type) + '40'
+                      }
+                    }}
+                  >
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: getEventColor(enhancedEvent.event_type)
+                        }} />
+                        <Box>
+                          <Typography variant="body2" sx={{ 
+                            fontWeight: 'bold',
+                            color: getEventColor(enhancedEvent.event_type)
+                          }}>
+                            {getEventLabel(enhancedEvent.event_type, enhancedEvent)}
+                          </Typography>
+                          {enhancedEvent.player?.name && (
+                            <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
+                              {enhancedEvent.player.name}
+                            </Typography>
+                          )}
+                          {enhancedEvent.event_type === 'extra_time' && enhancedEvent.extra_time && (
+                            <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
+                              +{enhancedEvent.extra_time} perc
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="body2" sx={{ 
+                          color: getEventColor(enhancedEvent.event_type),
+                          fontWeight: 'bold'
+                        }}>
+                          {enhancedEvent.minute}&apos;
+                        </Typography>
+                        {enhancedEvent.half && (
+                          <Typography variant="caption" sx={{ 
+                            color: '#9aa0a6',
+                            backgroundColor: '#404040',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1
+                          }}>
+                            {enhancedEvent.half}. félidő
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Stack>
+                  </Box>
                 );
               })}
             </Stack>
@@ -636,7 +749,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
               📷 Még nincsenek feltöltött fotók ehhez a mérkőzéshez
             </Typography>
             <Typography variant="body2" sx={{ color: '#666' }}>
-              A fotók hamarosan elérhetőek lesznek!
+              Van fotód a mérkőzésről? Küldd el a szervezőknek!
             </Typography>
           </Box>
         </Box>

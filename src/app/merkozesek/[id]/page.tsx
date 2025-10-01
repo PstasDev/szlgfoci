@@ -16,17 +16,19 @@ import {
 import SimpleLayout from '@/components/SimpleLayout';
 import BentoMatchDetail from '@/components/BentoMatchDetail';
 import ErrorDisplay from '@/components/ErrorDisplay';
-import { useTournamentData } from '@/hooks/useTournamentData';
-import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
+import { useMatchData } from '@/hooks/useMatchData';
+import { getErrorInfo } from '@/utils/errorUtils';
 
 export default function MatchPage() {
   const params = useParams();
   const router = useRouter();
   const [mounted, setMounted] = React.useState(false);
-  const { matches, loading, error, refetch } = useTournamentData();
-
+  
   const matchId = parseInt(params.id as string);
-  const match = matches.find(m => m.id === matchId);
+  const { match, loading, error, refetch } = useMatchData(matchId, {
+    enableLiveUpdates: true,
+    updateInterval: 2000 // 2 seconds for all matches
+  });
 
   React.useEffect(() => {
     setMounted(true);
@@ -59,8 +61,8 @@ export default function MatchPage() {
   }
 
   // Show error state
-  if (error || (isEmptyDataError(matches) && !loading)) {
-    const errorInfo = getErrorInfo('matches', error ? { message: error } : undefined);
+  if (error) {
+    const errorInfo = getErrorInfo('match', { message: error });
     return (
       <SimpleLayout>
         <Container maxWidth="lg" sx={{ py: 2 }}>

@@ -148,7 +148,17 @@ export function OptimizedTournamentDataProvider({ children }: OptimizedTournamen
               announcementsData.map(async (announcement) => {
                 if (announcement.author?.user) {
                   try {
-                    const userData = await userService.getById(announcement.author.user);
+                    // Ensure user ID is a number, not an object
+                    const userId = typeof announcement.author.user === 'number' 
+                      ? announcement.author.user 
+                      : (announcement.author.user as any).id || announcement.author.user;
+                    
+                    if (typeof userId !== 'number') {
+                      console.warn(`⚠️ Invalid user ID type for announcement ${announcement.id}:`, typeof userId, userId);
+                      return announcement;
+                    }
+                    
+                    const userData = await userService.getById(userId);
                     return { ...announcement, author: { ...announcement.author, user_details: userData } };
                   } catch {
                     return announcement;
@@ -266,7 +276,17 @@ export function OptimizedTournamentDataProvider({ children }: OptimizedTournamen
                 result.value.map(async (announcement: any) => {
                   if (announcement.author?.user) {
                     try {
-                      const userData = await userService.getById(announcement.author.user);
+                      // Ensure user ID is a number, not an object
+                      const userId = typeof announcement.author.user === 'number' 
+                        ? announcement.author.user 
+                        : (announcement.author.user as any).id || announcement.author.user;
+                      
+                      if (typeof userId !== 'number') {
+                        console.warn(`⚠️ Invalid user ID type for announcement ${announcement.id}:`, typeof userId, userId);
+                        return announcement;
+                      }
+                      
+                      const userData = await userService.getById(userId);
                       return { ...announcement, author: { ...announcement.author, user_details: userData } };
                     } catch {
                       return announcement;

@@ -20,13 +20,12 @@ import {
 } from '@mui/icons-material';
 import { getTeamColor, Match } from '@/utils/dataUtils';
 import { LiveMatch } from '@/types/api';
-import type { EnhancedEventSchema } from '@/types/api';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentData } from '@/contexts/TournamentDataContext';
 import { useMatchesByStatus } from '@/hooks/useMatchesByStatus';
 import useLiveMatchPolling from '@/hooks/useLiveMatchPolling';
 import LoadingSkeleton from './LoadingSkeleton';
-import LiveMatchTimer from './LiveMatchTimer';
+import ImprovedLiveMatchTimer from './ImprovedLiveMatchTimer';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
 
@@ -178,9 +177,9 @@ const LiveMatches: React.FC = () => {
                 <Typography variant="h6" fontWeight="bold" color="success.main">
                   {match.homeScore ?? 0} - {match.awayScore ?? 0}
                 </Typography>
-                <LiveMatchTimer 
+                <ImprovedLiveMatchTimer 
                   startTime={`${match.date}T${match.time}`}
-                  events={match.events as unknown as EnhancedEventSchema[]}
+                  events={match.events}
                 />
               </Box>
             ) : (

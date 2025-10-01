@@ -22,6 +22,7 @@ import {
   People as PeopleIcon,
   SportsScore as ScoreIcon,
   SportsSoccer as SoccerIcon,
+  Gavel as GavelIcon,
 } from '@mui/icons-material';
 
 interface HeaderProps {
@@ -40,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({ selectedSeason: _selectedSeason, onSeas
     { text: 'CSAPATOK', icon: <PeopleIcon />, href: '/csapatok' },
     { text: 'MECCSEK', icon: <SportsIcon />, href: '/merkozesek' },
     { text: 'GÓLLÖVŐLISTA', icon: <ScoreIcon />, href: '/gollista' },
+    { text: 'SZABÁLYZAT', icon: <GavelIcon />, href: '/szabalyzat' },
   ];
 
   const drawer = (
