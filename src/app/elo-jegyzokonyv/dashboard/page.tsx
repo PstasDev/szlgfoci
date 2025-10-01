@@ -24,7 +24,8 @@ import {
   AccessTime as TimeIcon,
   CheckCircle as DoneIcon,
   Logout as LogoutIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
@@ -190,6 +191,12 @@ const RefereeDashboard: React.FC = () => {
     router.push('/elo-jegyzokonyv');
   };
 
+  const handleDjangoAdmin = () => {
+    const apiBaseUrl = getApiBaseUrl();
+    const adminUrl = apiBaseUrl.replace('/api', '/admin/');
+    window.open(adminUrl, '_blank');
+  };
+
   const handleRefresh = async () => {
     setRefreshing(true);
     await loadData();
@@ -265,6 +272,14 @@ const RefereeDashboard: React.FC = () => {
           </Typography>
           <IconButton 
             color="inherit" 
+            onClick={handleDjangoAdmin}
+            title="Django Admin"
+            sx={{ mr: 1 }}
+          >
+            <AdminIcon />
+          </IconButton>
+          <IconButton 
+            color="inherit" 
             onClick={handleRefresh}
             disabled={refreshing}
             sx={{ mr: 1 }}
@@ -316,7 +331,14 @@ const RefereeDashboard: React.FC = () => {
             </Card>
           ) : (
             <Stack spacing={2}>
-              {liveMatches.map((match) => (
+              {liveMatches
+                .sort((a, b) => {
+                  // Sort to put finished matches at the bottom
+                  if (a.status === 'finished' && b.status !== 'finished') return 1;
+                  if (a.status !== 'finished' && b.status === 'finished') return -1;
+                  return 0;
+                })
+                .map((match) => (
                 <Card 
                   key={match.id}
                   sx={{ 
@@ -369,23 +391,26 @@ const RefereeDashboard: React.FC = () => {
                     </Box>
                   </CardContent>
 
-                  <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                    <Button
-                      variant="contained"
-                      startIcon={<PlayIcon />}
-                      onClick={() => router.push(`/elo-jegyzokonyv/match/${match.id}`)}
-                      sx={{
-                        borderRadius: 2,
-                        px: 3,
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                        }
-                      }}
-                    >
-                      Mérkőzés vezetése
-                    </Button>
-                  </CardActions>
+                  {/* Only show the button for non-finished matches */}
+                  {match.status !== 'finished' && (
+                    <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
+                      <Button
+                        variant="contained"
+                        startIcon={<PlayIcon />}
+                        onClick={() => router.push(`/elo-jegyzokonyv/match/${match.id}`)}
+                        sx={{
+                          borderRadius: 2,
+                          px: 3,
+                          background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                          '&:hover': {
+                            background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                          }
+                        }}
+                      >
+                        Mérkőzés vezetése
+                      </Button>
+                    </CardActions>
+                  )}
                 </Card>
               ))}
             </Stack>
