@@ -28,7 +28,8 @@ import type {
   KozlemenyUpdateSchema,
   LiveMatchStatus,
   LiveMatch,
-  LiveUpdatePayload
+  LiveUpdatePayload,
+  SzankcioSchema
 } from '@/types/api';
 
 // Tournament endpoints
@@ -188,6 +189,18 @@ export const tournamentService = {
 
   async getTeamEvents(teamId: number): Promise<AllEventsSchema> {
     return api.get<AllEventsSchema>(`/teams/${teamId}/events`);
+  },
+
+  async getTeamSanctions(teamId: number): Promise<SzankcioSchema[]> {
+    try {
+      console.log(`🚫 tournamentService.getTeamSanctions(${teamId}) called`);
+      const result = await api.get<SzankcioSchema[]>(`/teams/${teamId}/sanctions`);
+      console.log(`🚫 tournamentService.getTeamSanctions(${teamId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🚫 tournamentService.getTeamSanctions(${teamId}) failed:`, error);
+      throw error;
+    }
   }
 };
 

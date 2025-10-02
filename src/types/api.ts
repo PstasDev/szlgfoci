@@ -117,6 +117,29 @@ export interface KozlemenyUpdateSchema {
   priority?: string | null;
 }
 
+// NEW: Szankció (sanctions) schemas
+export interface SzankcioSchema {
+  id?: number | null;
+  team?: Team | null;
+  tournament?: Tournament | null;
+  minus_points: number;
+  reason?: string | null;
+  date_created?: string;
+  date_updated?: string;
+}
+
+export interface SzankcioCreateSchema {
+  team_id: number;
+  tournament_id: number;
+  minus_points: number;
+  reason?: string | null;
+}
+
+export interface SzankcioUpdateSchema {
+  minus_points?: number | null;
+  reason?: string | null;
+}
+
 export interface Profile {
   id?: number | null;
   user: number;

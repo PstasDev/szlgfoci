@@ -25,6 +25,8 @@ import {
   ArrowBack as BackIcon,
   SportsScore as GoalIcon,
   EmojiEvents as TrophyIcon,
+  Warning as WarningIcon,
+  Gavel as SanctionIcon,
 } from '@mui/icons-material';
 import Header from '@/components/Header';
 import ErrorDisplay from '@/components/ErrorDisplay';
@@ -33,7 +35,7 @@ import { tournamentService } from '@/services/apiService';
 import { getTeamColor, getTeamDisplayName, getTeamClassName } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import EmptyDataDisplay from '@/components/EmptyDataDisplay';
-import type { Team } from '@/types/api';
+import type { Team, SzankcioSchema } from '@/types/api';
 
 export default function TeamPage() {
   const params = useParams();
@@ -41,6 +43,9 @@ export default function TeamPage() {
   const [mounted, setMounted] = React.useState(false);
   const [fallbackTeams, setFallbackTeams] = React.useState<Team[]>([]);
   const [fallbackLoading, setFallbackLoading] = React.useState(false);
+  const [sanctions, setSanctions] = React.useState<SzankcioSchema[]>([]);
+  const [sanctionsLoading, setSanctionsLoading] = React.useState(false);
+  const [sanctionsError, setSanctionsError] = React.useState<string | null>(null);
   
   const { standings, topScorers, teams, matches, loading, error, refetch } = useTournamentContext();
   
@@ -93,6 +98,27 @@ export default function TeamPage() {
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch sanctions when we have a team
+  React.useEffect(() => {
+    if (team && mounted) {
+      setSanctionsLoading(true);
+      setSanctionsError(null);
+      
+      tournamentService.getTeamSanctions(team.id!)
+        .then((sanctionsData) => {
+          setSanctions(sanctionsData);
+        })
+        .catch((err) => {
+          console.error('Failed to load team sanctions:', err);
+          setSanctionsError('Failed to load sanctions');
+          setSanctions([]); // Set empty array on error
+        })
+        .finally(() => {
+          setSanctionsLoading(false);
+        });
+    }
+  }, [team, mounted]);
 
   // Don't render until mounted
   if (!mounted) {
@@ -279,6 +305,19 @@ export default function TeamPage() {
                       }}
                     />
                   )}
+                  {/* Show sanctions indicator */}
+                  {sanctions.length > 0 && (
+                    <Chip
+                      icon={<SanctionIcon />}
+                      label={`${sanctions.length} szankció`}
+                      sx={{ 
+                        color: 'white', 
+                        backgroundColor: 'rgba(211, 47, 47, 0.8)',
+                        '& .MuiChip-icon': { color: 'white' },
+                        border: '1px solid rgba(255,255,255,0.3)'
+                      }}
+                    />
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -339,8 +378,94 @@ export default function TeamPage() {
                   Különbség
                 </Typography>
               </Box>
+              {/* Sanctions summary */}
+              {sanctions.length > 0 && (
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#d32f2f' }}>
+                    -{sanctions.reduce((total, sanction) => total + sanction.minus_points, 0)}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Pontlevonás
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Paper>
+
+          {/* Team Sanctions */}
+          <Box>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, color: 'text.primary' }}>
+              Szankciók
+            </Typography>
+            
+            {sanctionsLoading ? (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <CircularProgress size={40} />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+                  Szankciók betöltése...
+                </Typography>
+              </Paper>
+            ) : sanctionsError ? (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="error" sx={{ mb: 1 }}>
+                  Hiba történt
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {sanctionsError}
+                </Typography>
+              </Paper>
+            ) : sanctions.length > 0 ? (
+              <Paper sx={{ p: 3, border: '1px solid', borderColor: 'divider' }}>
+                <Stack spacing={2}>
+                  {sanctions.map((sanction) => (
+                    <Box 
+                      key={sanction.id}
+                      sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        py: 1,
+                        borderBottom: sanctions.indexOf(sanction) < sanctions.length - 1 ? '1px solid' : 'none',
+                        borderBottomColor: 'divider'
+                      }}
+                    >
+                      <Box sx={{ flex: 1 }}>
+                        {sanction.reason && (
+                          <Typography variant="body1" sx={{ mb: 0.5, fontWeight: 500 }}>
+                            {sanction.reason}
+                          </Typography>
+                        )}
+                        {sanction.date_created && (
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date(sanction.date_created).toLocaleDateString('hu-HU')}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Chip
+                        label={`-${sanction.minus_points}`}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'error.main',
+                          color: 'error.contrastText',
+                          fontWeight: 'bold',
+                          minWidth: '60px'
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            ) : (
+              <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                  Nincsenek szankciók
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Ez a csapat még nem kapott pontlevonást vagy egyéb szankciót.
+                </Typography>
+              </Paper>
+            )}
+          </Box>
 
           {/* Team Players */}
           <Box>

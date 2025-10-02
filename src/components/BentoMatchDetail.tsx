@@ -157,7 +157,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
 
             {/* Score */}
             <Box sx={{ textAlign: 'center', minWidth: 120 }}>
-              {match.status !== 'upcoming' && match.homeScore !== null && match.awayScore !== null ? (
+              {match.status !== 'upcoming' && typeof match.homeScore === 'number' && typeof match.awayScore === 'number' ? (
                 <Box>
                   <Typography 
                     variant="h1" 

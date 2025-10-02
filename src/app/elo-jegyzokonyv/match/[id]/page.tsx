@@ -23,6 +23,7 @@ import {
   ListItemButton,
   ListItemText,
   Badge,
+  Chip,
   useTheme
 } from '@mui/material';
 import { 
@@ -35,10 +36,14 @@ import {
   EmojiEvents as GoalIcon,
   Warning as YellowCardIcon,
   Block as RedCardIcon,
-  SwapHoriz as SubstitutionIcon
+  SwapHoriz as SubstitutionIcon,
+  Undo as UndoIcon,
+  Delete as DeleteIcon,
+  RestoreFromTrash as RestoreIcon
 } from '@mui/icons-material';
 import { useRouter, useParams } from 'next/navigation';
 import RefereeMatchTimer from '@/components/RefereeMatchTimer';
+import SecondYellowCardModal from '@/components/SecondYellowCardModal';
 
 // API base URL helper
 const getApiBaseUrl = () => {
@@ -87,6 +92,25 @@ interface PendingEvent {
   team: 'team1' | 'team2';
   minute: number;
   half: number;
+}
+
+interface UndoableEvent {
+  id: number;
+  event_type: string;
+  minute: number;
+  half: number;
+  player_name: string | null;
+  exact_time: string | null;
+  can_undo: boolean;
+  cannot_undo_reasons: string[];
+}
+
+interface UndoResponse {
+  message: string;
+  removed_event?: any;
+  undone_event?: any;
+  updated_score: [number, number];
+  timestamp: string;
 }
 
 // Auth service
@@ -268,6 +292,41 @@ const apiService = {
     });
     if (!response.ok) throw new Error('Failed to start second half');
     return response.json();
+  },
+
+  // Undo functionality
+  async undoLastEvent(matchId: string): Promise<UndoResponse> {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/undo-last-event`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to undo last event');
+    return response.json();
+  },
+
+  async removeEvent(matchId: string, eventId: number): Promise<UndoResponse> {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/events/${eventId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to remove event');
+    return response.json();
+  },
+
+  async getUndoableEvents(matchId: string): Promise<{undoable_events: UndoableEvent[]}> {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/undoable-events`);
+    if (!response.ok) throw new Error('Failed to get undoable events');
+    return response.json();
+  },
+
+  async undoEventsAfterMinute(matchId: string, minute: number): Promise<UndoResponse> {
+    const apiBaseUrl = getApiBaseUrl();
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/undo-after-minute/${minute}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error('Failed to undo events after minute');
+    return response.json();
   }
 };
 
@@ -287,6 +346,15 @@ const LiveMatchPage: React.FC = () => {
   const [currentMatchMinute, setCurrentMatchMinute] = useState<number>(1);
   const [currentMatchHalf, setCurrentMatchHalf] = useState<number>(1);
   const [currentMatchStatus, setCurrentMatchStatus] = useState<string>('not_started');
+  const [secondYellowCardModalOpen, setSecondYellowCardModalOpen] = useState(false);
+  const [pendingSecondYellowPlayer, setPendingSecondYellowPlayer] = useState<Player | null>(null);
+  
+  // Undo functionality state
+  const [undoModalOpen, setUndoModalOpen] = useState(false);
+  const [undoableEvents, setUndoableEvents] = useState<UndoableEvent[]>([]);
+  const [undoLoading, setUndoLoading] = useState(false);
+  const [confirmUndoOpen, setConfirmUndoOpen] = useState(false);
+  const [eventToUndo, setEventToUndo] = useState<number | 'last' | null>(null);
 
   const loadMatch = useCallback(async () => {
     try {
@@ -342,6 +410,36 @@ const LiveMatchPage: React.FC = () => {
     return team.name || `${team.start_year}/${team.tagozat}`;
   };
 
+  // Helper function to count yellow cards for a specific player
+  const getPlayerYellowCardCount = (playerId: number) => {
+    if (!match) return 0;
+    
+    return match.events.filter(event => 
+      event.event_type === 'yellow_card' && 
+      event.player?.id === playerId
+    ).length;
+  };
+
+  // Helper function to count red cards for a specific player
+  const getPlayerRedCardCount = (playerId: number) => {
+    if (!match) return 0;
+    
+    return match.events.filter(event => 
+      event.event_type === 'red_card' && 
+      event.player?.id === playerId
+    ).length;
+  };
+
+  // Helper function to check if a player has been sent off (has red card)
+  const isPlayerSentOff = (playerId: number) => {
+    return getPlayerRedCardCount(playerId) > 0;
+  };
+
+  // Helper function to check if a player would get their second yellow card
+  const wouldBeSecondYellowCard = (playerId: number) => {
+    return getPlayerYellowCardCount(playerId) === 1;
+  };
+
   const handleEventClick = (eventType: 'goal' | 'yellow_card' | 'red_card' | 'substitution', team: 'team1' | 'team2') => {
     if (!match) return;
     
@@ -361,6 +459,29 @@ const LiveMatchPage: React.FC = () => {
   const handlePlayerSelect = async (playerId: number) => {
     if (!pendingEvent || !match) return;
     
+    // Special handling for yellow cards - check if this would be the player's second yellow card
+    if (pendingEvent.type === 'yellow_card' && wouldBeSecondYellowCard(playerId)) {
+      // Find the player object
+      const team = pendingEvent.team === 'team1' ? match.team1 : match.team2;
+      const player = team.players.find(p => p.id === playerId);
+      
+      if (player) {
+        // Store the player and show the second yellow card modal
+        setPendingSecondYellowPlayer(player);
+        setSecondYellowCardModalOpen(true);
+        setPlayerModalOpen(false); // Close the player selection modal
+        return;
+      }
+    }
+    
+    // Normal processing for all other cases
+    await processPlayerEvent(playerId);
+  };
+
+  // Separated event processing logic for reuse
+  const processPlayerEvent = async (playerId: number, forceCardType?: 'yellow' | 'red') => {
+    if (!pendingEvent || !match) return;
+    
     setActionLoading('event');
     try {
       if (pendingEvent.type === 'goal') {
@@ -368,18 +489,42 @@ const LiveMatchPage: React.FC = () => {
       } else if (pendingEvent.type === 'substitution') {
         await apiService.addSubstitution(matchId, playerId, pendingEvent.minute, pendingEvent.half);
       } else {
-        const cardType = pendingEvent.type === 'yellow_card' ? 'yellow' : 'red';
+        // Use forced card type if provided (for second yellow card scenarios), otherwise use the pending event type
+        const cardType = forceCardType || (pendingEvent.type === 'yellow_card' ? 'yellow' : 'red');
         await apiService.addCard(matchId, playerId, pendingEvent.minute, pendingEvent.half, cardType);
       }
       
       await loadMatch(); // Refresh match data
       setPlayerModalOpen(false);
       setPendingEvent(null);
+      
+      // Reset second yellow card modal state
+      setSecondYellowCardModalOpen(false);
+      setPendingSecondYellowPlayer(null);
     } catch {
       setError('Nem sikerült rögzíteni az eseményt');
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Handle second yellow card modal actions
+  const handleSecondYellowCardYellow = async () => {
+    if (pendingSecondYellowPlayer) {
+      await processPlayerEvent(pendingSecondYellowPlayer.id, 'yellow');
+    }
+  };
+
+  const handleSecondYellowCardRed = async () => {
+    if (pendingSecondYellowPlayer) {
+      await processPlayerEvent(pendingSecondYellowPlayer.id, 'red');
+    }
+  };
+
+  const handleSecondYellowCardClose = () => {
+    setSecondYellowCardModalOpen(false);
+    setPendingSecondYellowPlayer(null);
+    setPlayerModalOpen(true); // Reopen the player selection modal
   };
 
   const handleMatchAction = async (action: 'start' | 'end-half' | 'start-second-half' | 'end-match') => {
@@ -452,6 +597,77 @@ const LiveMatchPage: React.FC = () => {
     setCurrentMatchStatus(status);
   }, []);
 
+  // Undo functionality handlers
+  const loadUndoableEvents = useCallback(async () => {
+    if (!match) return;
+    
+    try {
+      const response = await apiService.getUndoableEvents(matchId);
+      setUndoableEvents(response.undoable_events);
+    } catch (error) {
+      console.error('Failed to load undoable events:', error);
+    }
+  }, [matchId, match]);
+
+  const handleUndoLastEvent = async () => {
+    if (!match) return;
+    
+    // Show confirmation dialog instead of immediate action
+    setEventToUndo('last'); // Use 'last' as identifier for last event
+    setConfirmUndoOpen(true);
+  };
+
+  const performUndoLastEvent = async () => {
+    if (!match) return;
+    
+    setUndoLoading(true);
+    try {
+      await apiService.undoLastEvent(matchId);
+      await loadMatch(); // Refresh match data
+      setError(''); // Clear any previous errors
+      setConfirmUndoOpen(false);
+      setEventToUndo(null);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Nem sikerült visszavonni az eseményt');
+      }
+    } finally {
+      setUndoLoading(false);
+    }
+  };
+
+  const handleRemoveEvent = async (eventId: number) => {
+    setUndoLoading(true);
+    try {
+      await apiService.removeEvent(matchId, eventId);
+      await loadMatch(); // Refresh match data
+      setUndoModalOpen(false);
+      setConfirmUndoOpen(false);
+      setEventToUndo(null);
+      setError(''); // Clear any previous errors
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Nem sikerült törölni az eseményt');
+      }
+    } finally {
+      setUndoLoading(false);
+    }
+  };
+
+  const handleOpenUndoModal = async () => {
+    await loadUndoableEvents();
+    setUndoModalOpen(true);
+  };
+
+  const handleConfirmRemoveEvent = (eventId: number) => {
+    setEventToUndo(eventId);
+    setConfirmUndoOpen(true);
+  };
+
   if (loading) {
     return (
       <Box
@@ -513,6 +729,26 @@ const LiveMatchPage: React.FC = () => {
           <IconButton color="inherit" onClick={loadMatch}>
             <RefreshIcon />
           </IconButton>
+          {/* Undo Controls */}
+          {match && match.events.length > 0 && match.status !== 'finished' && (
+            <>
+              <IconButton 
+                color="inherit" 
+                onClick={handleUndoLastEvent}
+                disabled={undoLoading}
+                title="Utolsó esemény visszavonása"
+              >
+                <UndoIcon />
+              </IconButton>
+              <IconButton 
+                color="inherit" 
+                onClick={handleOpenUndoModal}
+                title="Események kezelése"
+              >
+                <RestoreIcon />
+              </IconButton>
+            </>
+          )}
         </Toolbar>
       </AppBar>
 
@@ -723,9 +959,11 @@ const LiveMatchPage: React.FC = () => {
                       variant="contained"
                       startIcon={<SubstitutionIcon />}
                       onClick={() => handleEventClick('substitution', 'team1')}
+                      disabled={true}
                       sx={{
                         backgroundColor: '#03a9f4',
                         '&:hover': { backgroundColor: '#0288d1' },
+                        '&:disabled': { backgroundColor: '#666', color: '#999' },
                         py: 1.5
                       }}
                     >
@@ -796,9 +1034,11 @@ const LiveMatchPage: React.FC = () => {
                       variant="contained"
                       startIcon={<SubstitutionIcon />}
                       onClick={() => handleEventClick('substitution', 'team2')}
+                      disabled={true}
                       sx={{
                         backgroundColor: '#03a9f4',
                         '&:hover': { backgroundColor: '#0288d1' },
+                        '&:disabled': { backgroundColor: '#666', color: '#999' },
                         py: 1.5
                       }}
                     >
@@ -902,7 +1142,7 @@ const LiveMatchPage: React.FC = () => {
                         }}
                       >
                         <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
                             {getEventIcon(event.event_type)}
                             <Box>
                               <Typography variant="body2" fontWeight="bold" sx={{ color: '#e8eaed' }}>
@@ -921,6 +1161,26 @@ const LiveMatchPage: React.FC = () => {
                             </Box>
                           </Box>
                           <Stack direction="row" spacing={1} alignItems="center">
+                            {/* Undo button for individual events */}
+                            {match.status !== 'finished' && ['goal', 'yellow_card', 'red_card'].includes(event.event_type) && (
+                              <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleConfirmRemoveEvent(event.id);
+                                }}
+                                disabled={undoLoading}
+                                sx={{
+                                  color: '#ef4444',
+                                  '&:hover': {
+                                    backgroundColor: 'rgba(239, 68, 68, 0.1)'
+                                  }
+                                }}
+                                title="Esemény törlése"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            )}
                             <Typography variant="body2" sx={{ 
                               color: getEventColor(event.event_type),
                               fontWeight: 'bold'
@@ -959,34 +1219,107 @@ const LiveMatchPage: React.FC = () => {
         <DialogTitle>
           Játékos kiválasztása
           {pendingEvent && (
-            <Typography variant="body2" color="text.secondary">
-              {pendingEvent.type === 'goal' ? 'Gól' : 
-               pendingEvent.type === 'yellow_card' ? 'Sárga lap' : 
-               pendingEvent.type === 'red_card' ? 'Piros lap' : 
-               pendingEvent.type === 'substitution' ? 'Csere' : 
-               pendingEvent.type} - {pendingEvent.minute}. perc
-            </Typography>
+            <Box>
+              <Typography variant="body2" color="text.secondary">
+                {pendingEvent.type === 'goal' ? 'Gól' : 
+                 pendingEvent.type === 'yellow_card' ? 'Sárga lap' : 
+                 pendingEvent.type === 'red_card' ? 'Piros lap' : 
+                 pendingEvent.type === 'substitution' ? 'Csere' : 
+                 pendingEvent.type} - {pendingEvent.minute}. perc
+              </Typography>
+              {(pendingEvent.type === 'yellow_card' || pendingEvent.type === 'red_card') && (
+                <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
+                  A játékosok korábbi lapjait lásd alul jelezve
+                </Typography>
+              )}
+            </Box>
           )}
         </DialogTitle>
         
         <DialogContent>
           <List>
-            {selectedTeamPlayers.map((player) => (
-              <ListItem key={player.id} disablePadding>
-                <ListItemButton 
-                  onClick={() => handlePlayerSelect(player.id)}
-                  disabled={actionLoading === 'event'}
-                >
-                  <ListItemText 
-                    primary={player.name}
-                    secondary={player.csk ? 'Csapatkapitány' : ''}
-                  />
-                  {player.csk && (
-                    <Badge color="primary" variant="dot" sx={{ mr: 1 }} />
-                  )}
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {selectedTeamPlayers.map((player) => {
+              const yellowCards = getPlayerYellowCardCount(player.id);
+              const redCards = getPlayerRedCardCount(player.id);
+              const isDisabled = actionLoading === 'event' || isPlayerSentOff(player.id);
+              
+              return (
+                <ListItem key={player.id} disablePadding>
+                  <ListItemButton 
+                    onClick={() => handlePlayerSelect(player.id)}
+                    disabled={isDisabled}
+                    sx={{
+                      opacity: redCards > 0 ? 0.6 : 1,
+                      backgroundColor: redCards > 0 ? 'error.dark' : 'transparent'
+                    }}
+                  >
+                    <ListItemText 
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body1">
+                            {player.name}
+                          </Typography>
+                          {yellowCards > 0 && (
+                            <Chip 
+                              size="small" 
+                              label={`${yellowCards} sárga`}
+                              sx={{ 
+                                backgroundColor: '#ffa726',
+                                color: 'black',
+                                fontSize: '0.75rem',
+                                height: '20px'
+                              }}
+                            />
+                          )}
+                          {redCards > 0 && (
+                            <Chip 
+                              size="small" 
+                              label="Kiállítva"
+                              sx={{ 
+                                backgroundColor: '#e53935',
+                                color: 'white',
+                                fontSize: '0.75rem',
+                                height: '20px'
+                              }}
+                            />
+                          )}
+                          {yellowCards === 1 && pendingEvent?.type === 'yellow_card' && (
+                            <Chip 
+                              size="small" 
+                              label="2. sárga = piros!"
+                              sx={{ 
+                                backgroundColor: '#ff9800',
+                                color: 'black',
+                                fontSize: '0.7rem',
+                                height: '20px',
+                                fontWeight: 'bold'
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        <Box>
+                          {player.csk && (
+                            <Typography variant="caption" color="primary">
+                              Csapatkapitány
+                            </Typography>
+                          )}
+                          {redCards > 0 && (
+                            <Typography variant="caption" color="error" sx={{ display: 'block' }}>
+                              Játékos már kiállítva
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                    />
+                    {player.csk && (
+                      <Badge color="primary" variant="dot" sx={{ mr: 1 }} />
+                    )}
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
           </List>
         </DialogContent>
         
@@ -1028,6 +1361,148 @@ const LiveMatchPage: React.FC = () => {
             disabled={actionLoading === 'end-match'}
           >
             Igen, befejezem
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Second Yellow Card Modal */}
+      <SecondYellowCardModal 
+        open={secondYellowCardModalOpen}
+        player={pendingSecondYellowPlayer}
+        minute={pendingEvent?.minute || currentMatchMinute}
+        half={pendingEvent?.half || currentMatchHalf}
+        onClose={handleSecondYellowCardClose}
+        onYellowCard={handleSecondYellowCardYellow}
+        onRedCard={handleSecondYellowCardRed}
+        loading={actionLoading === 'event'}
+      />
+
+      {/* Undo Events Modal */}
+      <Dialog 
+        open={undoModalOpen} 
+        onClose={() => setUndoModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Események kezelése
+          <Typography variant="body2" color="text.secondary">
+            Válassza ki a törölni kívánt eseményt
+          </Typography>
+        </DialogTitle>
+        
+        <DialogContent>
+          {undoableEvents.length === 0 ? (
+            <Typography variant="body1" sx={{ textAlign: 'center', py: 4 }}>
+              Nincsenek törölhető események
+            </Typography>
+          ) : (
+            <List>
+              {undoableEvents.map((event) => (
+                <ListItem 
+                  key={event.id} 
+                  disablePadding
+                  sx={{
+                    border: '1px solid',
+                    borderColor: event.can_undo ? 'divider' : 'error.main',
+                    borderRadius: 1,
+                    mb: 1,
+                    backgroundColor: event.can_undo ? 'transparent' : 'error.dark'
+                  }}
+                >
+                  <ListItemButton 
+                    onClick={() => event.can_undo && handleConfirmRemoveEvent(event.id)}
+                    disabled={!event.can_undo || undoLoading}
+                  >
+                    <ListItemText 
+                      primary={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body1" fontWeight="bold">
+                            {event.event_type === 'goal' ? 'GÓL' : 
+                             event.event_type === 'yellow_card' ? 'SÁRGA LAP' : 
+                             event.event_type === 'red_card' ? 'PIROS LAP' : 
+                             event.event_type.toUpperCase()}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {event.minute}. perc
+                          </Typography>
+                          {event.player_name && (
+                            <Typography variant="body2" color="text.secondary">
+                              - {event.player_name}
+                            </Typography>
+                          )}
+                        </Box>
+                      }
+                      secondary={
+                        !event.can_undo && event.cannot_undo_reasons.length > 0 ? (
+                          <Typography variant="caption" color="error.main">
+                            Nem törölhető: {event.cannot_undo_reasons.join(', ')}
+                          </Typography>
+                        ) : undefined
+                      }
+                    />
+                    {event.can_undo && (
+                      <IconButton
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleConfirmRemoveEvent(event.id);
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    )}
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        
+        <DialogActions>
+          <Button onClick={() => setUndoModalOpen(false)}>
+            Bezárás
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirm Event Removal Modal */}
+      <Dialog 
+        open={confirmUndoOpen} 
+        onClose={() => setConfirmUndoOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Esemény törlése
+        </DialogTitle>
+        
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Biztosan törölni szeretné ezt az eseményt?
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Ez a művelet nem visszavonható. Az esemény véglegesen törlődik a mérkőzésből.
+          </Typography>
+        </DialogContent>
+        
+        <DialogActions>
+          <Button onClick={() => setConfirmUndoOpen(false)}>
+            Mégse
+          </Button>
+          <Button 
+            onClick={() => {
+              if (eventToUndo === 'last') {
+                performUndoLastEvent();
+              } else if (eventToUndo) {
+                handleRemoveEvent(eventToUndo);
+              }
+            }}
+            variant="contained"
+            color="error"
+            disabled={undoLoading}
+          >
+            Igen, törlöm
           </Button>
         </DialogActions>
       </Dialog>
