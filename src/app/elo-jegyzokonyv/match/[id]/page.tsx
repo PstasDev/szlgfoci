@@ -94,9 +94,37 @@ const authService = {
   async checkAuthStatus() {
     try {
       const apiBaseUrl = getApiBaseUrl();
-      const response = await fetch(`${apiBaseUrl}/auth/status`, {
-        credentials: 'include'
-      });
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('jwt_token');
+      
+      let response;
+      
+      // If we have a token, prefer using it over cookies (more reliable in production)
+      if (token) {
+        response = await fetch(`${apiBaseUrl}/auth/status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        });
+      } else {
+        response = await fetch(`${apiBaseUrl}/auth/status`, {
+          credentials: 'include',
+          mode: 'cors'
+        });
+      }
+      
+      if (!response.ok) {
+        // Clear invalid token if we have one
+        if (token) {
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('token_timestamp');
+        }
+        return { authenticated: false };
+      }
+      
       return await response.json();
     } catch {
       return { authenticated: false };
@@ -106,20 +134,47 @@ const authService = {
 
 // API service
 const apiService = {
+  async makeAuthenticatedRequest(url: string, options: RequestInit = {}) {
+    const token = localStorage.getItem('jwt_token');
+    
+    // Try with token first if available (more reliable in production)
+    if (token) {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        mode: 'cors'
+      });
+      
+      if (response.ok) {
+        return response;
+      }
+    }
+    
+    // Fallback to cookies
+    const response = await fetch(url, {
+      ...options,
+      credentials: 'include',
+      mode: 'cors'
+    });
+    
+    return response;
+  },
+
   async getMatch(matchId: string): Promise<MatchStatus> {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}`, {
-      credentials: 'include'
-    });
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}`);
     if (!response.ok) throw new Error('Failed to fetch match');
     return response.json();
   },
 
   async startMatch(matchId: string) {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/start-match`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/start-match`, {
+      method: 'POST'
     });
     if (!response.ok) throw new Error('Failed to start match');
     return response.json();
@@ -131,10 +186,9 @@ const apiService = {
       ? JSON.stringify({ minute, half })
       : undefined;
     
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/end-half`, {
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/end-half`, {
       method: 'POST',
       headers: body ? { 'Content-Type': 'application/json' } : {},
-      credentials: 'include',
       body
     });
     if (!response.ok) throw new Error('Failed to end half');
@@ -147,10 +201,9 @@ const apiService = {
       ? JSON.stringify({ minute, half })
       : undefined;
     
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/end-match`, {
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/end-match`, {
       method: 'POST',
       headers: body ? { 'Content-Type': 'application/json' } : {},
-      credentials: 'include',
       body
     });
     if (!response.ok) throw new Error('Failed to end match');
@@ -159,10 +212,9 @@ const apiService = {
 
   async addGoal(matchId: string, playerId: number, minute: number, half: number) {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/quick-goal`, {
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/quick-goal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ player_id: playerId, minute, half })
     });
     if (!response.ok) throw new Error('Failed to add goal');
@@ -171,10 +223,9 @@ const apiService = {
 
   async addCard(matchId: string, playerId: number, minute: number, half: number, cardType: 'yellow' | 'red') {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/quick-card`, {
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/quick-card`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ player_id: playerId, minute, half, card_type: cardType })
     });
     if (!response.ok) throw new Error('Failed to add card');
@@ -183,10 +234,9 @@ const apiService = {
 
   async addSubstitution(matchId: string, playerId: number, minute: number, half: number) {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/quick-substitution`, {
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/quick-substitution`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ player_id: playerId, minute, half })
     });
     if (!response.ok) throw new Error('Failed to add substitution');
@@ -195,19 +245,16 @@ const apiService = {
 
   async getCurrentMinute(matchId: string) {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/current-minute`, {
-      credentials: 'include'
-    });
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/current-minute`);
     if (!response.ok) throw new Error('Failed to get current minute');
     return response.json();
   },
 
   async addExtraTime(matchId: string, minutes: number, half: number) {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/extra-time`, {
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/extra-time`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ extra_time_minutes: minutes, half })
     });
     if (!response.ok) throw new Error('Failed to add extra time');
@@ -216,9 +263,8 @@ const apiService = {
 
   async startSecondHalf(matchId: string) {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/matches/${matchId}/start-second-half`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/start-second-half`, {
+      method: 'POST'
     });
     if (!response.ok) throw new Error('Failed to start second half');
     return response.json();

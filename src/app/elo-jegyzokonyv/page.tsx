@@ -86,10 +86,13 @@ const authService = {
       throw new Error(data.message || 'Login failed');
     }
     
-    // Store the token in localStorage as backup (in case cookies don't work)
+    // Store the token in localStorage for production environments where cookies might not work
     if (data.token) {
       console.log('💾 Storing token in localStorage');
       localStorage.setItem('jwt_token', data.token);
+      
+      // Also set a flag that we have a fresh token
+      localStorage.setItem('token_timestamp', Date.now().toString());
     }
     
     return data;    } catch (fetchError) {
@@ -104,31 +107,38 @@ const authService = {
       const apiBaseUrl = getApiBaseUrl();
       console.log('🔍 Checking auth status at:', `${apiBaseUrl}/auth/status`);
       
-      // Try with cookies first
-      let response = await fetch(`${apiBaseUrl}/auth/status`, {
-        credentials: 'include',
-        mode: 'cors'
-      });
+      // Get token from localStorage
+      const token = localStorage.getItem('jwt_token');
       
-      console.log('📡 Auth status response (cookies):', response.status, response.statusText);
+      let response;
       
-      // If cookies failed, try with Authorization header
-      if (!response.ok) {
-        const token = localStorage.getItem('jwt_token');
-        if (token) {
-          console.log('🔑 Trying with Authorization header...');
-          response = await fetch(`${apiBaseUrl}/auth/status`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            },
-            mode: 'cors'
-          });
-          console.log('📡 Auth status response (token):', response.status, response.statusText);
-        }
+      // If we have a token, prefer using it over cookies (more reliable in production)
+      if (token) {
+        console.log('🔑 Using token from localStorage for auth check...');
+        response = await fetch(`${apiBaseUrl}/auth/status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        });
+        console.log('📡 Auth status response (token):', response.status, response.statusText);
+      } else {
+        console.log('🍪 Trying with cookies...');
+        response = await fetch(`${apiBaseUrl}/auth/status`, {
+          credentials: 'include',
+          mode: 'cors'
+        });
+        console.log('📡 Auth status response (cookies):', response.status, response.statusText);
       }
       
       if (!response.ok) {
         console.log('❌ Auth status check failed');
+        // Clear invalid token if we have one
+        if (token) {
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('token_timestamp');
+        }
         return { authenticated: false, user: null };
       }
       
@@ -145,14 +155,59 @@ const authService = {
     const apiBaseUrl = getApiBaseUrl();
     console.log('🚪 Logging out at:', `${apiBaseUrl}/auth/logout`);
     
-    const response = await fetch(`${apiBaseUrl}/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-      mode: 'cors'
-    });
+    // Get token before clearing localStorage
+    const token = localStorage.getItem('jwt_token');
     
-    console.log('📡 Logout response:', response.status, response.statusText);
-    return response.ok;
+    // Try to logout on server BEFORE clearing local storage
+    let serverLogoutSuccess = false;
+    
+    try {
+      // First, try with cookies (this is most important for clearing HTTP-only cookies)
+      console.log('🍪 Attempting logout with cookies (primary method)...');
+      const cookieResponse = await fetch(`${apiBaseUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('📡 Cookie logout response:', cookieResponse.status, cookieResponse.statusText);
+      
+      if (cookieResponse.ok) {
+        console.log('✅ Cookie-based logout successful');
+        serverLogoutSuccess = true;
+      }
+      
+      // Also try with token if we have one (backup method)
+      if (token) {
+        console.log('🔑 Attempting logout with token (backup method)...');
+        const tokenResponse = await fetch(`${apiBaseUrl}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        });
+        console.log('📡 Token logout response:', tokenResponse.status, tokenResponse.statusText);
+        
+        if (tokenResponse.ok) {
+          console.log('✅ Token-based logout successful');
+          serverLogoutSuccess = true;
+        }
+      }
+    } catch (error) {
+      console.log('❌ Server logout requests failed:', error);
+    }
+    
+    // Clear local storage after server logout attempts
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token_timestamp');
+    console.log('🧹 Local storage cleared');
+    
+    console.log('📡 Logout completed, success:', serverLogoutSuccess);
+    return serverLogoutSuccess;
   }
 };
 
@@ -169,17 +224,59 @@ const RefereeLoginPage: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('🔍 Login page: Checking authentication status...');
+        
         const authStatus = await authService.checkAuthStatus();
+        console.log('📊 Auth status result:', authStatus);
+        
         if (authStatus.authenticated) {
           // Check if user is a referee by trying to access referee endpoint
-          const response = await fetch('/api/biro/dashboard');
-          if (response.ok) {
+          const apiBaseUrl = getApiBaseUrl();
+          console.log('🛡️ Checking referee permissions at startup:', `${apiBaseUrl}/biro/dashboard`);
+          
+          // Get token from localStorage
+          const token = localStorage.getItem('jwt_token');
+          
+          let response;
+          
+          // If we have a token, try with token first
+          if (token) {
+            console.log('🔑 Trying referee check with Authorization header...');
+            response = await fetch(`${apiBaseUrl}/biro/dashboard`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              },
+              mode: 'cors'
+            });
+            console.log('📡 Referee check response (token):', response.status, response.statusText);
+          } else {
+            console.log('🍪 Trying referee check with cookies...');
+            response = await fetch(`${apiBaseUrl}/biro/dashboard`, {
+              credentials: 'include',
+              mode: 'cors'
+            });
+            console.log('📡 Referee check response (cookies):', response.status, response.statusText);
+          }
+          
+          if (response && response.ok) {
+            console.log('✅ User already authenticated and has referee permissions, redirecting...');
             router.push('/elo-jegyzokonyv/dashboard');
             return;
+          } else {
+            console.log('❌ Referee permissions check failed, staying on login page');
+            // Clear any invalid tokens
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('token_timestamp');
           }
+        } else {
+          console.log('❌ User not authenticated, staying on login page');
         }
-      } catch {
-        console.log('Auth check failed');
+      } catch (error) {
+        console.log('❌ Auth check failed:', error);
+        // Clear any problematic tokens
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('token_timestamp');
       } finally {
         setCheckingAuth(false);
       }

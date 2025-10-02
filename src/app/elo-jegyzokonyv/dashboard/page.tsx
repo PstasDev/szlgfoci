@@ -28,6 +28,8 @@ import {
   AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
+import { clearAuthTokensIfNotAllowed, canStoreAuthTokens } from '@/utils/cookieConsent';
+import { forceLogout, verifyLogoutComplete } from '@/utils/authUtils';
 
 // API base URL helper
 const getApiBaseUrl = () => {
@@ -103,18 +105,109 @@ interface DashboardData {
 const authService = {
   async logout() {
     const apiBaseUrl = getApiBaseUrl();
-    await fetch(`${apiBaseUrl}/auth/logout`, { 
-      method: 'POST',
-      credentials: 'include'
-    });
+    console.log('🚪 Auth service logout starting...');
+    
+    // Get token before clearing localStorage
+    const token = localStorage.getItem('jwt_token');
+    console.log('🔑 Token exists:', !!token);
+    
+    // Try to logout on server BEFORE clearing local storage (in case server needs the token)
+    let serverLogoutSuccess = false;
+    
+    try {
+      // First, try with cookies (this is most important for clearing HTTP-only cookies)
+      console.log('🍪 Attempting logout with cookies (primary method)...');
+      const cookieResponse = await fetch(`${apiBaseUrl}/auth/logout`, { 
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('📡 Cookie logout response:', cookieResponse.status, cookieResponse.statusText);
+      
+      if (cookieResponse.ok) {
+        console.log('✅ Cookie-based logout successful');
+        serverLogoutSuccess = true;
+      }
+      
+      // Also try with token if we have one (backup method)
+      if (token) {
+        console.log('📡 Attempting logout with token (backup method)...');
+        const tokenResponse = await fetch(`${apiBaseUrl}/auth/logout`, { 
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        });
+        console.log('📡 Token logout response:', tokenResponse.status, tokenResponse.statusText);
+        
+        if (tokenResponse.ok) {
+          console.log('✅ Token-based logout successful');
+          serverLogoutSuccess = true;
+        }
+      }
+      
+    } catch (error) {
+      console.log('❌ Server logout requests failed:', error);
+    }
+    
+    // Clear local storage after server logout attempts
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('token_timestamp');
+    localStorage.removeItem('cookie_consent');
+    console.log('🧹 Local storage cleared');
+    
+    // Verify logout was successful
+    if (serverLogoutSuccess) {
+      console.log('✅ Server logout completed successfully');
+    } else {
+      console.log('⚠️ Server logout may have failed, but local tokens cleared');
+    }
+    
+    return serverLogoutSuccess;
   },
 
   async checkAuthStatus() {
     try {
       const apiBaseUrl = getApiBaseUrl();
-      const response = await fetch(`${apiBaseUrl}/auth/status`, {
-        credentials: 'include'
-      });
+      
+      // Check cookie consent first
+      clearAuthTokensIfNotAllowed();
+      
+      // Get token from localStorage
+      const token = localStorage.getItem('jwt_token');
+      
+      let response;
+      
+      // If we have a token, prefer using it over cookies (more reliable in production)
+      if (token && canStoreAuthTokens()) {
+        response = await fetch(`${apiBaseUrl}/auth/status`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        });
+      } else {
+        response = await fetch(`${apiBaseUrl}/auth/status`, {
+          credentials: 'include',
+          mode: 'cors'
+        });
+      }
+      
+      if (!response.ok) {
+        // Clear invalid token if we have one
+        if (token) {
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('token_timestamp');
+        }
+        return { authenticated: false };
+      }
+      
       return await response.json();
     } catch {
       return { authenticated: false };
@@ -124,20 +217,43 @@ const authService = {
 
 // API service
 const apiService = {
+  async makeAuthenticatedRequest(url: string) {
+    const token = localStorage.getItem('jwt_token');
+    
+    // Try with token first if available and cookies are allowed (more reliable in production)
+    if (token && canStoreAuthTokens()) {
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        mode: 'cors'
+      });
+      
+      if (response.ok) {
+        return response;
+      }
+    }
+    
+    // Fallback to cookies
+    const response = await fetch(url, {
+      credentials: 'include',
+      mode: 'cors'
+    });
+    
+    return response;
+  },
+
   async getLiveMatches(): Promise<MatchStatus[]> {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/live-matches`, {
-      credentials: 'include'
-    });
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/live-matches`);
     if (!response.ok) throw new Error('Failed to fetch live matches');
     return response.json();
   },
 
   async getDashboard(): Promise<DashboardData> {
     const apiBaseUrl = getApiBaseUrl();
-    const response = await fetch(`${apiBaseUrl}/biro/dashboard`, {
-      credentials: 'include'
-    });
+    const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/dashboard`);
     if (!response.ok) throw new Error('Failed to fetch dashboard');
     return response.json();
   }
@@ -187,8 +303,51 @@ const RefereeDashboard: React.FC = () => {
   }, [router, loadData]);
 
   const handleLogout = async () => {
-    await authService.logout();
-    router.push('/elo-jegyzokonyv');
+    try {
+      console.log('🚪 Starting logout process...');
+      
+      // Call logout service and wait for completion
+      const logoutSuccess = await authService.logout();
+      console.log('✅ Logout service completed, success:', logoutSuccess);
+      
+      // Verify we're actually logged out by checking auth status
+      const apiBaseUrl = getApiBaseUrl();
+      const isLoggedOut = await verifyLogoutComplete(apiBaseUrl);
+      console.log('� Logout verification result:', isLoggedOut);
+      
+      if (!isLoggedOut) {
+        console.log('⚠️ Still authenticated after logout, forcing hard logout...');
+        // Force clear everything
+        forceLogout();
+        
+        // Force navigation with page reload
+        window.location.href = '/elo-jegyzokonyv';
+        return;
+      }
+      
+      // Clear any additional state that might persist
+      setLiveMatches([]);
+      setDashboard(null);
+      setError('');
+      
+      console.log('🔄 Navigating to login page...');
+      
+      // Force navigation to login page
+      router.push('/elo-jegyzokonyv');
+      
+      // Also force a page reload to ensure clean state
+      setTimeout(() => {
+        if (window.location.pathname !== '/elo-jegyzokonyv') {
+          window.location.href = '/elo-jegyzokonyv';
+        }
+      }, 500);
+      
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Even if logout fails, clear local state and redirect
+      forceLogout();
+      window.location.href = '/elo-jegyzokonyv';
+    }
   };
 
   const handleDjangoAdmin = () => {

@@ -6,8 +6,10 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
 import theme from '../theme';
 import Footer from '../components/Footer';
+import CookieConsentComponent from '../components/CookieConsent';
 import { TournamentDataProvider } from '../contexts/TournamentDataContext';
 import "./globals.css";
+import 'vanilla-cookieconsent/dist/cookieconsent.css';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -52,6 +54,7 @@ export default function RootLayout({
                 </Box>
                 <Footer />
               </Box>
+              <CookieConsentComponent />
             </TournamentDataProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
