@@ -39,8 +39,8 @@ const GoalScorersList: React.FC = () => {
       return (
         <Box
           sx={{
-            width: 24,
-            height: 24,
+            width: { xs: 20, sm: 24 },
+            height: { xs: 20, sm: 24 },
             borderRadius: '50%',
             backgroundColor: getPositionColor(position),
             display: 'flex',
@@ -48,7 +48,7 @@ const GoalScorersList: React.FC = () => {
             justifyContent: 'center',
             color: position === 1 ? 'black' : 'white',
             fontWeight: 'bold',
-            fontSize: '0.7rem'
+            fontSize: { xs: '0.6rem', sm: '0.7rem' }
           }}
         >
           {position}
@@ -56,7 +56,10 @@ const GoalScorersList: React.FC = () => {
       );
     }
     return (
-      <Typography variant="body2" fontWeight="bold" sx={{ color: 'text.primary' }}>
+      <Typography variant="body2" fontWeight="bold" sx={{ 
+        color: 'text.primary',
+        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+      }}>
         {position}.
       </Typography>
     );
@@ -128,13 +131,13 @@ const GoalScorersList: React.FC = () => {
 
         <TableContainer sx={{ 
           backgroundColor: 'background.paper', 
-          overflowX: 'auto',
+          overflowX: { xs: 'hidden', sm: 'auto' },
           '& .MuiTable-root': {
-            minWidth: { xs: 500, sm: 600 }
+            minWidth: { xs: '100%', sm: 600 }
           }
         }}>
           <Table size="small" sx={{ 
-            minWidth: { xs: 500, sm: 600 },
+            minWidth: { xs: '100%', sm: 600 },
             '& .MuiTableCell-root': {
               px: { xs: 0.5, sm: 1 },
               fontSize: { xs: '0.75rem', sm: '0.875rem' }
@@ -144,7 +147,7 @@ const GoalScorersList: React.FC = () => {
               <TableRow sx={{ backgroundColor: 'action.hover' }}>
                 <TableCell sx={{ 
                   fontWeight: 'bold', 
-                  width: { xs: 40, sm: 50 }, 
+                  width: { xs: 35, sm: 50 }, 
                   color: 'text.primary' 
                 }}>
                   H
@@ -152,21 +155,21 @@ const GoalScorersList: React.FC = () => {
                 <TableCell sx={{ 
                   fontWeight: 'bold', 
                   color: 'text.primary',
-                  minWidth: { xs: 120, sm: 150 }
+                  minWidth: { xs: 'auto', sm: 150 }
                 }}>
                   JÁTÉKOS
                 </TableCell>
                 <TableCell sx={{ 
                   fontWeight: 'bold', 
                   color: 'text.primary',
-                  minWidth: { xs: 100, sm: 120 },
+                  minWidth: { xs: 'auto', sm: 120 },
                   display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   CSAPAT
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
-                  width: { xs: 60, sm: 80 }, 
+                  width: { xs: 50, sm: 80 }, 
                   color: 'text.primary' 
                 }}>
                   GÓLOK
@@ -193,32 +196,47 @@ const GoalScorersList: React.FC = () => {
                   </TableCell>
 
                   <TableCell>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0 }}>
                       <Typography 
                         variant="body2" 
                         fontWeight={index < 3 ? 'bold' : 'normal'}
                         sx={{ 
                           color: 'text.primary',
-                          fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                          lineHeight: 1.2,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
                         }}
                       >
                         {player.name}
                       </Typography>
                       {/* Show team on mobile under player name */}
-                      <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 0.5 }}>
                         <Avatar
                           sx={{
-                            width: 16,
-                            height: 16,
+                            width: 14,
+                            height: 14,
                             bgcolor: getClassColor(player.teamName || ''),
-                            fontSize: '0.5rem',
+                            fontSize: '0.45rem',
                             fontWeight: 'bold',
                             color: 'white'
                           }}
                         >
                           {(player.teamName || '').split(' ')[1] || (player.teamName || '').charAt((player.teamName || '').length - 1)}
                         </Avatar>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: 'text.secondary', 
+                            fontSize: '0.65rem',
+                            lineHeight: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '120px'
+                          }}
+                        >
                           {player.teamName}
                         </Typography>
                       </Box>
@@ -255,7 +273,9 @@ const GoalScorersList: React.FC = () => {
                                        index < 3 ? 'success.main' : 
                                        index < 10 ? 'info.main' : 'default',
                         color: 'white',
-                        minWidth: '35px'
+                        minWidth: { xs: '28px', sm: '35px' },
+                        height: { xs: '20px', sm: '24px' },
+                        fontSize: { xs: '0.65rem', sm: '0.75rem' }
                       }}
                     />
                   </TableCell>
@@ -266,26 +286,42 @@ const GoalScorersList: React.FC = () => {
         </TableContainer>
 
         <Box sx={{ 
-          p: 2, 
+          p: { xs: 1.5, sm: 2 }, 
           display: 'flex', 
-          gap: 2, 
+          gap: { xs: 1, sm: 2 }, 
           flexWrap: 'wrap', 
           fontSize: '0.8rem',
           borderTop: '1px solid',
           borderTopColor: 'divider',
-          backgroundColor: 'action.hover'
+          backgroundColor: 'action.hover',
+          justifyContent: { xs: 'center', sm: 'flex-start' }
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 12, height: 3, bgcolor: 'warning.main', borderRadius: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Góllövőkirály (1.)</Typography>
+            <Box sx={{ width: { xs: 10, sm: 12 }, height: 3, bgcolor: 'warning.main', borderRadius: 1 }} />
+            <Typography variant="caption" sx={{ 
+              color: 'text.secondary',
+              fontSize: { xs: '0.65rem', sm: '0.75rem' }
+            }}>
+              Góllövőkirály (1.)
+            </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 12, height: 3, bgcolor: 'success.main', borderRadius: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Top 3 (2-3.)</Typography>
+            <Box sx={{ width: { xs: 10, sm: 12 }, height: 3, bgcolor: 'success.main', borderRadius: 1 }} />
+            <Typography variant="caption" sx={{ 
+              color: 'text.secondary',
+              fontSize: { xs: '0.65rem', sm: '0.75rem' }
+            }}>
+              Top 3 (2-3.)
+            </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Box sx={{ width: 12, height: 3, bgcolor: 'info.main', borderRadius: 1 }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>Top 10 (4-10.)</Typography>
+            <Box sx={{ width: { xs: 10, sm: 12 }, height: 3, bgcolor: 'info.main', borderRadius: 1 }} />
+            <Typography variant="caption" sx={{ 
+              color: 'text.secondary',
+              fontSize: { xs: '0.65rem', sm: '0.75rem' }
+            }}>
+              Top 10 (4-10.)
+            </Typography>
           </Box>
         </Box>
       </CardContent>

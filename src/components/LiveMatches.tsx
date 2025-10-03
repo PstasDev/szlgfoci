@@ -141,77 +141,237 @@ const LiveMatches: React.FC = () => {
         )}
 
         {/* Teams and Score */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-          {/* Home Team */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-            <Avatar
-              sx={{
-                width: 28,
-                height: 28,
-                bgcolor: getTeamColor(match.homeTeamObj),
-                fontSize: '0.7rem',
-                fontWeight: 'bold',
-                color: 'white'
-              }}
-            >
-              {match.homeTeamObj?.tagozat?.charAt(0) || match.homeTeam.charAt(0)}
-            </Avatar>
-            <Typography 
-              variant="body2" 
-              fontWeight="500" 
-              noWrap
-              sx={{ color: 'text.primary' }}
-            >
-              {match.homeTeam}
-            </Typography>
-          </Box>
-          
-          {/* Score/Time */}
-          <Box sx={{ textAlign: 'center', px: 2 }}>
-            {match.status === 'finished' ? (
-              <Typography variant="h6" fontWeight="bold" sx={{ color: 'text.primary' }}>
-                {match.homeScore ?? 0} - {match.awayScore ?? 0}
-              </Typography>
-            ) : match.status === 'live' ? (
-              <Box>
-                <Typography variant="h6" fontWeight="bold" color="success.main">
-                  {match.homeScore ?? 0} - {match.awayScore ?? 0}
+        <Box sx={{ 
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' }, 
+          justifyContent: { xs: 'stretch', sm: 'space-between' }, 
+          mb: 1,
+          gap: { xs: 0.5, sm: 0 }
+        }}>
+          {/* Mobile Layout: Stacked teams with scores */}
+          <Box sx={{ 
+            display: { xs: 'flex', sm: 'none' },
+            flexDirection: 'column',
+            gap: 0.5
+          }}>
+            {/* Home Team Row */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    bgcolor: getTeamColor(match.homeTeamObj),
+                    fontSize: '0.65rem',
+                    fontWeight: 'bold',
+                    color: 'white'
+                  }}
+                >
+                  {match.homeTeamObj?.tagozat?.charAt(0) || match.homeTeam.charAt(0)}
+                </Avatar>
+                <Typography 
+                  variant="body2" 
+                  fontWeight="500" 
+                  sx={{ color: 'text.primary', fontSize: '0.85rem' }}
+                >
+                  {match.homeTeam}
                 </Typography>
+              </Box>
+              {/* Home Score */}
+              <Typography 
+                variant="h6" 
+                fontWeight="bold" 
+                sx={{ 
+                  color: match.status === 'live' ? 'success.main' : 'text.primary',
+                  minWidth: '20px',
+                  textAlign: 'center'
+                }}
+              >
+                {match.status === 'finished' || match.status === 'live' ? (match.homeScore ?? 0) : '-'}
+              </Typography>
+            </Box>
+            
+            {/* Away Team Row */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar
+                  sx={{
+                    width: 24,
+                    height: 24,
+                    bgcolor: getTeamColor(match.awayTeamObj),
+                    fontSize: '0.65rem',
+                    fontWeight: 'bold',
+                    color: 'white'
+                  }}
+                >
+                  {match.awayTeamObj?.tagozat?.charAt(0) || match.awayTeam.charAt(0)}
+                </Avatar>
+                <Typography 
+                  variant="body2" 
+                  fontWeight="500" 
+                  sx={{ color: 'text.primary', fontSize: '0.85rem' }}
+                >
+                  {match.awayTeam}
+                </Typography>
+              </Box>
+              {/* Away Score */}
+              <Typography 
+                variant="h6" 
+                fontWeight="bold" 
+                sx={{ 
+                  color: match.status === 'live' ? 'success.main' : 'text.primary',
+                  minWidth: '20px',
+                  textAlign: 'center'
+                }}
+              >
+                {match.status === 'finished' || match.status === 'live' ? (match.awayScore ?? 0) : '-'}
+              </Typography>
+            </Box>
+            
+            {/* Mobile Time/Date Info */}
+            <Box sx={{ textAlign: 'center', mt: 0.5 }}>
+              {match.status === 'live' ? (
                 <ImprovedLiveMatchTimer 
                   startTime={`${match.date}T${match.time}`}
                   events={match.events}
                 />
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
-                {match.time}
-              </Typography>
-            )}
+              ) : match.status === 'upcoming' ? (
+                <Box>
+                  <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                    {match.time}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.65rem' }}>
+                    {new Date(match.date).toLocaleDateString('hu-HU', { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </Typography>
+                </Box>
+              ) : (
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>
+                  {new Date(match.date).toLocaleDateString('hu-HU', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })} • {match.time}
+                </Typography>
+              )}
+            </Box>
           </Box>
-          
-          {/* Away Team */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, justifyContent: 'flex-end' }}>
-            <Typography 
-              variant="body2" 
-              fontWeight="500" 
-              noWrap 
-              textAlign="right"
-              sx={{ color: 'text.primary' }}
-            >
-              {match.awayTeam}
-            </Typography>
-            <Avatar
-              sx={{
-                width: 28,
-                height: 28,
-                bgcolor: getTeamColor(match.awayTeamObj),
-                fontSize: '0.7rem',
-                fontWeight: 'bold',
-                color: 'white'
-              }}
-            >
-              {match.awayTeamObj?.tagozat?.charAt(0) || match.awayTeam.charAt(0)}
-            </Avatar>
+
+          {/* Desktop Layout: Original horizontal layout */}
+          <Box sx={{ 
+            display: { xs: 'none', sm: 'flex' },
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%'
+          }}>
+            {/* Home Team */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1, 
+              flex: 1
+            }}>
+              <Avatar
+                sx={{
+                  width: 28,
+                  height: 28,
+                  bgcolor: getTeamColor(match.homeTeamObj),
+                  fontSize: '0.7rem',
+                  fontWeight: 'bold',
+                  color: 'white'
+                }}
+              >
+                {match.homeTeamObj?.tagozat?.charAt(0) || match.homeTeam.charAt(0)}
+              </Avatar>
+              <Typography 
+                variant="body2" 
+                fontWeight="500" 
+                noWrap
+                sx={{ color: 'text.primary' }}
+              >
+                {match.homeTeam}
+              </Typography>
+            </Box>
+            
+            {/* Score/Time */}
+            <Box sx={{ textAlign: 'center', px: 2 }}>
+              {match.status === 'finished' ? (
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: 'text.primary' }}>
+                    {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}>
+                    {new Date(match.date).toLocaleDateString('hu-HU', { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })} • {match.time}
+                  </Typography>
+                </Box>
+              ) : match.status === 'live' ? (
+                <Box>
+                  <Typography variant="h6" fontWeight="bold" color="success.main">
+                    {match.homeScore ?? 0} - {match.awayScore ?? 0}
+                  </Typography>
+                  <ImprovedLiveMatchTimer 
+                    startTime={`${match.date}T${match.time}`}
+                    events={match.events}
+                  />
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
+                    {match.time}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', fontSize: '0.7rem' }}>
+                    {new Date(match.date).toLocaleDateString('hu-HU', { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+            
+            {/* Away Team */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1, 
+              flex: 1,
+              justifyContent: 'flex-end'
+            }}>
+              <Typography 
+                variant="body2" 
+                fontWeight="500" 
+                noWrap 
+                textAlign="right"
+                sx={{ color: 'text.primary' }}
+              >
+                {match.awayTeam}
+              </Typography>
+              <Avatar
+                sx={{
+                  width: 28,
+                  height: 28,
+                  bgcolor: getTeamColor(match.awayTeamObj),
+                  fontSize: '0.7rem',
+                  fontWeight: 'bold',
+                  color: 'white'
+                }}
+              >
+                {match.awayTeamObj?.tagozat?.charAt(0) || match.awayTeam.charAt(0)}
+              </Avatar>
+            </Box>
           </Box>
         </Box>
 

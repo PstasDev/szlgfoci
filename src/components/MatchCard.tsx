@@ -346,14 +346,132 @@ const MatchCard: React.FC<MatchCardProps> = ({
       {/* Main Match Info */}
       <Box sx={{ p: 3 }}>
         <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr auto 1fr', 
-          gap: 3, 
+          display: { xs: 'flex', sm: 'grid' },
+          flexDirection: { xs: 'column', sm: 'initial' },
+          gridTemplateColumns: { sm: '1fr auto 1fr' },
+          gap: { xs: 2, sm: 3 }, 
           alignItems: 'center',
           mb: 2
         }}>
+          {/* Mobile Layout: Stacked teams with scores */}
+          <Box sx={{ 
+            display: { xs: 'flex', sm: 'none' },
+            flexDirection: 'column',
+            gap: 1,
+            width: '100%'
+          }}>
+            {/* Home Team Row */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: getTeamColor(match.homeTeamObj),
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    border: '2px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  {match.homeTeam.split(' ')[1]}
+                </Avatar>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    color: '#e8eaed', 
+                    fontWeight: 600,
+                    fontSize: '1rem'
+                  }}
+                >
+                  {match.homeTeam}
+                </Typography>
+              </Box>
+              {/* Home Score */}
+              <Typography 
+                variant="h4" 
+                fontWeight="bold" 
+                sx={{ 
+                  color: match.status === 'live' ? '#4caf50' : '#e8eaed',
+                  minWidth: '30px',
+                  textAlign: 'center'
+                }}
+              >
+                {match.status !== 'upcoming' ? (match.homeScore ?? 0) : '-'}
+              </Typography>
+            </Box>
+            
+            {/* Away Team Row */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between'
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    bgcolor: getTeamColor(match.awayTeamObj),
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    border: '2px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  {match.awayTeam.split(' ')[1]}
+                </Avatar>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    color: '#e8eaed', 
+                    fontWeight: 600,
+                    fontSize: '1rem'
+                  }}
+                >
+                  {match.awayTeam}
+                </Typography>
+              </Box>
+              {/* Away Score */}
+              <Typography 
+                variant="h4" 
+                fontWeight="bold" 
+                sx={{ 
+                  color: match.status === 'live' ? '#4caf50' : '#e8eaed',
+                  minWidth: '30px',
+                  textAlign: 'center'
+                }}
+              >
+                {match.status !== 'upcoming' ? (match.awayScore ?? 0) : '-'}
+              </Typography>
+            </Box>
+
+            {/* Mobile VS or Live indicator */}
+            {match.status === 'upcoming' && (
+              <Box sx={{ textAlign: 'center', mt: 1 }}>
+                <SportsSoccer sx={{ fontSize: 32, color: '#4285f4', mb: 0.5 }} />
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    color: '#9aa0a6',
+                    fontWeight: 500
+                  }}
+                >
+                  VS
+                </Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* Desktop Layout: Original grid layout */}
           {/* Home Team */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ 
+            display: { xs: 'none', sm: 'flex' }, 
+            alignItems: 'center', 
+            gap: 2 
+          }}>
             <Avatar
               sx={{
                 width: 56,
@@ -381,8 +499,12 @@ const MatchCard: React.FC<MatchCardProps> = ({
             </Box>
           </Box>
 
-          {/* Score */}
-          <Box sx={{ textAlign: 'center', minWidth: 100 }}>
+          {/* Score - Desktop only */}
+          <Box sx={{ 
+            textAlign: 'center', 
+            minWidth: 100,
+            display: { xs: 'none', sm: 'block' }
+          }}>
             {match.status !== 'upcoming' ? (
               <Typography 
                 variant="h2" 
@@ -416,9 +538,9 @@ const MatchCard: React.FC<MatchCardProps> = ({
             )}
           </Box>
 
-          {/* Away Team */}
+          {/* Away Team - Desktop only */}
           <Box sx={{ 
-            display: 'flex', 
+            display: { xs: 'none', sm: 'flex' }, 
             alignItems: 'center', 
             gap: 2, 
             justifyContent: 'flex-end' 

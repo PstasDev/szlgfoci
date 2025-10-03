@@ -45,7 +45,13 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
   })));
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: { xs: 2, sm: 3 },
+      width: '100%',
+      overflow: 'hidden'
+    }}>
       {/* Match Header Card */}
       <Paper 
         elevation={2} 
@@ -53,23 +59,30 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
           overflow: 'hidden', 
           background: `linear-gradient(135deg, ${getTeamColorLight(homeTeam)} 0%, ${getTeamColorLight(awayTeam)} 100%)`,
           border: '1px solid #404040',
-          borderRadius: '16px'
+          borderRadius: '16px',
+          width: '100%'
         }}
       >
         {/* Match Status Bar */}
         <Box sx={{ 
-          p: 2, 
+          p: { xs: 1.5, sm: 2 }, 
           backgroundColor: '#1e1e1e',
           borderBottom: '1px solid #404040',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 1
         }}>
-          <Typography variant="body1" sx={{ fontWeight: 600, color: '#9aa0a6' }}>
+          <Typography variant="body1" sx={{ 
+            fontWeight: 600, 
+            color: '#9aa0a6',
+            fontSize: { xs: '0.85rem', sm: '1rem' }
+          }}>
             {match.round}
           </Typography>
           {match.status === 'live' && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Box sx={{ 
                 width: 8, 
                 height: 8, 
@@ -87,8 +100,9 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                   bgcolor: 'success.main', 
                   color: 'white', 
                   fontWeight: 'bold',
-                  fontSize: '0.75rem',
-                  boxShadow: '0 2px 8px rgba(76, 175, 80, 0.4)'
+                  fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                  boxShadow: '0 2px 8px rgba(76, 175, 80, 0.4)',
+                  height: { xs: 20, sm: 24 }
                 }} 
                 size="small" 
               />
@@ -100,15 +114,20 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
               sx={{ 
                 bgcolor: '#9aa0a6', 
                 color: 'white',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                height: { xs: 20, sm: 24 }
               }} 
               size="small" 
             />
           )}
           {match.status === 'upcoming' && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <TimeIcon sx={{ fontSize: 16, color: '#9aa0a6' }} />
-              <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <TimeIcon sx={{ fontSize: { xs: 14, sm: 16 }, color: '#9aa0a6' }} />
+              <Typography variant="body2" sx={{ 
+                color: '#9aa0a6',
+                fontSize: { xs: '0.75rem', sm: '0.875rem' }
+              }}>
                 {match.date} • {match.time}
               </Typography>
             </Box>
@@ -116,34 +135,176 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
         </Box>
 
         {/* Teams and Score */}
-        <Box sx={{ p: 4 }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
           <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr auto 1fr', 
-            gap: 4, 
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 2, sm: 4 }, 
             alignItems: 'center',
             mb: 3
           }}>
+            {/* Mobile Layout: Stacked teams with scores */}
+            <Box sx={{ 
+              display: { xs: 'flex', sm: 'none' },
+              flexDirection: 'column',
+              gap: 1.5,
+              width: '100%'
+            }}>
+              {/* Home Team Row */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: 'rgba(255,255,255,0.02)'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: getTeamColor(homeTeam),
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '0.9rem',
+                      border: '2px solid rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    {homeTeam?.tagozat?.charAt(0) || homeTeam?.name?.charAt(0) || 'H'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      fontWeight: 700, 
+                      color: '#e8eaed',
+                      lineHeight: 1.2,
+                      fontSize: '1.1rem'
+                    }}>
+                      {match.homeTeam}
+                    </Typography>
+                    {homeTeam && (
+                      <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.75rem' }}>
+                        {homeTeam.className}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                {/* Home Score */}
+                <Typography 
+                  variant="h3" 
+                  fontWeight="bold" 
+                  sx={{ 
+                    color: match.status === 'live' ? '#4caf50' : '#e8eaed',
+                    minWidth: '40px',
+                    textAlign: 'center'
+                  }}
+                >
+                  {match.status !== 'upcoming' && typeof match.homeScore === 'number' ? match.homeScore : '-'}
+                </Typography>
+              </Box>
+              
+              {/* Away Team Row */}
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: 'rgba(255,255,255,0.02)'
+              }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: getTeamColor(awayTeam),
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '0.9rem',
+                      border: '2px solid rgba(255,255,255,0.1)'
+                    }}
+                  >
+                    {awayTeam?.tagozat?.charAt(0) || awayTeam?.name?.charAt(0) || 'A'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6" sx={{ 
+                      fontWeight: 700, 
+                      color: '#e8eaed',
+                      lineHeight: 1.2,
+                      fontSize: '1.1rem'
+                    }}>
+                      {match.awayTeam}
+                    </Typography>
+                    {awayTeam && (
+                      <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.75rem' }}>
+                        {awayTeam.className}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                {/* Away Score */}
+                <Typography 
+                  variant="h3" 
+                  fontWeight="bold" 
+                  sx={{ 
+                    color: match.status === 'live' ? '#4caf50' : '#e8eaed',
+                    minWidth: '40px',
+                    textAlign: 'center'
+                  }}
+                >
+                  {match.status !== 'upcoming' && typeof match.awayScore === 'number' ? match.awayScore : '-'}
+                </Typography>
+              </Box>
+
+              {/* Mobile VS or Live indicator for upcoming matches */}
+              {match.status === 'upcoming' && (
+                <Box sx={{ textAlign: 'center', mt: 2 }}>
+                  <Typography variant="h4" sx={{ 
+                    color: '#4285f4', 
+                    mb: 1,
+                    fontSize: '2rem'
+                  }}>
+                    ⚽
+                  </Typography>
+                  <Typography variant="h5" sx={{ 
+                    color: '#9aa0a6', 
+                    fontWeight: 500,
+                    fontSize: '1.25rem'
+                  }}>
+                    VS
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            {/* Desktop Layout: Original layout */}
             {/* Home Team */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ 
+              display: { xs: 'none', sm: 'flex' }, 
+              alignItems: 'center', 
+              gap: 2,
+              flex: 1,
+              justifyContent: 'flex-start'
+            }}>
               <Avatar
                 sx={{
-                  width: 56,
-                  height: 56,
+                  width: { sm: 56, md: 64 },
+                  height: { sm: 56, md: 64 },
                   bgcolor: getTeamColor(homeTeam),
                   color: 'white',
                   fontWeight: 'bold',
-                  fontSize: '1.2rem',
+                  fontSize: { sm: '1.2rem', md: '1.4rem' },
                   border: '3px solid rgba(255,255,255,0.1)'
                 }}
               >
                 {homeTeam?.tagozat?.charAt(0) || homeTeam?.name?.charAt(0) || 'H'}
               </Avatar>
-              <Box>
+              <Box sx={{ textAlign: 'left' }}>
                 <Typography variant="h5" sx={{ 
                   fontWeight: 700, 
                   color: '#e8eaed',
-                  lineHeight: 1.2
+                  lineHeight: 1.2,
+                  fontSize: { sm: '1.5rem', md: '1.75rem' }
                 }}>
                   {match.homeTeam}
                 </Typography>
@@ -155,8 +316,12 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
               </Box>
             </Box>
 
-            {/* Score */}
-            <Box sx={{ textAlign: 'center', minWidth: 120 }}>
+            {/* Score - Desktop only */}
+            <Box sx={{ 
+              textAlign: 'center', 
+              minWidth: 120,
+              display: { xs: 'none', sm: 'block' }
+            }}>
               {match.status !== 'upcoming' && typeof match.homeScore === 'number' && typeof match.awayScore === 'number' ? (
                 <Box>
                   <Typography 
@@ -165,7 +330,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                       fontWeight: 'bold', 
                       color: '#e8eaed',
                       lineHeight: 1,
-                      fontSize: '4rem',
+                      fontSize: { sm: '3rem', md: '4rem' },
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -173,34 +338,52 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                     }}
                   >
                     {match.homeScore}
-                    <Typography variant="h3" sx={{ color: '#9aa0a6' }}>-</Typography>
+                    <Typography 
+                      variant="h3" 
+                      sx={{ 
+                        color: '#9aa0a6',
+                        fontSize: { sm: '2rem', md: '3rem' }
+                      }}
+                    >
+                      -
+                    </Typography>
                     {match.awayScore}
                   </Typography>
                 </Box>
               ) : (
                 <Box>
-                  <Typography variant="h4" sx={{ color: '#4285f4', mb: 1 }}>
+                  <Typography variant="h4" sx={{ 
+                    color: '#4285f4', 
+                    mb: 1,
+                    fontSize: { sm: '2.5rem', md: '3rem' }
+                  }}>
                     ⚽
                   </Typography>
-                  <Typography variant="h5" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
+                  <Typography variant="h5" sx={{ 
+                    color: '#9aa0a6', 
+                    fontWeight: 500,
+                    fontSize: { sm: '1.5rem', md: '1.75rem' }
+                  }}>
                     VS
                   </Typography>
                 </Box>
               )}
             </Box>
 
-            {/* Away Team */}
+            {/* Away Team - Desktop only */}
             <Box sx={{ 
-              display: 'flex', 
+              display: { xs: 'none', sm: 'flex' }, 
               alignItems: 'center', 
-              gap: 2, 
-              justifyContent: 'flex-end' 
+              gap: 2,
+              flex: 1,
+              justifyContent: 'flex-end'
             }}>
               <Box sx={{ textAlign: 'right' }}>
                 <Typography variant="h5" sx={{ 
                   fontWeight: 700, 
                   color: '#e8eaed',
-                  lineHeight: 1.2
+                  lineHeight: 1.2,
+                  fontSize: { sm: '1.5rem', md: '1.75rem' }
                 }}>
                   {match.awayTeam}
                 </Typography>
@@ -212,12 +395,12 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
               </Box>
               <Avatar
                 sx={{
-                  width: 56,
-                  height: 56,
+                  width: { sm: 56, md: 64 },
+                  height: { sm: 56, md: 64 },
                   bgcolor: getTeamColor(awayTeam),
                   color: 'white',
                   fontWeight: 'bold',
-                  fontSize: '1.2rem',
+                  fontSize: { sm: '1.2rem', md: '1.4rem' },
                   border: '3px solid rgba(255,255,255,0.1)'
                 }}
               >
@@ -229,19 +412,20 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
           {/* Match Info */}
           <Box sx={{ 
             display: 'flex', 
+            flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'center', 
-            gap: 4,
+            gap: { xs: 2, sm: 4 },
             pt: 3,
             borderTop: '1px solid #404040'
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
               <LocationIcon sx={{ fontSize: 18, color: '#9aa0a6' }} />
               <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
                 {match.venue}
               </Typography>
             </Box>
             {(match.referee || match.refereeObj) && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
                 <RefereeIcon sx={{ fontSize: 18, color: '#9aa0a6' }} />
                 <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
                   Bíró: {match.refereeObj ? formatRefereeName(match.refereeObj) : match.referee}
@@ -469,50 +653,75 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
             </Typography>
           </Box>
           
-          <Box sx={{ p: 4 }}>
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: '1fr auto 1fr', 
-              gap: 4, 
-              alignItems: 'center' 
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 3, sm: 4 }, 
+              alignItems: 'center',
+              justifyContent: 'space-around'
             }}>
-              <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ textAlign: 'center', flex: 1 }}>
                 <Typography variant="h2" sx={{ 
                   fontWeight: 'bold', 
                   color: getTeamColor(homeTeam),
-                  mb: 1
+                  mb: 1,
+                  fontSize: { xs: '3rem', sm: '4rem' }
                 }}>
                   {match.events.filter(e => e.type === 'goal' && e.team === 'home').length}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
                   Gólok
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
+                <Typography variant="caption" sx={{ 
+                  color: '#9aa0a6',
+                  display: 'block',
+                  mt: 0.5,
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                }}>
                   {match.homeTeam}
                 </Typography>
               </Box>
               
               <Divider 
-                orientation="vertical" 
+                orientation="vertical"
                 flexItem 
                 sx={{ 
                   borderColor: '#404040',
-                  borderWidth: 1
+                  borderWidth: 1,
+                  width: { xs: '50%', sm: 'auto' },
+                  display: { xs: 'none', sm: 'block' }
+                }} 
+              />
+              <Divider 
+                orientation="horizontal"
+                sx={{ 
+                  borderColor: '#404040',
+                  borderWidth: 1,
+                  width: '50%',
+                  mx: 'auto',
+                  display: { xs: 'block', sm: 'none' }
                 }} 
               />
               
-              <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ textAlign: 'center', flex: 1 }}>
                 <Typography variant="h2" sx={{ 
                   fontWeight: 'bold', 
                   color: getTeamColor(awayTeam),
-                  mb: 1
+                  mb: 1,
+                  fontSize: { xs: '3rem', sm: '4rem' }
                 }}>
                   {match.events.filter(e => e.type === 'goal' && e.team === 'away').length}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
                   Gólok
                 </Typography>
-                <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
+                <Typography variant="caption" sx={{ 
+                  color: '#9aa0a6',
+                  display: 'block',
+                  mt: 0.5,
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                }}>
                   {match.awayTeam}
                 </Typography>
               </Box>
@@ -524,11 +733,16 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
               pt: 3, 
               borderTop: '1px solid #404040',
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
               gap: 3
             }}>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#ff9800', mb: 1 }}>
+                <Typography variant="h4" sx={{ 
+                  fontWeight: 'bold', 
+                  color: '#ff9800', 
+                  mb: 1,
+                  fontSize: { xs: '2rem', sm: '2.5rem' }
+                }}>
                   {match.events.filter(e => e.type === 'yellow_card').length}
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
@@ -536,7 +750,12 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 </Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#f44336', mb: 1 }}>
+                <Typography variant="h4" sx={{ 
+                  fontWeight: 'bold', 
+                  color: '#f44336', 
+                  mb: 1,
+                  fontSize: { xs: '2rem', sm: '2.5rem' }
+                }}>
                   {match.events.filter(e => e.type === 'red_card').length}
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
@@ -544,7 +763,12 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 </Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2196f3', mb: 1 }}>
+                <Typography variant="h4" sx={{ 
+                  fontWeight: 'bold', 
+                  color: '#2196f3', 
+                  mb: 1,
+                  fontSize: { xs: '2rem', sm: '2.5rem' }
+                }}>
                   {match.events.filter(e => e.type === 'substitution').length}
                 </Typography>
                 <Typography variant="body2" sx={{ color: '#9aa0a6' }}>
@@ -582,11 +806,11 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
           </Typography>
         </Box>
         
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 3 } }}>
           <Box sx={{ 
             display: 'grid', 
             gridTemplateColumns: { xs: '1fr', md: '1fr auto 1fr' }, 
-            gap: 4 
+            gap: { xs: 3, md: 4 }
           }}>
             {/* Home Team Players */}
             <Box>
@@ -594,7 +818,8 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 color: getTeamColor(homeTeam), 
                 mb: 2, 
                 fontWeight: 600,
-                textAlign: 'center'
+                textAlign: 'center',
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
               }}>
                 {match.homeTeam}
               </Typography>
@@ -604,25 +829,28 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 2,
-                    p: 1,
+                    p: { xs: 0.5, sm: 1 },
                     borderRadius: 1,
                     backgroundColor: 'rgba(255,255,255,0.02)'
                   }}>
                     <Box sx={{ 
-                      minWidth: 24, 
-                      height: 24, 
+                      minWidth: { xs: 20, sm: 24 }, 
+                      height: { xs: 20, sm: 24 }, 
                       borderRadius: '50%', 
                       backgroundColor: getTeamColor(homeTeam),
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '0.75rem',
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' },
                       fontWeight: 'bold',
                       color: 'white'
                     }}>
                       {index + 1}
                     </Box>
-                    <Typography variant="body2" sx={{ color: '#e8eaed' }}>
+                    <Typography variant="body2" sx={{ 
+                      color: '#e8eaed',
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                    }}>
                       {player.name}
                     </Typography>
                     {player.csk && (
@@ -630,7 +858,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                         backgroundColor: '#4285f4', 
                         color: 'white',
                         fontSize: '0.6rem',
-                        height: 20
+                        height: { xs: 18, sm: 20 }
                       }} />
                     )}
                   </Box>
@@ -655,7 +883,8 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 color: getTeamColor(awayTeam), 
                 mb: 2, 
                 fontWeight: 600,
-                textAlign: 'center'
+                textAlign: 'center',
+                fontSize: { xs: '1.1rem', sm: '1.25rem' }
               }}>
                 {match.awayTeam}
               </Typography>
@@ -665,25 +894,28 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 2,
-                    p: 1,
+                    p: { xs: 0.5, sm: 1 },
                     borderRadius: 1,
                     backgroundColor: 'rgba(255,255,255,0.02)'
                   }}>
                     <Box sx={{ 
-                      minWidth: 24, 
-                      height: 24, 
+                      minWidth: { xs: 20, sm: 24 }, 
+                      height: { xs: 20, sm: 24 }, 
                       borderRadius: '50%', 
                       backgroundColor: getTeamColor(awayTeam),
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '0.75rem',
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' },
                       fontWeight: 'bold',
                       color: 'white'
                     }}>
                       {index + 1}
                     </Box>
-                    <Typography variant="body2" sx={{ color: '#e8eaed' }}>
+                    <Typography variant="body2" sx={{ 
+                      color: '#e8eaed',
+                      fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                    }}>
                       {player.name}
                     </Typography>
                     {player.csk && (
@@ -691,7 +923,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                         backgroundColor: '#4285f4', 
                         color: 'white',
                         fontSize: '0.6rem',
-                        height: 20
+                        height: { xs: 18, sm: 20 }
                       }} />
                     )}
                   </Box>
@@ -740,15 +972,22 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
           </Typography>
         </Box>
         
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: { xs: 2, sm: 3, md: 3 } }}>
           <Box sx={{ 
             textAlign: 'center',
-            py: 4
+            py: { xs: 3, sm: 4 }
           }}>
-            <Typography variant="body1" sx={{ color: '#9aa0a6', mb: 2 }}>
+            <Typography variant="body1" sx={{ 
+              color: '#9aa0a6', 
+              mb: 2,
+              fontSize: { xs: '0.9rem', sm: '1rem' }
+            }}>
               📷 Még nincsenek feltöltött fotók ehhez a mérkőzéshez
             </Typography>
-            <Typography variant="body2" sx={{ color: '#666' }}>
+            <Typography variant="body2" sx={{ 
+              color: '#666',
+              fontSize: { xs: '0.8rem', sm: '0.875rem' }
+            }}>
               Van fotód a mérkőzésről? Küldd el a szervezőknek!
             </Typography>
           </Box>

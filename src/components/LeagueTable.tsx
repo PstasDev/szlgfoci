@@ -109,13 +109,13 @@ const LeagueTable: React.FC = () => {
         
         <TableContainer sx={{ 
           backgroundColor: 'background.paper', 
-          overflowX: 'auto',
+          overflowX: { xs: 'hidden', sm: 'auto' },
           '& .MuiTable-root': {
-            minWidth: { xs: 650, sm: 700 }
+            minWidth: { xs: '100%', sm: 700 }
           }
         }}>
           <Table size="small" sx={{ 
-            minWidth: { xs: 650, sm: 700 },
+            minWidth: { xs: '100%', sm: 700 },
             '& .MuiTableCell-root': {
               px: { xs: 0.5, sm: 1 },
               fontSize: { xs: '0.75rem', sm: '0.875rem' }
@@ -126,62 +126,80 @@ const LeagueTable: React.FC = () => {
                 <TableCell sx={{ 
                   fontWeight: 'bold', 
                   color: 'text.primary',
-                  minWidth: { xs: 80, sm: 100 }
+                  minWidth: { xs: 120, sm: 100 }
                 }}>
                   OSZT
                 </TableCell>
+                {/* Hide M column on mobile */}
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 35, sm: 50 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   M
+                </TableCell>
+                {/* Show merged GY:D:V on mobile, separate on desktop */}
+                <TableCell align="center" sx={{ 
+                  fontWeight: 'bold', 
+                  width: { xs: 70, sm: 50 }, 
+                  color: 'text.primary',
+                  display: { xs: 'table-cell', sm: 'none' }
+                }}>
+                  GY:D:V
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 35, sm: 50 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   GY
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 35, sm: 50 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   D
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 35, sm: 50 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   V
                 </TableCell>
+                {/* Hide goal-related columns on mobile */}
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 45, sm: 60 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   LG
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 45, sm: 60 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   KG
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
                   width: { xs: 45, sm: 60 }, 
-                  color: 'text.primary' 
+                  color: 'text.primary',
+                  display: { xs: 'none', sm: 'table-cell' }
                 }}>
                   GA
                 </TableCell>
                 <TableCell align="center" sx={{ 
                   fontWeight: 'bold', 
-                  width: { xs: 40, sm: 50 }, 
+                  width: { xs: 50, sm: 50 }, 
                   color: 'text.primary' 
                 }}>
                   P
@@ -257,21 +275,107 @@ const LeagueTable: React.FC = () => {
                       </Box>
                     </ButtonBase>
                   </TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{teamStanding.played || 0}</TableCell>
-                  <TableCell align="center" sx={{ color: 'success.main', fontWeight: 'bold' }}>
+                  {/* Hide M column on mobile */}
+                  <TableCell align="center" sx={{ 
+                    color: 'text.primary',
+                    display: { xs: 'none', sm: 'table-cell' }
+                  }}>
+                    {teamStanding.played || 0}
+                  </TableCell>
+                  {/* Show merged GY:D:V on mobile */}
+                  <TableCell align="center" sx={{ 
+                    display: { xs: 'table-cell', sm: 'none' }
+                  }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                      <Typography 
+                        component="span" 
+                        sx={{ 
+                          color: 'success.main', 
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        {teamStanding.won || 0}
+                      </Typography>
+                      <Typography 
+                        component="span" 
+                        sx={{ 
+                          color: 'text.secondary',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        :
+                      </Typography>
+                      <Typography 
+                        component="span" 
+                        sx={{ 
+                          color: 'warning.main', 
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        {teamStanding.drawn || 0}
+                      </Typography>
+                      <Typography 
+                        component="span" 
+                        sx={{ 
+                          color: 'text.secondary',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        :
+                      </Typography>
+                      <Typography 
+                        component="span" 
+                        sx={{ 
+                          color: 'error.main', 
+                          fontWeight: 'bold',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        {teamStanding.lost || 0}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  {/* Show separate GY:D:V on desktop */}
+                  <TableCell align="center" sx={{ 
+                    color: 'success.main', 
+                    fontWeight: 'bold',
+                    display: { xs: 'none', sm: 'table-cell' }
+                  }}>
                     {teamStanding.won || 0}
                   </TableCell>
-                  <TableCell align="center" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
+                  <TableCell align="center" sx={{ 
+                    color: 'warning.main', 
+                    fontWeight: 'bold',
+                    display: { xs: 'none', sm: 'table-cell' }
+                  }}>
                     {teamStanding.drawn || 0}
                   </TableCell>
-                  <TableCell align="center" sx={{ color: 'error.main', fontWeight: 'bold' }}>
+                  <TableCell align="center" sx={{ 
+                    color: 'error.main', 
+                    fontWeight: 'bold',
+                    display: { xs: 'none', sm: 'table-cell' }
+                  }}>
                     {teamStanding.lost || 0}
                   </TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{teamStanding.goalsFor || 0}</TableCell>
-                  <TableCell align="center" sx={{ color: 'text.primary' }}>{teamStanding.goalsAgainst || 0}</TableCell>
+                  {/* Hide goal-related columns on mobile */}
+                  <TableCell align="center" sx={{ 
+                    color: 'text.primary',
+                    display: { xs: 'none', sm: 'table-cell' }
+                  }}>
+                    {teamStanding.goalsFor || 0}
+                  </TableCell>
+                  <TableCell align="center" sx={{ 
+                    color: 'text.primary',
+                    display: { xs: 'none', sm: 'table-cell' }
+                  }}>
+                    {teamStanding.goalsAgainst || 0}
+                  </TableCell>
                   <TableCell align="center" sx={{ 
                     color: (teamStanding.goalDifference || 0) > 0 ? 'success.main' : (teamStanding.goalDifference || 0) < 0 ? 'error.main' : 'text.primary',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    display: { xs: 'none', sm: 'table-cell' }
                   }}>
                     {(teamStanding.goalDifference || 0) > 0 ? '+' : ''}{teamStanding.goalDifference || 0}
                   </TableCell>
