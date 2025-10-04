@@ -5,9 +5,9 @@ import {
   Box,
   Typography,
   Paper,
-  Avatar,
 } from '@mui/material';
-import { getClassColor } from '@/utils/dataUtils';
+import TeamLogo from './TeamLogo';
+// getClassColor no longer needed; TeamLogo handles color selection
 
 const ClassColorLegend: React.FC = () => {
   const classes = [
@@ -59,18 +59,7 @@ const ClassColorLegend: React.FC = () => {
               textAlign: 'center'
             }}
           >
-            <Avatar
-              sx={{
-                width: 32,
-                height: 32,
-                bgcolor: getClassColor(`20 ${classItem.letter}`), // Use dummy class name
-                fontSize: '0.9rem',
-                fontWeight: 'bold',
-                color: 'white'
-              }}
-            >
-              {classItem.letter}
-            </Avatar>
+            <TeamLogo teamName={`20 ${classItem.letter}`} size={32} fontSize="0.9rem" />
             <Box>
               <Typography variant="caption" sx={{ display: 'block', fontWeight: 500 }}>
                 {classItem.letter} osztály

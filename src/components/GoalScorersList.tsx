@@ -12,11 +12,13 @@ import {
   TableHead,
   TableRow,
   Box,
-  Avatar,
+  // Avatar replaced by TeamLogo for team badges
+  // Avatar,
   Chip,
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
-import { getClassColor, convertTopScorerToPlayer } from '@/utils/dataUtils';
+import { convertTopScorerToPlayer } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentData } from '@/contexts/TournamentDataContext';
 import LoadingSkeleton from './LoadingSkeleton';
@@ -213,18 +215,7 @@ const GoalScorersList: React.FC = () => {
                       </Typography>
                       {/* Show team on mobile under player name */}
                       <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 0.5 }}>
-                        <Avatar
-                          sx={{
-                            width: 14,
-                            height: 14,
-                            bgcolor: getClassColor(player.teamName || ''),
-                            fontSize: '0.45rem',
-                            fontWeight: 'bold',
-                            color: 'white'
-                          }}
-                        >
-                          {(player.teamName || '').split(' ')[1] || (player.teamName || '').charAt((player.teamName || '').length - 1)}
-                        </Avatar>
+                        <TeamLogo teamName={player.teamName || undefined} size={14} fontSize="0.45rem" />
                         <Typography 
                           variant="caption" 
                           sx={{ 
@@ -245,18 +236,7 @@ const GoalScorersList: React.FC = () => {
 
                   <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          bgcolor: getClassColor(player.teamName || ''),
-                          fontSize: '0.6rem',
-                          fontWeight: 'bold',
-                          color: 'white'
-                        }}
-                      >
-                        {(player.teamName || '').split(' ')[1] || (player.teamName || '').charAt((player.teamName || '').length - 1)}
-                      </Avatar>
+                      <TeamLogo teamName={player.teamName || undefined} size={20} fontSize="0.6rem" />
                       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                         {player.teamName}
                       </Typography>

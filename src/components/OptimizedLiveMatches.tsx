@@ -7,12 +7,12 @@ import {
   CardContent,
   Typography,
   Box,
-  Avatar,
   Stack,
   Chip,
   IconButton,
   Tooltip,
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import {
   Sports as SportsIcon,
   SportsSoccer as BallIcon,
@@ -88,18 +88,7 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Home Team */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-          <Avatar
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: getTeamColor(match.homeTeamObj),
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              color: 'white'
-            }}
-          >
-            {match.homeTeam.split(' ')[1]}
-          </Avatar>
+          <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={32} fontSize="0.8rem" />
           <Typography 
             variant="body1" 
             fontWeight="500" 
@@ -149,18 +138,7 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
           >
             {match.awayTeam}
           </Typography>
-          <Avatar
-            sx={{
-              width: 32,
-              height: 32,
-              bgcolor: getTeamColor(match.awayTeamObj),
-              fontSize: '0.8rem',
-              fontWeight: 'bold',
-              color: 'white'
-            }}
-          >
-            {match.awayTeam.split(' ')[1]}
-          </Avatar>
+          <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={32} fontSize="0.8rem" />
         </Box>
       </Box>
 

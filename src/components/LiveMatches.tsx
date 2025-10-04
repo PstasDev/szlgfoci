@@ -7,12 +7,12 @@ import {
   CardContent,
   Typography,
   Box,
-  Avatar,
   Stack,
   Chip,
   IconButton,
   Tooltip,
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import {
   Sports as SportsIcon,
   Schedule as ClockIcon,
@@ -162,18 +162,7 @@ const LiveMatches: React.FC = () => {
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Avatar
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    bgcolor: getTeamColor(match.homeTeamObj),
-                    fontSize: '0.65rem',
-                    fontWeight: 'bold',
-                    color: 'white'
-                  }}
-                >
-                  {match.homeTeamObj?.tagozat?.charAt(0) || match.homeTeam.charAt(0)}
-                </Avatar>
+                <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={24} fontSize="0.65rem" />
                 <Typography 
                   variant="body2" 
                   fontWeight="500" 
@@ -203,18 +192,7 @@ const LiveMatches: React.FC = () => {
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Avatar
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    bgcolor: getTeamColor(match.awayTeamObj),
-                    fontSize: '0.65rem',
-                    fontWeight: 'bold',
-                    color: 'white'
-                  }}
-                >
-                  {match.awayTeamObj?.tagozat?.charAt(0) || match.awayTeam.charAt(0)}
-                </Avatar>
+                <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={24} fontSize="0.65rem" />
                 <Typography 
                   variant="body2" 
                   fontWeight="500" 
@@ -281,18 +259,7 @@ const LiveMatches: React.FC = () => {
               gap: 1, 
               flex: 1
             }}>
-              <Avatar
-                sx={{
-                  width: 28,
-                  height: 28,
-                  bgcolor: getTeamColor(match.homeTeamObj),
-                  fontSize: '0.7rem',
-                  fontWeight: 'bold',
-                  color: 'white'
-                }}
-              >
-                {match.homeTeamObj?.tagozat?.charAt(0) || match.homeTeam.charAt(0)}
-              </Avatar>
+              <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={28} fontSize="0.7rem" />
               <Typography 
                 variant="body2" 
                 fontWeight="500" 
@@ -359,18 +326,7 @@ const LiveMatches: React.FC = () => {
               >
                 {match.awayTeam}
               </Typography>
-              <Avatar
-                sx={{
-                  width: 28,
-                  height: 28,
-                  bgcolor: getTeamColor(match.awayTeamObj),
-                  fontSize: '0.7rem',
-                  fontWeight: 'bold',
-                  color: 'white'
-                }}
-              >
-                {match.awayTeamObj?.tagozat?.charAt(0) || match.awayTeam.charAt(0)}
-              </Avatar>
+              <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={28} fontSize="0.7rem" />
             </Box>
           </Box>
         </Box>

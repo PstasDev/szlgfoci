@@ -6,10 +6,10 @@ import {
   Box,
   Typography,
   Paper,
-  Avatar,
   Chip,
   Button,
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import {
   PlayArrow as PlayIcon,
   AccessTime as TimeIcon,
@@ -153,33 +153,13 @@ const MatchCard: React.FC<MatchCardProps> = ({
           {/* Teams */}
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: getTeamColor(match.homeTeamObj),
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold',
-                }}
-              >
-                {match.homeTeam.split(' ')[1]}
-              </Avatar>
+              <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={32} fontSize="0.8rem" />
               <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
                 {match.homeTeam}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: getTeamColor(match.awayTeamObj),
-                  fontSize: '0.8rem',
-                  fontWeight: 'bold',
-                }}
-              >
-                {match.awayTeam.split(' ')[1]}
-              </Avatar>
+              <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={32} fontSize="0.8rem" />
               <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
                 {match.awayTeam}
               </Typography>
@@ -367,18 +347,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: getTeamColor(match.homeTeamObj),
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold',
-                    border: '2px solid rgba(255,255,255,0.1)'
-                  }}
-                >
-                  {match.homeTeam.split(' ')[1]}
-                </Avatar>
+                    <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={40} fontSize="0.9rem" showBorder />
                 <Typography 
                   variant="h6" 
                   sx={{ 
@@ -411,18 +380,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
               justifyContent: 'space-between'
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    bgcolor: getTeamColor(match.awayTeamObj),
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold',
-                    border: '2px solid rgba(255,255,255,0.1)'
-                  }}
-                >
-                  {match.awayTeam.split(' ')[1]}
-                </Avatar>
+                <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={40} fontSize="0.9rem" showBorder />
                 <Typography 
                   variant="h6" 
                   sx={{ 
@@ -472,18 +430,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
             alignItems: 'center', 
             gap: 2 
           }}>
-            <Avatar
-              sx={{
-                width: 56,
-                height: 56,
-                bgcolor: getTeamColor(match.homeTeamObj),
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                border: '2px solid rgba(255,255,255,0.1)'
-              }}
-            >
-              {match.homeTeam.split(' ')[1]}
-            </Avatar>
+            <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={56} fontSize="1.1rem" showBorder />
             <Box>
               <Typography 
                 variant="h6" 
@@ -558,18 +505,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 {match.awayTeam}
               </Typography>
             </Box>
-            <Avatar
-              sx={{
-                width: 56,
-                height: 56,
-                bgcolor: getTeamColor(match.awayTeamObj),
-                fontSize: '1.1rem',
-                fontWeight: 'bold',
-                border: '2px solid rgba(255,255,255,0.1)'
-              }}
-            >
-              {match.awayTeam.split(' ')[1]}
-            </Avatar>
+            <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={56} fontSize="1.1rem" showBorder />
           </Box>
         </Box>
 

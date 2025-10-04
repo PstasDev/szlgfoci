@@ -4,9 +4,9 @@ import {
   Box,
   Typography,
   Chip,
-  Avatar,
   Paper,
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import {
   SportsScore as GoalIcon,
   Warning as YellowCardIcon,
@@ -244,15 +244,13 @@ const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
           </Typography>
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ 
-              width: 48, 
-              height: 48,
-              border: '2px solid white',
-              bgcolor: teamColor,
-              fontWeight: 'bold'
-            }}>
-              {playerTeam === 'home' ? homeTeam?.tagozat?.charAt(0) : awayTeam?.tagozat?.charAt(0)}
-            </Avatar>
+            <TeamLogo
+              team={playerTeam === 'home' ? homeTeam : awayTeam}
+              teamName={(playerTeam === 'home' ? homeTeam?.name : awayTeam?.name) || undefined}
+              size={48}
+              fontSize="1.2rem"
+              showBorder
+            />
             <Box>
               <Typography variant="body1" sx={{ fontWeight: 600 }}>
                 {playerTeam === 'home' ? homeTeam?.name || homeTeam?.tagozat : awayTeam?.name || awayTeam?.tagozat}
@@ -457,15 +455,12 @@ const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
 
         {event.player && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ 
-              width: 48, 
-              height: 48,
-              bgcolor: teamColor,
-              color: 'white',
-              fontWeight: 'bold'
-            }}>
-              {playerTeam === 'home' ? homeTeam?.tagozat?.charAt(0) : awayTeam?.tagozat?.charAt(0)}
-            </Avatar>
+            <TeamLogo
+              team={playerTeam === 'home' ? homeTeam : awayTeam}
+              teamName={(playerTeam === 'home' ? homeTeam?.name : awayTeam?.name) || undefined}
+              size={48}
+              fontSize="1rem"
+            />
             <Box sx={{ flex: 1 }}>
               <Typography variant="h6" sx={{ color: '#e8eaed', fontWeight: 600 }}>
                 {event.player.name}

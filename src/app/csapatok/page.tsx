@@ -2,7 +2,7 @@
 
 import React, { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
+import {
   Container, 
   Typography, 
   Card, 
@@ -14,10 +14,10 @@ import {
   CircularProgress,
   Alert,
   Stack,
-  Avatar,
   LinearProgress,
   Paper
 } from '@mui/material';
+import TeamLogo from '@/components/TeamLogo';
 import {
   SportsScore as GoalIcon,
   Group as GroupIcon,
@@ -226,18 +226,7 @@ function CsapatokContent() {
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                      <Avatar
-                        sx={{
-                          width: 50,
-                          height: 50,
-                          bgcolor: 'rgba(255,255,255,0.2)',
-                          fontSize: '1.5rem',
-                          fontWeight: 'bold',
-                          border: '2px solid rgba(255,255,255,0.3)'
-                        }}
-                      >
-                        {teamClassName}
-                      </Avatar>
+                      <TeamLogo team={team} teamName={teamDisplayName} size={50} fontSize="1.5rem" fallbackColor="rgba(255,255,255,0.2)" showBorder />
                     </Box>
                     
                     <Typography 

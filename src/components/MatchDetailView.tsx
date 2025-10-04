@@ -5,12 +5,12 @@ import {
   Box,
   Typography,
   Paper,
-  Avatar,
   Chip,
   Stack,
   Divider,
   Badge,
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import {
   Person as RefereeIcon,
   LocationOn as LocationIcon,
@@ -119,19 +119,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
           }}>
             {/* Home Team */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Avatar
-                sx={{
-                  width: 56,
-                  height: 56,
-                  bgcolor: getTeamColor(homeTeam),
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem',
-                  border: '3px solid rgba(255,255,255,0.1)'
-                }}
-              >
-                {homeTeam?.tagozat?.charAt(0) || homeTeam?.name?.charAt(0) || 'H'}
-              </Avatar>
+                <TeamLogo team={homeTeam} teamName={match.homeTeam} size={56} fontSize="1.2rem" showBorder />
               <Box>
                 <Typography variant="h5" sx={{ 
                   fontWeight: 700, 
@@ -203,19 +191,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                   </Typography>
                 )}
               </Box>
-              <Avatar
-                sx={{
-                  width: 56,
-                  height: 56,
-                  bgcolor: getTeamColor(awayTeam),
-                  color: 'white',
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem',
-                  border: '3px solid rgba(255,255,255,0.1)'
-                }}
-              >
-                {awayTeam?.tagozat?.charAt(0) || awayTeam?.name?.charAt(0) || 'A'}
-              </Avatar>
+              <TeamLogo team={awayTeam} teamName={match.awayTeam} size={56} fontSize="1.2rem" showBorder />
             </Box>
           </Box>
 

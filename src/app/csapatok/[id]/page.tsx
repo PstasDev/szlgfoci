@@ -9,7 +9,6 @@ import {
   Button,
   Stack,
   Paper,
-  Avatar,
   Chip,
   Card,
   CardContent,
@@ -21,6 +20,7 @@ import {
   TableRow,
   CircularProgress,
 } from '@mui/material';
+import TeamLogo from '@/components/TeamLogo';
 import {
   ArrowBack as BackIcon,
   SportsScore as GoalIcon,
@@ -253,17 +253,7 @@ export default function TeamPage() {
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 3 }}>
-              <Avatar
-                sx={{
-                  width: 80,
-                  height: 80,
-                  bgcolor: getTeamColor(team),
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                }}
-              >
-                {team ? getTeamClassName(team) : 'T'}
-              </Avatar>
+              <TeamLogo team={team} teamName={teamDisplayName} size={80} fontSize="2rem" showBorder fallbackColor={getTeamColor(team)} />
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 1 }}>
                   {teamDisplayName}

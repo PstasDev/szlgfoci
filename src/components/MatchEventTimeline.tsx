@@ -14,8 +14,9 @@ import {
   Typography,
   Box,
   Paper,
-  Avatar,
+  // Avatar replaced by TeamLogo for logo-first rendering
 } from '@mui/material';
+import TeamLogo from './TeamLogo';
 import {
   SportsSoccer as GoalIcon,
   Warning as YellowCardIcon,
@@ -206,17 +207,12 @@ const MatchEventTimeline: React.FC<MatchEventTimelineProps> = ({
                     
                     {/* Team indicator */}
                     {!isNeutralEvent && (
-                      <Avatar
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          fontSize: '0.7rem',
-                          bgcolor: isHomeEvent ? 'primary.main' : 'success.main',
-                          color: 'white'
-                        }}
-                      >
-                        {isHomeEvent ? (homeTeam?.name?.charAt(0) || 'H') : (awayTeam?.name?.charAt(0) || 'A')}
-                      </Avatar>
+                      <TeamLogo
+                        team={isHomeEvent ? homeTeam : awayTeam}
+                        teamName={(isHomeEvent ? homeTeam?.name : awayTeam?.name) || undefined}
+                        size={20}
+                        fontSize="0.7rem"
+                      />
                     )}
                   </Box>
                   
