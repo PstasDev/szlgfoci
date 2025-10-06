@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Table,
@@ -48,6 +49,7 @@ type SortOrder = 'asc' | 'desc';
 type StatusFilter = 'all' | 'live' | 'upcoming' | 'finished';
 
 const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
+  const router = useRouter();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
@@ -57,6 +59,11 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
+
+  // Navigation handler
+  const handleMatchClick = (matchId: number) => {
+    router.push(`/merkozesek/${matchId}`);
+  };
 
   // Sort and filter matches
   const processedMatches = useMemo(() => {
@@ -206,8 +213,17 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
         backgroundColor: '#2d2d2d',
         border: '1px solid #404040',
         borderRadius: 2,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        '&:hover': {
+          backgroundColor: '#3a3a3a',
+          borderColor: '#4285f4',
+          transform: 'translateY(-1px)',
+          boxShadow: '0 4px 12px rgba(66, 133, 244, 0.15)'
+        }
       }}
+      onClick={() => handleMatchClick(match.id)}
     >
       <CardContent sx={{ p: 2 }}>
         {/* Status and DateTime */}
@@ -443,10 +459,24 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
               <React.Fragment key={match.id}>
                 <TableRow 
                   sx={{ 
-                    '&:hover': { backgroundColor: '#3a3a3a' },
-                    cursor: isTablet ? 'pointer' : 'default'
+                    '&:hover': { 
+                      backgroundColor: '#3a3a3a',
+                      '& .MuiTableCell-root': {
+                        borderColor: '#4285f4'
+                      }
+                    },
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
                   }}
-                  onClick={isTablet ? () => setExpandedRow(expandedRow === match.id ? null : match.id) : undefined}
+                  onClick={(e) => {
+                    // For tablet, handle expand/collapse, for desktop, navigate to match
+                    if (isTablet) {
+                      e.stopPropagation();
+                      setExpandedRow(expandedRow === match.id ? null : match.id);
+                    } else {
+                      handleMatchClick(match.id);
+                    }
+                  }}
                 >
                   {/* Status and DateTime */}
                   <TableCell sx={{ py: 2 }}>
@@ -510,12 +540,32 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
 
                   {isTablet && (
                     <TableCell sx={{ py: 2 }}>
-                      <IconButton
-                        size="small"
-                        sx={{ color: '#9aa0a6' }}
-                      >
-                        {expandedRow === match.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      </IconButton>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#4285f4', 
+                            fontWeight: 500,
+                            fontSize: '0.875rem'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMatchClick(match.id);
+                          }}
+                        >
+                          Részletek
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          sx={{ color: '#9aa0a6' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedRow(expandedRow === match.id ? null : match.id);
+                          }}
+                        >
+                          {expandedRow === match.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                      </Stack>
                     </TableCell>
                   )}
                 </TableRow>
