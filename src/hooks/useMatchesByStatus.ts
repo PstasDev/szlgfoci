@@ -16,7 +16,7 @@ export const useMatchesByStatus = (matches: Match[] = []): MatchesByStatus => {
     return {
       liveMatches: getLiveMatches(matches),
       upcomingMatches: getUpcomingMatches(matches, 5),
-      recentMatches: getRecentMatches(matches, 5),
+      recentMatches: getRecentMatches(matches, 3), // Limit to 3 for homepage
       homepageUpcoming: getUpcomingMatchesForHomepage(matches)
     };
   }, [matches]);

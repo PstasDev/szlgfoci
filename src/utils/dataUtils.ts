@@ -288,6 +288,13 @@ export const getUpcomingMatchesForHomepage = (matches: Match[]): { matches: Matc
 export const getRecentMatches = (matches: Match[], limit: number = 5): Match[] => {
   return matches
     .filter(match => match.status === 'finished')
+    .sort((a, b) => {
+      // Create datetime strings for comparison
+      const dateTimeA = `${a.date}T${a.time}`;
+      const dateTimeB = `${b.date}T${b.time}`;
+      // Sort by most recent first (descending order)
+      return new Date(dateTimeB).getTime() - new Date(dateTimeA).getTime();
+    })
     .slice(0, limit);
 };
 

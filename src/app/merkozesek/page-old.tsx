@@ -6,18 +6,20 @@ import {
   Stack,
   Typography,
   CircularProgress,
-  Container,
 } from '@mui/material';
 import SimpleLayout from '@/components/SimpleLayout';
-import MatchesTable from '@/components/MatchesTable';
-import MatchInsights from '@/components/MatchInsights';
+import MatchesLayout from '@/components/MatchesLayout';
+import MatchesList from '@/components/MatchesList';
 import ErrorDisplay from '@/components/ErrorDisplay';
 import { useTournamentContext } from '@/hooks/useTournamentContext';
+import { useMatchesByStatus } from '@/hooks/useTournamentData';
 import { getErrorInfo, isEmptyDataError } from '@/utils/errorUtils';
 import { hasTournamentStarted } from '@/utils/dataUtils';
 
 export default function MatchesPage() {
+  const [activeTab, setActiveTab] = React.useState<'live' | 'upcoming' | 'recent'>('live');
   const { matches, tournament, loading, error, refetch } = useTournamentContext();
+  const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
 
   if (loading) {
     return (
@@ -94,49 +96,83 @@ export default function MatchesPage() {
     );
   }
 
+  const renderMatchContent = () => {
+    switch (activeTab) {
+      case 'live':
+        return (
+          <Stack spacing={3}>
+            {liveMatches.length > 0 ? (
+              <MatchesList
+                matches={liveMatches}
+                title="� Élő Mérkőzések"
+                variant="detailed"
+                layout="list"
+              />
+            ) : (
+              <Box sx={{
+                textAlign: 'center',
+                py: 8,
+                px: 4,
+                backgroundColor: '#2d2d2d',
+                borderRadius: '16px',
+                border: '1px solid #404040',
+                maxWidth: '600px',
+                mx: 'auto'
+              }}>
+                <Typography variant="h3" sx={{ color: '#9aa0a6', mb: 3, fontSize: '3rem' }}>
+                  📺
+                </Typography>
+                <Typography variant="h5" sx={{ color: '#e8eaed', mb: 2, fontWeight: 600 }}>
+                  Jelenleg nincs élő mérkőzés
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#9aa0a6', fontSize: '1.1rem' }}>
+                  A következő meccseket a &ldquo;Közelgő Meccsek&rdquo; fülön találja
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        );
+      
+      case 'upcoming':
+        return (
+          <MatchesList
+            matches={upcomingMatches.slice(0, 10)}
+            title="📅 Közelgő Mérkőzések"
+            variant="detailed"
+            layout="list"
+            emptyMessage="Nincsenek tervezett mérkőzések a közeljövőben."
+          />
+        );
+      
+      case 'recent':
+        return (
+          <MatchesList
+            matches={recentMatches.slice(0, 10)}
+            title="✅ Befejezett Mérkőzések"
+            variant="compact"
+            layout="list"
+            emptyMessage="Nincsenek befejezett mérkőzések."
+          />
+        );
+      
+      default:
+        return (
+          <MatchesList
+            matches={liveMatches}
+            title="Mérkőzések"
+            variant="detailed"
+            layout="list"
+          />
+        );
+    }
+  };
+
   return (
     <SimpleLayout>
-      <Box sx={{ minHeight: '100vh', backgroundColor: 'background.default' }}>
-        <Container maxWidth="xl" sx={{ py: 0, px: { xs: 1, sm: 2 } }}>
-          {/* Header Section */}
-          <Box sx={{ pt: { xs: 2, sm: 3, md: 4 }, pb: 3 }}>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              gutterBottom
-              sx={{ 
-                fontWeight: 'bold',
-                color: 'primary.main',
-                textAlign: 'center',
-                mb: 1,
-                fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
-              }}
-            >
-              Mérkőzések
-            </Typography>
-            <Typography 
-              variant="h6" 
-              color="text.secondary"
-              sx={{ 
-                textAlign: 'center',
-                mb: { xs: 3, sm: 4 },
-                fontSize: { xs: '1rem', sm: '1.25rem' },
-                px: { xs: 2, sm: 0 }
-              }}
-            >
-              {tournament.name} - Minden mérkőzés egy helyen
-            </Typography>
-          </Box>
-
-          {/* Content */}
-          <Box sx={{ pb: { xs: 3, sm: 4 } }}>
-            {/* Insights Section */}
-            <MatchInsights matches={matches} />
-            
-            {/* Matches Table */}
-            <MatchesTable matches={matches} />
-          </Box>
-        </Container>
+      <Box sx={{ px: { xs: 0, sm: 2, md: 3 } }}>
+        <MatchesLayout activeTab={activeTab} onTabChange={setActiveTab}>
+          {renderMatchContent()}
+        </MatchesLayout>
       </Box>
     </SimpleLayout>
   );
