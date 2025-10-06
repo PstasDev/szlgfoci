@@ -4,6 +4,32 @@ import type { Team, Standing, ApiMatch, Match, TopScorer, MatchEvent, StandingSc
 // Re-export types for convenience
 export type { Match, MatchEvent, Team, Standing, TopScorer, Tournament } from '@/types/api';
 
+// Helper function to parse date and time properly for sorting
+// Converts European date format (dd.mm.yyyy) and time (HH:mm) to a proper Date object
+const parseMatchDateTime = (dateStr: string, timeStr: string): Date => {
+  try {
+    const [day, month, year] = dateStr.split('.');
+    if (!day || !month || !year) {
+      console.warn('Invalid date format:', dateStr);
+      return new Date(0); // Fallback to epoch time for invalid dates
+    }
+    
+    const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    const dateTime = new Date(`${isoDate}T${timeStr}:00`);
+    
+    // Validate the resulting date
+    if (isNaN(dateTime.getTime())) {
+      console.warn('Invalid date/time combination:', dateStr, timeStr);
+      return new Date(0);
+    }
+    
+    return dateTime;
+  } catch (error) {
+    console.warn('Error parsing date/time:', dateStr, timeStr, error);
+    return new Date(0); // Fallback to epoch time for errors
+  }
+};
+
 // Get team color from the team object (backend provides the color)
 export const getTeamColor = (team: Team | null | undefined): string => {
   if (team?.color) {
@@ -261,10 +287,9 @@ export const getUpcomingMatches = (matches: Match[], limit: number = 5): Match[]
   return matches
     .filter(match => match.status === 'upcoming')
     .sort((a, b) => {
-      // Create datetime strings for comparison
-      const dateTimeA = `${a.date}T${a.time}`;
-      const dateTimeB = `${b.date}T${b.time}`;
-      return new Date(dateTimeA).getTime() - new Date(dateTimeB).getTime();
+      const dateTimeA = parseMatchDateTime(a.date, a.time);
+      const dateTimeB = parseMatchDateTime(b.date, b.time);
+      return dateTimeA.getTime() - dateTimeB.getTime();
     })
     .slice(0, limit);
 };
@@ -273,10 +298,9 @@ export const getUpcomingMatchesForHomepage = (matches: Match[]): { matches: Matc
   const sortedUpcoming = matches
     .filter(match => match.status === 'upcoming')
     .sort((a, b) => {
-      // Create datetime strings for comparison
-      const dateTimeA = `${a.date}T${a.time}`;
-      const dateTimeB = `${b.date}T${b.time}`;
-      return new Date(dateTimeA).getTime() - new Date(dateTimeB).getTime();
+      const dateTimeA = parseMatchDateTime(a.date, a.time);
+      const dateTimeB = parseMatchDateTime(b.date, b.time);
+      return dateTimeA.getTime() - dateTimeB.getTime();
     });
   
   return {
@@ -289,11 +313,10 @@ export const getRecentMatches = (matches: Match[], limit: number = 5): Match[] =
   return matches
     .filter(match => match.status === 'finished')
     .sort((a, b) => {
-      // Create datetime strings for comparison
-      const dateTimeA = `${a.date}T${a.time}`;
-      const dateTimeB = `${b.date}T${b.time}`;
+      const dateTimeA = parseMatchDateTime(a.date, a.time);
+      const dateTimeB = parseMatchDateTime(b.date, b.time);
       // Sort by most recent first (descending order)
-      return new Date(dateTimeB).getTime() - new Date(dateTimeA).getTime();
+      return dateTimeB.getTime() - dateTimeA.getTime();
     })
     .slice(0, limit);
 };
