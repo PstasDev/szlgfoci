@@ -162,22 +162,6 @@ export default function HomePage() {
                       </Typography>
                     )}
                     
-                    <Box
-                      sx={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        px: 2,
-                        py: 0.5,
-                        borderRadius: '20px',
-                        backgroundColor: hasTournamentStarted(tournament) ? 'success.main' : 'warning.main',
-                        color: 'white',
-                        fontSize: '0.875rem',
-                        fontWeight: 'bold'
-                      }}
-                    >
-                      {hasTournamentStarted(tournament) ? '🟢 Folyamatban' : '🟡 Hamarosan'}
-                    </Box>
                   </Stack>
                 </Box>
               </motion.div>

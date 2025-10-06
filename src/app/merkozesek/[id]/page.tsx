@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
         url: matchUrl,
         siteName: 'Szlgfoci',
         images: [{
-          url: `${baseUrl}/api/og/match?homeTeam=Mérkőzés&awayTeam=Betöltés&status=upcoming`,
+          url: `${baseUrl}/og-default.png`,
           width: 1200,
           height: 630,
         }],
@@ -47,6 +47,7 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
         card: 'summary_large_image',
         title: 'Szlgfoci - Iskolai Foci Kupa',
         description: 'Iskolai labdarúgó bajnokság mérkőzés részletei',
+        images: [`${baseUrl}/og-default.png`],
       },
     };
   }
@@ -79,7 +80,7 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
     }
   };
 
-  // Generate match image URL for OpenGraph
+  // Generate match image URL for OpenGraph with Instagram compatibility
   const generateImageUrl = () => {
     const params = new URLSearchParams({
       homeTeam: match.homeTeam,
@@ -129,10 +130,17 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
       images: [imageUrl],
     },
     other: {
-      // Instagram specific optimizations
-      'ig:title': title,
-      'ig:description': description,
-      'ig:image': imageUrl,
+      // Instagram specific meta tags for better DM compatibility
+      'og:image:width': '1200',
+      'og:image:height': '630',
+      'og:image:type': 'image/png',
+      'og:image:secure_url': imageUrl,
+      // Additional meta tags for better social media compatibility
+      'fb:app_id': '',
+      'article:author': 'Szlgfoci',
+      'article:section': 'Futball',
+      // Cache control hints
+      'cache-control': 'public, max-age=3600',
     },
   };
 }

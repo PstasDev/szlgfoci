@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       statusColor = '#ff9800';
     }
 
-    return new ImageResponse(
+    const response = new ImageResponse(
       <div
         style={{
           background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
@@ -371,8 +371,23 @@ export async function GET(request: NextRequest) {
       {
         width: 1200,
         height: 630,
+        headers: {
+          // Cache for better Instagram compatibility
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+          'Content-Type': 'image/png',
+          // CORS headers for better social media compatibility
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        },
       },
     );
+
+    // Add additional headers for Instagram compatibility
+    response.headers.set('Vary', 'User-Agent');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    
+    return response;
   } catch (e: any) {
     console.log(`${e.message}`);
     return new Response(`Failed to generate the image`, {
