@@ -169,7 +169,10 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
   };
 
   const renderScore = (match: Match) => {
-    if (match.homeScore !== null && match.awayScore !== null) {
+    // Show score for finished or live matches, even if both scores are 0
+    if (match.status === 'finished' || match.status === 'live') {
+      const homeScore = match.homeScore ?? 0;
+      const awayScore = match.awayScore ?? 0;
       return (
         <Typography
           variant="h6"
@@ -179,10 +182,12 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
             fontSize: { xs: '1rem', sm: '1.25rem' }
           }}
         >
-          {match.homeScore} - {match.awayScore}
+          {homeScore} - {awayScore}
         </Typography>
       );
     }
+    
+    // For upcoming matches, show "vs"
     return (
       <Typography
         variant="body2"
