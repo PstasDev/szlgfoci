@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
-import { Match, getLiveMatches, getUpcomingMatches, getRecentMatches } from '@/utils/dataUtils';
+import { Match, getLiveMatches, getUpcomingMatches, getRecentMatches, getUpcomingMatchesForHomepage } from '@/utils/dataUtils';
 
 interface MatchesByStatus {
   liveMatches: Match[];
   upcomingMatches: Match[];
   recentMatches: Match[];
+  homepageUpcoming: {
+    matches: Match[];
+    hasMore: boolean;
+  };
 }
 
 export const useMatchesByStatus = (matches: Match[] = []): MatchesByStatus => {
@@ -12,7 +16,8 @@ export const useMatchesByStatus = (matches: Match[] = []): MatchesByStatus => {
     return {
       liveMatches: getLiveMatches(matches),
       upcomingMatches: getUpcomingMatches(matches, 5),
-      recentMatches: getRecentMatches(matches, 5)
+      recentMatches: getRecentMatches(matches, 5),
+      homepageUpcoming: getUpcomingMatchesForHomepage(matches)
     };
   }, [matches]);
 };

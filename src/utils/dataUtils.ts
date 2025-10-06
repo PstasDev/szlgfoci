@@ -260,7 +260,29 @@ export const getLiveMatches = (matches: Match[]): Match[] => {
 export const getUpcomingMatches = (matches: Match[], limit: number = 5): Match[] => {
   return matches
     .filter(match => match.status === 'upcoming')
+    .sort((a, b) => {
+      // Create datetime strings for comparison
+      const dateTimeA = `${a.date}T${a.time}`;
+      const dateTimeB = `${b.date}T${b.time}`;
+      return new Date(dateTimeA).getTime() - new Date(dateTimeB).getTime();
+    })
     .slice(0, limit);
+};
+
+export const getUpcomingMatchesForHomepage = (matches: Match[]): { matches: Match[], hasMore: boolean } => {
+  const sortedUpcoming = matches
+    .filter(match => match.status === 'upcoming')
+    .sort((a, b) => {
+      // Create datetime strings for comparison
+      const dateTimeA = `${a.date}T${a.time}`;
+      const dateTimeB = `${b.date}T${b.time}`;
+      return new Date(dateTimeA).getTime() - new Date(dateTimeB).getTime();
+    });
+  
+  return {
+    matches: sortedUpcoming.slice(0, 3),
+    hasMore: sortedUpcoming.length > 3
+  };
 };
 
 export const getRecentMatches = (matches: Match[], limit: number = 5): Match[] => {

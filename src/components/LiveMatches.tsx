@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -11,6 +12,7 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Button,
 } from '@mui/material';
 import TeamLogo from './TeamLogo';
 import {
@@ -18,7 +20,7 @@ import {
   Schedule as ClockIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { getTeamColor, Match } from '@/utils/dataUtils';
+import { Match } from '@/utils/dataUtils';
 import { LiveMatch } from '@/types/api';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentData } from '@/contexts/TournamentDataContext';
@@ -32,7 +34,7 @@ import EmptyDataDisplay from './EmptyDataDisplay';
 const LiveMatches: React.FC = () => {
   const router = useRouter();
   const { matches, loading, error, refetch } = useTournamentData();
-  const { liveMatches, upcomingMatches, recentMatches } = useMatchesByStatus(matches);
+  const { liveMatches, homepageUpcoming, recentMatches } = useMatchesByStatus(matches);
   
   // Real-time live match polling
   const {
@@ -451,10 +453,32 @@ const LiveMatches: React.FC = () => {
           </Box>
           
           <CardContent sx={{ p: 2 }}>
-            {upcomingMatches.length > 0 ? (
-              upcomingMatches.map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))
+            {homepageUpcoming.matches.length > 0 ? (
+              <>
+                {homepageUpcoming.matches.map((match) => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+                {homepageUpcoming.hasMore && (
+                  <Box sx={{ textAlign: 'center', mt: 2 }}>
+                    <Button
+                      component={Link}
+                      href="/merkozesek"
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        borderColor: 'primary.main',
+                        color: 'primary.main',
+                        '&:hover': {
+                          backgroundColor: 'primary.main',
+                          color: 'white',
+                        },
+                      }}
+                    >
+                      További mérkőzések
+                    </Button>
+                  </Box>
+                )}
+              </>
             ) : (
               <Box sx={{ 
                 display: 'flex', 
