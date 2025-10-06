@@ -124,7 +124,7 @@ export default function MatchesPage() {
                 px: { xs: 2, sm: 0 }
               }}
             >
-              {tournament.name} - Minden mérkőzés egy helyen
+              {tournament?.name || 'Torna'} - Minden mérkőzés egy helyen
             </Typography>
           </Box>
 
