@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
 import { Match } from '@/types/api';
-import MatchPageClient from './MatchPageClient';
 
-// Metadata generation for the page
 interface GenerateMetadataProps {
   params: { id: string };
 }
@@ -93,8 +91,6 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
       round: match.round,
       homeColor: match.homeTeamObj?.color || '#42a5f5',
       awayColor: match.awayTeamObj?.color || '#f44336',
-      homeLogoUrl: match.homeTeamObj?.logo_url || '',
-      awayLogoUrl: match.awayTeamObj?.logo_url || '',
     });
     
     return `${baseUrl}/api/og/match?${params.toString()}`;
@@ -135,9 +131,4 @@ export async function generateMetadata({ params }: GenerateMetadataProps): Promi
       'ig:image': imageUrl,
     },
   };
-}
-
-// Server component for metadata generation and client component rendering
-export default function MatchPage() {
-  return <MatchPageClient />;
 }
