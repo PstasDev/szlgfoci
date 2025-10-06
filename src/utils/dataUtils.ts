@@ -8,18 +8,43 @@ export type { Match, MatchEvent, Team, Standing, TopScorer, Tournament } from '@
 // Converts European date format (dd.mm.yyyy) and time (HH:mm) to a proper Date object
 const parseMatchDateTime = (dateStr: string, timeStr: string): Date => {
   try {
-    const [day, month, year] = dateStr.split('.');
+    // Handle both European (dd.mm.yyyy) and ISO (yyyy-mm-dd) date formats
+    let day: string, month: string, year: string;
+    
+    if (dateStr.includes('.')) {
+      // European format: dd.mm.yyyy
+      [day, month, year] = dateStr.split('.');
+    } else if (dateStr.includes('-')) {
+      // ISO format: yyyy-mm-dd
+      [year, month, day] = dateStr.split('-');
+    } else {
+      console.warn('Unrecognized date format:', dateStr);
+      return new Date(0);
+    }
+    
     if (!day || !month || !year) {
       console.warn('Invalid date format:', dateStr);
       return new Date(0); // Fallback to epoch time for invalid dates
     }
     
-    const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    const dateTime = new Date(`${isoDate}T${timeStr}:00`);
+    // Ensure all parts are properly padded
+    const paddedMonth = month.padStart(2, '0');
+    const paddedDay = day.padStart(2, '0');
+    const paddedYear = year.length === 2 ? '20' + year : year;
+    
+    // Create ISO date string
+    const isoDate = `${paddedYear}-${paddedMonth}-${paddedDay}`;
+    
+    // Ensure time has seconds
+    const timeWithSeconds = timeStr.includes(':') ? 
+      (timeStr.split(':').length === 2 ? `${timeStr}:00` : timeStr) : 
+      `${timeStr}:00:00`;
+    
+    const dateTime = new Date(`${isoDate}T${timeWithSeconds}`);
     
     // Validate the resulting date
     if (isNaN(dateTime.getTime())) {
-      console.warn('Invalid date/time combination:', dateStr, timeStr);
+      console.warn('Invalid date/time combination:', dateStr, timeStr, 'resulted in:', isoDate, timeWithSeconds);
       return new Date(0);
     }
     
@@ -189,6 +214,16 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     extra_time: (event as any).extra_time || null
   } as any));
   
+  // Extract date and time from the API datetime
+  const matchDateTime = new Date(match.datetime);
+  const formattedDate = formatDate(match.datetime); // This converts to dd.mm.yyyy format
+  const formattedTime = formatTime(match.datetime); // This extracts HH:mm format
+  
+  // Debug logging for date formatting
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Formatting match datetime: original=${match.datetime}, parsed=${matchDateTime.toISOString()}, formatted date=${formattedDate}, formatted time=${formattedTime}`);
+  }
+  
   return {
     id: match.id || 0,
     tournament: match.tournament?.id || 1,
@@ -196,7 +231,7 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     team2: match.team2?.id || 0,
     team1_score: homeScore,
     team2_score: awayScore,
-    date: formatDate(match.datetime),
+    date: formattedDate,
     venue: 'SZLG Sportpálya',
     referee: match.referee?.id || null,
     round_obj: match.round_obj?.number || 1,
@@ -207,14 +242,16 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     homeScore: homeScore,
     awayScore: awayScore,
     status: getMatchStatus(match),
-    time: formatTime(match.datetime) || '00:00',
+    time: formattedTime || '00:00',
     round: `${match.round_obj?.number || 1}. forduló`,
     events: formattedEvents,
     // Include full team objects for accessing colors and other data
     homeTeamObj: homeTeam,
     awayTeamObj: awayTeam,
     // Include full referee profile
-    refereeObj: match.referee
+    refereeObj: match.referee,
+    // Store original datetime for better sorting
+    originalDateTime: match.datetime
   };
 };
 
@@ -284,24 +321,79 @@ export const getLiveMatches = (matches: Match[]): Match[] => {
 };
 
 export const getUpcomingMatches = (matches: Match[], limit: number = 5): Match[] => {
-  return matches
-    .filter(match => match.status === 'upcoming')
+  const upcomingMatches = matches.filter(match => match.status === 'upcoming');
+  
+  return upcomingMatches
     .sort((a, b) => {
+      // Prefer original datetime for more accurate sorting
+      if (a.originalDateTime && b.originalDateTime) {
+        const dateTimeA = new Date(a.originalDateTime);
+        const dateTimeB = new Date(b.originalDateTime);
+        return dateTimeA.getTime() - dateTimeB.getTime();
+      }
+      
+      // Fallback to formatted date/time parsing
       const dateTimeA = parseMatchDateTime(a.date, a.time);
       const dateTimeB = parseMatchDateTime(b.date, b.time);
+      
+      // Debug logging for sorting issues
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Sorting matches: ${a.homeTeam} vs ${a.awayTeam} (${a.date} ${a.time}) = ${dateTimeA.getTime()} vs ${b.homeTeam} vs ${b.awayTeam} (${b.date} ${b.time}) = ${dateTimeB.getTime()}`);
+      }
+      
       return dateTimeA.getTime() - dateTimeB.getTime();
     })
     .slice(0, limit);
 };
 
 export const getUpcomingMatchesForHomepage = (matches: Match[]): { matches: Match[], hasMore: boolean } => {
-  const sortedUpcoming = matches
-    .filter(match => match.status === 'upcoming')
+  const upcomingMatches = matches.filter(match => match.status === 'upcoming');
+  
+  const sortedUpcoming = upcomingMatches
     .sort((a, b) => {
+      // Prefer original datetime for more accurate sorting
+      if (a.originalDateTime && b.originalDateTime) {
+        const dateTimeA = new Date(a.originalDateTime);
+        const dateTimeB = new Date(b.originalDateTime);
+        
+        // Debug logging for homepage sorting
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Homepage sorting (original): ${a.homeTeam} vs ${a.awayTeam} (${a.originalDateTime}) vs ${b.homeTeam} vs ${b.awayTeam} (${b.originalDateTime})`);
+        }
+        
+        const timeDiff = dateTimeA.getTime() - dateTimeB.getTime();
+        
+        // If times are equal, sort by match ID as tiebreaker
+        if (timeDiff === 0) {
+          return (a.id || 0) - (b.id || 0);
+        }
+        
+        return timeDiff;
+      }
+      
+      // Fallback to formatted date/time parsing
       const dateTimeA = parseMatchDateTime(a.date, a.time);
       const dateTimeB = parseMatchDateTime(b.date, b.time);
-      return dateTimeA.getTime() - dateTimeB.getTime();
+      
+      // Debug logging for homepage sorting
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Homepage sorting (parsed): ${a.homeTeam} vs ${a.awayTeam} (${a.date} ${a.time}) = ${dateTimeA.toISOString()} vs ${b.homeTeam} vs ${b.awayTeam} (${b.date} ${b.time}) = ${dateTimeB.toISOString()}`);
+      }
+      
+      const timeDiff = dateTimeA.getTime() - dateTimeB.getTime();
+      
+      // If times are equal, sort by match ID as tiebreaker
+      if (timeDiff === 0) {
+        return (a.id || 0) - (b.id || 0);
+      }
+      
+      return timeDiff;
     });
+  
+  // Additional debug logging for final order
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Final upcoming matches order:', sortedUpcoming.map(m => `${m.homeTeam} vs ${m.awayTeam} at ${m.originalDateTime || `${m.date} ${m.time}`}`));
+  }
   
   return {
     matches: sortedUpcoming.slice(0, 3),

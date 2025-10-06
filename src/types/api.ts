@@ -198,6 +198,8 @@ export interface Match {
   awayTeamObj?: Team | null;
   // Referee profile with full data
   refereeObj?: Profile | null;
+  // Original datetime for more accurate sorting
+  originalDateTime?: string;
 }
 
 export interface EventSchema {
