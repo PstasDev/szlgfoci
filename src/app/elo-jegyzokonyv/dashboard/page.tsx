@@ -25,7 +25,8 @@ import {
   CheckCircle as DoneIcon,
   Logout as LogoutIcon,
   Refresh as RefreshIcon,
-  AdminPanelSettings as AdminIcon
+  AdminPanelSettings as AdminIcon,
+  Home as HomeIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { clearAuthTokensIfNotAllowed, canStoreAuthTokens } from '@/utils/cookieConsent';
@@ -429,6 +430,14 @@ const RefereeDashboard: React.FC = () => {
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
             Bírói felület
           </Typography>
+          <IconButton 
+            color="inherit" 
+            onClick={() => router.push('/')}
+            title="Kezdőlap"
+            sx={{ mr: 1 }}
+          >
+            <HomeIcon />
+          </IconButton>
           <IconButton 
             color="inherit" 
             onClick={handleDjangoAdmin}

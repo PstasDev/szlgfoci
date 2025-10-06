@@ -15,7 +15,8 @@ import {
 } from '@mui/material';
 import { 
   SportsSoccer as SoccerIcon,
-  Login as LoginIcon 
+  Login as LoginIcon,
+  Home as HomeIcon
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
@@ -374,164 +375,204 @@ const RefereeLoginPage: React.FC = () => {
         minHeight: '100vh',
         background: `linear-gradient(135deg, ${theme.palette.background.default} 0%, ${theme.palette.background.paper} 50%, ${theme.palette.action.hover} 100%)`,
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 2,
+        flexDirection: 'column',
+        position: 'relative',
       }}
     >
-      <Container maxWidth="xs">
-        <Paper
-          elevation={24}
+      {/* Home Button */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 16,
+          right: 16,
+          zIndex: 1000,
+        }}
+      >
+        <Button
+          variant="outlined"
+          startIcon={<HomeIcon />}
+          onClick={() => router.push('/')}
           sx={{
-            p: 4,
-            borderRadius: 4,
-            background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
-            border: `1px solid ${theme.palette.primary.main}20`,
-            boxShadow: `0 25px 50px -12px ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.15)'}, 0 0 0 1px ${theme.palette.primary.main}10`,
+            borderRadius: 2,
+            px: 2,
+            py: 1,
+            backgroundColor: theme.palette.background.paper,
+            borderColor: theme.palette.primary.main,
+            color: theme.palette.primary.main,
+            '&:hover': {
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+            },
           }}
         >
-          <Stack spacing={3} alignItems="center">
-            {/* Header */}
-            <Box textAlign="center">
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                  mb: 2,
-                  boxShadow: `0 10px 25px ${theme.palette.primary.main}30`,
-                }}
-              >
-                <SoccerIcon sx={{ fontSize: 40, color: 'white' }} />
-              </Box>
-              <Typography 
-                variant="h4" 
-                fontWeight="bold"
-                sx={{ 
-                  color: theme.palette.text.primary,
-                  mb: 1,
-                }}
-              >
-                Élő jegyzőkönyv
-              </Typography>
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ maxWidth: 280, mx: 'auto' }}
-              >
-                Bírói felület mérkőzések élő vezetéséhez
-              </Typography>
-            </Box>
+          Kezdőlap
+        </Button>
+      </Box>
 
-            {/* Login Form */}
-            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-              <Stack spacing={3}>
-                {error && (
-                  <Alert 
-                    severity="error" 
-                    sx={{ 
-                      borderRadius: 2,
-                      '& .MuiAlert-message': { fontWeight: 500 }
-                    }}
-                  >
-                    {error}
-                  </Alert>
-                )}
-
-                <TextField
-                  fullWidth
-                  label="Felhasználónév"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  disabled={loading}
-                  variant="outlined"
+      {/* Main content */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2,
+        }}
+      >
+        <Container maxWidth="xs">
+          <Paper
+            elevation={24}
+            sx={{
+              p: 4,
+              borderRadius: 4,
+              background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
+              border: `1px solid ${theme.palette.primary.main}20`,
+              boxShadow: `0 25px 50px -12px ${theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.15)'}, 0 0 0 1px ${theme.palette.primary.main}10`,
+            }}
+          >
+            <Stack spacing={3} alignItems="center">
+              {/* Header */}
+              <Box textAlign="center">
+                <Box
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      backgroundColor: theme.palette.background.default,
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.primary.main,
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.primary.main,
-                      },
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: theme.palette.primary.main,
-                    },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Jelszó"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  variant="outlined"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      backgroundColor: theme.palette.background.default,
-                      '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.primary.main,
-                      },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: theme.palette.primary.main,
-                      },
-                    },
-                    '& .MuiInputLabel-root.Mui-focused': {
-                      color: theme.palette.primary.main,
-                    },
-                  }}
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  disabled={loading}
-                  startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    textTransform: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                    boxShadow: `0 4px 15px ${theme.palette.primary.main}30`,
-                    '&:hover': {
-                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                      boxShadow: `0 6px 20px ${theme.palette.primary.main}40`,
-                      transform: 'translateY(-1px)',
-                    },
-                    '&:disabled': {
-                      background: `linear-gradient(135deg, ${theme.palette.action.disabled}, ${theme.palette.action.disabledBackground})`,
-                    },
+                    mb: 2,
+                    boxShadow: `0 10px 25px ${theme.palette.primary.main}30`,
                   }}
                 >
-                  {loading ? 'Bejelentkezés...' : 'Bejelentkezés'}
-                </Button>
-              </Stack>
-            </Box>
+                  <SoccerIcon sx={{ fontSize: 40, color: 'white' }} />
+                </Box>
+                <Typography 
+                  variant="h4" 
+                  fontWeight="bold"
+                  sx={{ 
+                    color: theme.palette.text.primary,
+                    mb: 1,
+                  }}
+                >
+                  Élő jegyzőkönyv
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{ maxWidth: 280, mx: 'auto' }}
+                >
+                  Bírói felület mérkőzések élő vezetéséhez
+                </Typography>
+              </Box>
 
-            {/* Info */}
-            <Typography 
-              variant="caption" 
-              color="text.secondary"
-              textAlign="center"
-              sx={{ mt: 2, opacity: 0.8 }}
-            >
-              Csak bírók számára elérhető
-            </Typography>
-          </Stack>
-        </Paper>
-      </Container>
+              {/* Login Form */}
+              <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                <Stack spacing={3}>
+                  {error && (
+                    <Alert 
+                      severity="error" 
+                      sx={{ 
+                        borderRadius: 2,
+                        '& .MuiAlert-message': { fontWeight: 500 }
+                      }}
+                    >
+                      {error}
+                    </Alert>
+                  )}
+
+                  <TextField
+                    fullWidth
+                    label="Felhasználónév"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={loading}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        backgroundColor: theme.palette.background.default,
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.primary.main,
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.primary.main,
+                        },
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: theme.palette.primary.main,
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label="Jelszó"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        backgroundColor: theme.palette.background.default,
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.primary.main,
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: theme.palette.primary.main,
+                        },
+                      },
+                      '& .MuiInputLabel-root.Mui-focused': {
+                        color: theme.palette.primary.main,
+                      },
+                    }}
+                  />
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    disabled={loading}
+                    startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <LoginIcon />}
+                    sx={{
+                      py: 1.5,
+                      borderRadius: 2,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      boxShadow: `0 4px 15px ${theme.palette.primary.main}30`,
+                      '&:hover': {
+                        background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                        boxShadow: `0 6px 20px ${theme.palette.primary.main}40`,
+                        transform: 'translateY(-1px)',
+                      },
+                      '&:disabled': {
+                        background: `linear-gradient(135deg, ${theme.palette.action.disabled}, ${theme.palette.action.disabledBackground})`,
+                      },
+                    }}
+                  >
+                    {loading ? 'Bejelentkezés...' : 'Bejelentkezés'}
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Info */}
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                textAlign="center"
+                sx={{ mt: 2, opacity: 0.8 }}
+              >
+                Csak bírók számára elérhető
+              </Typography>
+            </Stack>
+          </Paper>
+        </Container>
+      </Box>
     </Box>
   );
 };
