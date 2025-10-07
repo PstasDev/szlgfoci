@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   CardContent,
@@ -15,6 +16,7 @@ import {
   // Avatar replaced by TeamLogo for team badges
   // Avatar,
   Chip,
+  ButtonBase,
 } from '@mui/material';
 import TeamLogo from './TeamLogo';
 import { SportsSoccer as BallIcon } from '@mui/icons-material';
@@ -27,7 +29,30 @@ import EmptyDataDisplay from './EmptyDataDisplay';
 import type { Player } from '@/types/api';
 
 const GoalScorersList: React.FC = () => {
-  const { topScorers, loading, error, refetch } = useTournamentData();
+  const router = useRouter();
+  const { topScorers, teams, loading, error, refetch } = useTournamentData();
+
+  // Helper function to get team by name
+  const getTeamByName = (teamName: string) => {
+    return teams.find(team => 
+      team.name === teamName || 
+      `${team.start_year}${team.tagozat}` === teamName ||
+      team.tagozat === teamName
+    );
+  };
+
+  // Click handlers
+  const handlePlayerClick = (_player: Player) => {
+    // For now, just navigate to players page - could be enhanced to show player details
+    router.push('/jatekosok');
+  };
+
+  const handleTeamClick = (teamName: string) => {
+    const team = getTeamByName(teamName);
+    if (team?.id) {
+      router.push(`/csapatok/${team.id}`);
+    }
+  };
 
   const getPositionColor = (position: number) => {
     if (position === 1) return '#ffd700'; // Gold
@@ -199,48 +224,128 @@ const GoalScorersList: React.FC = () => {
 
                   <TableCell>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0 }}>
-                      <Typography 
-                        variant="body2" 
-                        fontWeight={index < 3 ? 'bold' : 'normal'}
-                        sx={{ 
-                          color: 'text.primary',
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                          lineHeight: 1.2,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                      <ButtonBase
+                        onClick={() => handlePlayerClick(player)}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                          textAlign: 'left',
+                          borderRadius: 1,
+                          p: 0.5,
+                          '&:hover': {
+                            backgroundColor: 'action.hover',
+                          },
                         }}
                       >
-                        {player.name}
-                      </Typography>
-                      {/* Show team on mobile under player name */}
-                      <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 0.5 }}>
-                        <TeamLogo teamName={player.teamName || undefined} size={14} fontSize="0.45rem" />
                         <Typography 
-                          variant="caption" 
+                          variant="body2" 
+                          fontWeight={index < 3 ? 'bold' : 'normal'}
                           sx={{ 
-                            color: 'text.secondary', 
-                            fontSize: '0.65rem',
-                            lineHeight: 1,
+                            color: 'text.primary',
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            lineHeight: 1.2,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            maxWidth: '120px'
+                            whiteSpace: 'nowrap'
                           }}
                         >
-                          {player.teamName}
+                          {player.name}
                         </Typography>
-                      </Box>
+                      </ButtonBase>
+                      {/* Show team on mobile under player name */}
+                      <ButtonBase
+                        onClick={() => handleTeamClick(player.teamName || '')}
+                        sx={{ 
+                          display: { xs: 'flex', sm: 'none' }, 
+                          alignItems: 'center', 
+                          gap: 0.5,
+                          justifyContent: 'flex-start',
+                          borderRadius: 1,
+                          p: 0.25,
+                          '&:hover': {
+                            backgroundColor: 'action.hover',
+                          },
+                        }}
+                      >
+                        <TeamLogo teamName={player.teamName || undefined} size={14} fontSize="0.45rem" />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: 'text.secondary', 
+                              fontSize: '0.65rem',
+                              lineHeight: 1,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              maxWidth: '120px'
+                            }}
+                          >
+                            {player.teamName}
+                          </Typography>
+                          {player.teamName && getTeamByName(player.teamName) && (
+                            <Typography 
+                              variant="caption" 
+                              sx={{ 
+                                color: 'text.secondary', 
+                                fontSize: '0.6rem',
+                                lineHeight: 1,
+                                opacity: 0.8
+                              }}
+                            >
+                              ({(() => {
+                                const team = getTeamByName(player.teamName || '');
+                                return team?.start_year && team?.tagozat 
+                                  ? `${team.start_year.toString().slice(-2)}${team.tagozat.toUpperCase()}`
+                                  : team?.tagozat?.toUpperCase() || '?';
+                              })()})
+                            </Typography>
+                          )}
+                        </Box>
+                      </ButtonBase>
                     </Box>
                   </TableCell>
 
                   <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <ButtonBase
+                      onClick={() => handleTeamClick(player.teamName || '')}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        borderRadius: 1,
+                        p: 0.5,
+                        '&:hover': {
+                          backgroundColor: 'action.hover',
+                        },
+                      }}
+                    >
                       <TeamLogo teamName={player.teamName || undefined} size={20} fontSize="0.6rem" />
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                        {player.teamName}
-                      </Typography>
-                    </Box>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {player.teamName}
+                        </Typography>
+                        {player.teamName && getTeamByName(player.teamName) && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: 'text.secondary', 
+                              fontSize: '0.65rem',
+                              lineHeight: 1,
+                              opacity: 0.8
+                            }}
+                          >
+                            ({(() => {
+                              const team = getTeamByName(player.teamName || '');
+                              return team?.start_year && team?.tagozat 
+                                ? `${team.start_year.toString().slice(-2)}${team.tagozat.toUpperCase()}`
+                                : team?.tagozat?.toUpperCase() || '?';
+                            })()})
+                          </Typography>
+                        )}
+                      </Box>
+                    </ButtonBase>
                   </TableCell>
 
                   <TableCell align="center">

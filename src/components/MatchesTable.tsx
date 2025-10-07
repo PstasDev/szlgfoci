@@ -39,6 +39,7 @@ import {
 } from '@mui/icons-material';
 import { Match } from '@/utils/dataUtils';
 import TeamLogo from './TeamLogo';
+import { getTeamClassDisplayName } from '@/utils/dataUtils';
 
 interface MatchesTableProps {
   matches: Match[];
@@ -245,9 +246,14 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} mb={2}>
           <Stack direction="row" alignItems="center" spacing={1} flex={1}>
             <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={24} />
-            <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
-              {match.homeTeam}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500, lineHeight: 1.2 }}>
+                {match.homeTeam}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.7rem', lineHeight: 1 }}>
+                ({getTeamClassDisplayName(match.homeTeamObj || null)})
+              </Typography>
+            </Box>
           </Stack>
 
           <Box sx={{ textAlign: 'center', minWidth: 60 }}>
@@ -255,9 +261,14 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
           </Box>
 
           <Stack direction="row" alignItems="center" spacing={1} flex={1} justifyContent="flex-end">
-            <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
-              {match.awayTeam}
-            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500, lineHeight: 1.2 }}>
+                {match.awayTeam}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.7rem', lineHeight: 1 }}>
+                ({getTeamClassDisplayName(match.awayTeamObj || null)})
+              </Typography>
+            </Box>
             <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={24} />
           </Stack>
         </Stack>
@@ -499,9 +510,14 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
                   <TableCell sx={{ py: 2 }}>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={28} />
-                      <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
-                        {match.homeTeam}
-                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500, lineHeight: 1.2 }}>
+                          {match.homeTeam}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.7rem', lineHeight: 1 }}>
+                          ({getTeamClassDisplayName(match.homeTeamObj || null)})
+                        </Typography>
+                      </Box>
                     </Stack>
                   </TableCell>
 
@@ -514,9 +530,14 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
                   <TableCell sx={{ py: 2 }}>
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={28} />
-                      <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
-                        {match.awayTeam}
-                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500, lineHeight: 1.2 }}>
+                          {match.awayTeam}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.7rem', lineHeight: 1 }}>
+                          ({getTeamClassDisplayName(match.awayTeamObj || null)})
+                        </Typography>
+                      </Box>
                     </Stack>
                   </TableCell>
 

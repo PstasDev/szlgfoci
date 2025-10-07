@@ -30,6 +30,7 @@ import LoadingSkeleton from './LoadingSkeleton';
 import ImprovedLiveMatchTimer from './ImprovedLiveMatchTimer';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
+import { getTeamClassDisplayName } from '@/utils/dataUtils';
 
 const LiveMatches: React.FC = () => {
   const router = useRouter();
@@ -165,13 +166,25 @@ const LiveMatches: React.FC = () => {
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={24} fontSize="0.65rem" />
-                <Typography 
-                  variant="body2" 
-                  fontWeight="500" 
-                  sx={{ color: 'text.primary', fontSize: '0.85rem' }}
-                >
-                  {match.homeTeam}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="500" 
+                    sx={{ color: 'text.primary', fontSize: '0.85rem', lineHeight: 1.1 }}
+                  >
+                    {match.homeTeam}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'text.secondary', 
+                      fontSize: '0.65rem',
+                      lineHeight: 1
+                    }}
+                  >
+                    ({getTeamClassDisplayName(match.homeTeamObj || null)})
+                  </Typography>
+                </Box>
               </Box>
               {/* Home Score */}
               <Typography 
@@ -195,13 +208,25 @@ const LiveMatches: React.FC = () => {
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={24} fontSize="0.65rem" />
-                <Typography 
-                  variant="body2" 
-                  fontWeight="500" 
-                  sx={{ color: 'text.primary', fontSize: '0.85rem' }}
-                >
-                  {match.awayTeam}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Typography 
+                    variant="body2" 
+                    fontWeight="500" 
+                    sx={{ color: 'text.primary', fontSize: '0.85rem', lineHeight: 1.1 }}
+                  >
+                    {match.awayTeam}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'text.secondary', 
+                      fontSize: '0.65rem',
+                      lineHeight: 1
+                    }}
+                  >
+                    ({getTeamClassDisplayName(match.awayTeamObj || null)})
+                  </Typography>
+                </Box>
               </Box>
               {/* Away Score */}
               <Typography 
@@ -262,14 +287,26 @@ const LiveMatches: React.FC = () => {
               flex: 1
             }}>
               <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={28} fontSize="0.7rem" />
-              <Typography 
-                variant="body2" 
-                fontWeight="500" 
-                noWrap
-                sx={{ color: 'text.primary' }}
-              >
-                {match.homeTeam}
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Typography 
+                  variant="body2" 
+                  fontWeight="500" 
+                  noWrap
+                  sx={{ color: 'text.primary', lineHeight: 1.2 }}
+                >
+                  {match.homeTeam}
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: 'text.secondary', 
+                    fontSize: '0.65rem',
+                    lineHeight: 1
+                  }}
+                >
+                  ({getTeamClassDisplayName(match.homeTeamObj || null)})
+                </Typography>
+              </Box>
             </Box>
             
             {/* Score/Time */}
@@ -319,15 +356,27 @@ const LiveMatches: React.FC = () => {
               flex: 1,
               justifyContent: 'flex-end'
             }}>
-              <Typography 
-                variant="body2" 
-                fontWeight="500" 
-                noWrap 
-                textAlign="right"
-                sx={{ color: 'text.primary' }}
-              >
-                {match.awayTeam}
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                <Typography 
+                  variant="body2" 
+                  fontWeight="500" 
+                  noWrap 
+                  textAlign="right"
+                  sx={{ color: 'text.primary', lineHeight: 1.2 }}
+                >
+                  {match.awayTeam}
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: 'text.secondary', 
+                    fontSize: '0.65rem',
+                    lineHeight: 1
+                  }}
+                >
+                  ({getTeamClassDisplayName(match.awayTeamObj || null)})
+                </Typography>
+              </Box>
               <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={28} fontSize="0.7rem" />
             </Box>
           </Box>

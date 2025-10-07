@@ -17,6 +17,7 @@ import {
   SportsSoccer
 } from '@mui/icons-material';
 import { Match } from '@/utils/dataUtils';
+import { getTeamClassDisplayName } from '@/utils/dataUtils';
 
 interface MatchCardProps {
   match: Match;
@@ -70,10 +71,22 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                fontSize: '0.75rem'
+                fontSize: '0.75rem',
+                lineHeight: 1.1
               }}
             >
               {match.homeTeam}
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: '#9aa0a6',
+                fontSize: '0.6rem',
+                lineHeight: 1,
+                display: 'block'
+              }}
+            >
+              ({getTeamClassDisplayName(match.homeTeamObj || null)})
             </Typography>
             <Typography 
               variant="caption" 
@@ -83,10 +96,22 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                fontSize: '0.75rem'
+                fontSize: '0.75rem',
+                lineHeight: 1.1
               }}
             >
               {match.awayTeam}
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: '#9aa0a6',
+                fontSize: '0.6rem',
+                lineHeight: 1,
+                display: 'block'
+              }}
+            >
+              ({getTeamClassDisplayName(match.awayTeamObj || null)})
             </Typography>
           </Box>
 
@@ -154,15 +179,25 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
               <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={32} fontSize="0.8rem" />
-              <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
-                {match.homeTeam}
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500, lineHeight: 1.2 }}>
+                  {match.homeTeam}
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.7rem', lineHeight: 1 }}>
+                  ({getTeamClassDisplayName(match.homeTeamObj || null)})
+                </Typography>
+              </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={32} fontSize="0.8rem" />
-              <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500 }}>
-                {match.awayTeam}
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="body1" sx={{ color: '#e8eaed', fontWeight: 500, lineHeight: 1.2 }}>
+                  {match.awayTeam}
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#9aa0a6', fontSize: '0.7rem', lineHeight: 1 }}>
+                  ({getTeamClassDisplayName(match.awayTeamObj || null)})
+                </Typography>
+              </Box>
             </Box>
           </Box>
 
@@ -348,16 +383,29 @@ const MatchCard: React.FC<MatchCardProps> = ({
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <TeamLogo team={match.homeTeamObj} teamName={match.homeTeam} size={40} fontSize="0.9rem" showBorder />
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    color: '#e8eaed', 
-                    fontWeight: 600,
-                    fontSize: '1rem'
-                  }}
-                >
-                  {match.homeTeam}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#e8eaed', 
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      lineHeight: 1.2
+                    }}
+                  >
+                    {match.homeTeam}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: '#9aa0a6',
+                      fontSize: '0.7rem',
+                      lineHeight: 1
+                    }}
+                  >
+                    ({getTeamClassDisplayName(match.homeTeamObj || null)})
+                  </Typography>
+                </Box>
               </Box>
               {/* Home Score */}
               <Typography 
@@ -381,16 +429,29 @@ const MatchCard: React.FC<MatchCardProps> = ({
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={40} fontSize="0.9rem" showBorder />
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    color: '#e8eaed', 
-                    fontWeight: 600,
-                    fontSize: '1rem'
-                  }}
-                >
-                  {match.awayTeam}
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      color: '#e8eaed', 
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      lineHeight: 1.2
+                    }}
+                  >
+                    {match.awayTeam}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: '#9aa0a6',
+                      fontSize: '0.7rem',
+                      lineHeight: 1
+                    }}
+                  >
+                    ({getTeamClassDisplayName(match.awayTeamObj || null)})
+                  </Typography>
+                </Box>
               </Box>
               {/* Away Score */}
               <Typography 
@@ -442,6 +503,17 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 }}
               >
                 {match.homeTeam}
+              </Typography>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#9aa0a6',
+                  fontSize: '0.7rem',
+                  lineHeight: 1,
+                  display: 'block'
+                }}
+              >
+                ({getTeamClassDisplayName(match.homeTeamObj || null)})
               </Typography>
             </Box>
           </Box>
@@ -503,6 +575,17 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 }}
               >
                 {match.awayTeam}
+              </Typography>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#9aa0a6',
+                  fontSize: '0.7rem',
+                  lineHeight: 1,
+                  display: 'block'
+                }}
+              >
+                ({getTeamClassDisplayName(match.awayTeamObj || null)})
               </Typography>
             </Box>
             <TeamLogo team={match.awayTeamObj} teamName={match.awayTeam} size={56} fontSize="1.1rem" showBorder />

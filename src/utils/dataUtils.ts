@@ -581,6 +581,39 @@ export const getTeamDisplayName = (team: Team | null): string => {
   return `Team ${team.id || 'Unknown'}`;
 };
 
+// NEW: Get the display name with class name for a team
+export const getTeamDisplayNameWithClass = (team: Team | null): string => {
+  if (!team) return 'Unknown Team';
+  
+  const displayName = getTeamDisplayName(team);
+  const className = getTeamClassName(team);
+  
+  // If custom name exists and it's different from the class, show both
+  if (team.name && team.name.trim() !== '' && team.name !== className) {
+    return `${displayName} (${className})`;
+  }
+  
+  // Otherwise just return the display name (which includes the class)
+  return displayName;
+};
+
+// NEW: Get team class name in the format like "25A" from start_year and tagozat
+export const getTeamClassDisplayName = (team: Team | null): string => {
+  if (!team) return '?';
+  
+  if (team.start_year && team.tagozat) {
+    // Format as "25A" (last 2 digits of year + tagozat letter)
+    const shortYear = team.start_year.toString().slice(-2);
+    return `${shortYear}${team.tagozat.toUpperCase()}`;
+  }
+  
+  if (team.tagozat) {
+    return team.tagozat.toUpperCase();
+  }
+  
+  return '?';
+};
+
 // Get the class identifier for a team (used for colors and identification)
 export const getTeamClassName = (team: Team): string => {
   // Use tagozat as the class identifier for styling

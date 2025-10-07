@@ -23,6 +23,7 @@ import TeamLogo from './TeamLogo';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import ErrorDisplay from './ErrorDisplay';
 import EmptyDataDisplay from './EmptyDataDisplay';
+import { getTeamClassDisplayName } from '@/utils/dataUtils';
 
 const LeagueTable: React.FC = () => {
   const { standings, teams, loading, error, refetch } = useTournamentData();
@@ -270,7 +271,7 @@ const LeagueTable: React.FC = () => {
                             fontSize: { xs: '0.65rem', sm: '0.75rem' }
                           }}
                         >
-                          {teamStanding.teamData?.tagozat || 'N/A'} tagozat
+                          ({getTeamClassDisplayName(teamStanding.teamData || null)})
                         </Typography>
                       </Box>
                     </ButtonBase>
