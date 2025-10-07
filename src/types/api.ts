@@ -206,7 +206,8 @@ export interface EventSchema {
   id?: number | null;
   event_type: string;
   minute: number;
-  minute_extra_time?: number | null; // Extra time minutes (e.g., 22 for "10+22")
+  minute_extra_time?: number | null; // Extra time minutes (A in X+A format)
+  formatted_time?: string; // Human-readable time format (e.g., "45+3'")
   exact_time?: string | null;
   extra_time?: number | null;
   player?: Player | null;
@@ -218,7 +219,8 @@ export interface MatchEvent {
   player: number;
   event_type: 'goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time';
   minute: number;
-  minute_extra_time?: number | null; // Support for extra time display (e.g., "45+3")
+  minute_extra_time?: number | null; // Support for extra time display (e.g., 3 for "45+3")
+  formatted_time?: string; // Human-readable time format (e.g., "45+3'")
   // For display purposes
   playerName?: string;
   team?: 'home' | 'away';
@@ -342,7 +344,9 @@ export interface LiveMatchStatus {
   match_id: number;
   status: 'not_started' | 'first_half' | 'half_time' | 'second_half' | 'extra_time' | 'finished' | 'postponed' | 'cancelled';
   current_minute: number;
-  extra_time_minutes: number;
+  current_extra_time?: number; // NEW: Current extra time minutes (A in X+A format)
+  extra_time_minutes: number; // DEPRECATED: Use current_extra_time instead
+  formatted_time?: string; // NEW: Human-readable time format (e.g., "10+17'")
   last_updated: string;
   goals_team1: number;
   goals_team2: number;
@@ -433,6 +437,7 @@ export interface EnhancedMatchEvent extends MatchEvent {
   timestamp: string;
   match_status: LiveMatchStatus['status'];
   team_name: string;
+  formatted_time: string; // Required for enhanced events
   player_details?: {
     id: number;
     name: string;
@@ -549,6 +554,7 @@ export interface EnhancedEventSchema {
   half: number;
   minute: number;
   minute_extra_time?: number | null;
+  formatted_time?: string; // Human-readable time format (e.g., "45+3'")
   exact_time?: string | null;
   extra_time?: number | null;
 }
@@ -556,9 +562,11 @@ export interface EnhancedEventSchema {
 // NEW: Match timing information
 export interface MatchTiming {
   current_minute: number;
+  current_extra_time?: number; // NEW: Current extra time minutes (A in X+A format)
   current_half: number;
   status: 'not_started' | 'first_half' | 'half_time' | 'second_half' | 'extra_time' | 'finished';
-  extra_time_minutes?: number;
+  extra_time_minutes?: number; // DEPRECATED: Use current_extra_time instead
+  formatted_time?: string; // NEW: Human-readable time format (e.g., "45+3'")
   is_live: boolean;
   last_event_time?: string;
 }
@@ -573,4 +581,76 @@ export interface OptimizedQueryParams {
   limit?: number;
   offset?: number;
   fields?: string[]; // Specific fields to return
+}
+
+// NEW: Referee quick event request types
+export interface QuickGoalRequest {
+  player_id: number;
+  minute: number;
+  minute_extra_time?: number | null; // Optional extra time support
+  half: number;
+}
+
+export interface QuickCardRequest {
+  player_id: number;
+  minute: number;
+  minute_extra_time?: number | null; // Optional extra time support
+  card_type: 'yellow' | 'red';
+  half: number;
+}
+
+export interface GeneralEventRequest {
+  event_type: string;
+  minute: number;
+  minute_extra_time?: number | null; // Optional extra time support
+  half: number;
+  player_id?: number | null;
+}
+
+// NEW: Enhanced API response types for quick events
+export interface QuickGoalResponse {
+  message: string;
+  event_id: number;
+  player_name: string;
+  minute: number;
+  minute_extra_time?: number | null;
+  formatted_time: string; // "45+3'" or "67'"
+  new_score: [number, number]; // [home_score, away_score]
+}
+
+export interface QuickCardResponse {
+  message: string;
+  event_id: number;
+  player_name: string;
+  minute: number;
+  minute_extra_time?: number | null;
+  formatted_time: string; // "88+1'" or "23'"
+  card_type: 'yellow' | 'red';
+}
+
+export interface GeneralEventResponse {
+  message: string;
+  event_id: number;
+  event_type: string;
+  minute: number;
+  minute_extra_time?: number | null;
+  formatted_time: string;
+  player_name?: string;
+}
+
+// NEW: Match record (jegyzőkönyv) response with formatted times
+export interface MatchRecordResponse {
+  match_id: number;
+  events: (EventSchema & { formatted_time: string })[];
+  match_details: {
+    datetime: string;
+    team1: Team;
+    team2: Team;
+    referee?: Profile;
+    status: string;
+  };
+  scores: {
+    home: number;
+    away: number;
+  };
 }

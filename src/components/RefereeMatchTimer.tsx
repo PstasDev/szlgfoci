@@ -29,6 +29,7 @@ interface RefereeMatchTimerProps {
   onExtraTimeAdded?: (minutes: number, half: number) => void;
   onCurrentMinuteChange?: (minute: number, half: number) => void;
   onStatusChange?: (status: string) => void;
+  onTimingUpdate?: (minute: number, extraTime: number, half: number) => void;
 }
 
 interface TimerState {
@@ -48,7 +49,8 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
   events,
   onExtraTimeAdded,
   onCurrentMinuteChange,
-  onStatusChange
+  onStatusChange,
+  onTimingUpdate
 }) => {
   const [timerState, setTimerState] = useState<TimerState>({
     currentMinute: 1, // Start at minute 1, never 0
@@ -244,7 +246,26 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
     if (onCurrentMinuteChange) {
       onCurrentMinuteChange(displayMinute, timerState.currentHalf);
     }
-  }, [timerState.isRunning, timerState.matchStartTime, timerState.halfStartTime, timerState.currentHalf, onCurrentMinuteChange]);
+
+    // Notify parent component of timing details for proper event logging
+    if (onTimingUpdate) {
+      const { currentMinute, currentHalf, extraTimeMinutes } = timerState;
+      
+      // Calculate base minute and extra time
+      let baseMinute = currentMinute;
+      let extraTime = 0;
+      
+      if (currentHalf === 1 && currentMinute > 10) {
+        baseMinute = 10;
+        extraTime = extraTimeMinutes > 0 ? extraTimeMinutes : currentMinute - 10;
+      } else if (currentHalf === 2 && currentMinute > 20) {
+        baseMinute = 20;
+        extraTime = extraTimeMinutes > 0 ? extraTimeMinutes : currentMinute - 20;
+      }
+      
+      onTimingUpdate(baseMinute, extraTime, currentHalf);
+    }
+  }, [timerState, onCurrentMinuteChange, onTimingUpdate]);
 
   // Update timer every second
   useEffect(() => {

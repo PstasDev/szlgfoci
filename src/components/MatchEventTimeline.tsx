@@ -153,8 +153,8 @@ const MatchEventTimeline: React.FC<MatchEventTimelineProps> = ({
                 variant="body2"
                 color="text.secondary"
               >
-                {Math.max(1, event.minute)}&apos;
-                {event.minute_extra_time && (
+                {event.formatted_time || `${Math.max(1, event.minute)}'`}
+                {!event.formatted_time && event.minute_extra_time && (
                   <Typography 
                     component="span" 
                     variant="caption" 

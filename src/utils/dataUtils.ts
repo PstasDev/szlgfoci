@@ -205,6 +205,7 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     event_type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time',
     minute: event.minute,
     minute_extra_time: event.minute_extra_time || null, // Preserve minute_extra_time from API
+    formatted_time: event.formatted_time || formatEventTime(event.minute, event.minute_extra_time), // Use API formatted_time or generate it
     playerName: event.player?.name || 'Unknown Player',
     team: event.player && homeTeam?.players?.some(p => p.id === event.player?.id) ? 'home' as const : 'away' as const,
     type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'substitution',
@@ -647,6 +648,196 @@ export const getTournamentStatusMessage = (tournament: Tournament | null): strin
   }
   
   return 'A torna folyamatban van';
+};
+
+// Format match minute in football standard "X+A" format
+// DEPRECATED: This function has incorrect logic for football timing
+// Use formatEventTime() instead which properly handles minute + extra_time separately
+export const formatMatchMinute = (minute: number, half: number): string => {
+  console.warn('formatMatchMinute is deprecated and has incorrect timing logic. Use formatEventTime(minute, extraTime) instead.');
+  
+  // This logic is WRONG for football - keeping only for backward compatibility
+  // In football, 45+3 means 45th minute + 3 extra time, NOT minute 48
+  if (half === 1) {
+    if (minute <= 45) {
+      return `${minute}`;
+    } else {
+      const injuryTime = minute - 45;
+      return `45+${injuryTime}`;
+    }
+  } else if (half === 2) {
+    if (minute <= 90) {
+      return `${minute}`;
+    } else {
+      const injuryTime = minute - 90;
+      return `90+${injuryTime}`;
+    }
+  }
+  
+  return `${minute}`;
+};
+
+// NEW: Format event time with extra time support (X+A format)
+export const formatEventTime = (minute: number, extraTime?: number | null): string => {
+  const baseMinute = Math.max(1, minute); // Ensure minimum of 1 minute
+  
+  if (extraTime && extraTime > 0) {
+    return `${baseMinute}+${extraTime}'`;
+  }
+  return `${baseMinute}'`;
+};
+
+// NEW: Parse formatted time back to minute and extra time
+export const parseFormattedTime = (formattedTime: string): { minute: number; extraTime: number | null } => {
+  if (!formattedTime) {
+    return { minute: 1, extraTime: null };
+  }
+  
+  // Remove the apostrophe if present
+  const timeStr = formattedTime.replace("'", "");
+  
+  // Check if it contains a plus sign for extra time
+  if (timeStr.includes('+')) {
+    const [minuteStr, extraTimeStr] = timeStr.split('+');
+    return {
+      minute: parseInt(minuteStr, 10) || 1,
+      extraTime: parseInt(extraTimeStr, 10) || null
+    };
+  }
+  
+  // Regular time without extra time
+  return {
+    minute: parseInt(timeStr, 10) || 1,
+    extraTime: null
+  };
+};
+
+// NEW: Sort events with proper extra time handling
+export const sortEventsByTime = (events: any[]): any[] => {
+  return events.sort((a, b) => {
+    // Primary sort: by minute
+    if (a.minute !== b.minute) {
+      return a.minute - b.minute;
+    }
+    
+    // Secondary sort: by extra time (nulls first)
+    const aExtra = a.minute_extra_time || 0;
+    const bExtra = b.minute_extra_time || 0;
+    return aExtra - bExtra;
+  });
+};
+
+// NEW: Filter events by time range including extra time
+export const filterEventsByTimeRange = (events: any[], minMinute: number, maxMinute: number): any[] => {
+  return events.filter(event => {
+    const totalMinute = event.minute + (event.minute_extra_time || 0);
+    return totalMinute >= minMinute && totalMinute <= maxMinute;
+  });
+};
+
+// NEW: Get first half events (up to actual half-time)
+export const getFirstHalfEvents = (events: any[]): any[] => {
+  const halfTimeEvent = events.find(e => e.event_type === 'half_time');
+  const halfTimeMinute = halfTimeEvent ? halfTimeEvent.minute : 45;
+  
+  return events.filter(event => 
+    event.minute < halfTimeMinute || 
+    (event.minute === halfTimeMinute && !event.minute_extra_time)
+  );
+};
+
+// NEW: Get second half events (from second half start onwards)
+export const getSecondHalfEvents = (events: any[]): any[] => {
+  const halfTimeEvent = events.find(e => e.event_type === 'half_time');
+  const halfTimeMinute = halfTimeEvent ? halfTimeEvent.minute : 45;
+  
+  return events.filter(event => 
+    event.minute > halfTimeMinute || 
+    (event.minute === halfTimeMinute && event.minute_extra_time)
+  );
+};
+
+// NEW: Calculate total match time including extra time
+export const calculateTotalMatchTime = (events: any[]): number => {
+  if (!events.length) return 0;
+  
+  const sortedEvents = sortEventsByTime(events);
+  const lastEvent = sortedEvents[sortedEvents.length - 1];
+  
+  return lastEvent.minute + (lastEvent.minute_extra_time || 0);
+};
+
+// NEW: Validate time input for forms
+export const validateMatchTime = (minute: number, extraTime?: number | null): { isValid: boolean; error?: string } => {
+  if (minute < 1) {
+    return { isValid: false, error: 'Minute must be at least 1' };
+  }
+  
+  if (minute > 120) {
+    return { isValid: false, error: 'Minute cannot exceed 120 (even in extra time)' };
+  }
+  
+  if (extraTime !== null && extraTime !== undefined) {
+    if (extraTime < 0) {
+      return { isValid: false, error: 'Extra time cannot be negative' };
+    }
+    
+    if (extraTime > 15) {
+      return { isValid: false, error: 'Extra time typically does not exceed 15 minutes' };
+    }
+    
+    // Validate combinations make sense for football
+    if (minute <= 45 && extraTime > 0) {
+      // First half with extra time should be at critical minutes (typically 45+X)
+      if (minute < 44) {
+        console.warn(`Unusual: ${minute}+${extraTime} - extra time typically occurs at end of half`);
+      }
+    } else if (minute > 45 && minute <= 90 && extraTime > 0) {
+      // Second half with extra time should be at critical minutes (typically 90+X)
+      if (minute < 89) {
+        console.warn(`Unusual: ${minute}+${extraTime} - extra time typically occurs at end of half`);
+      }
+    }
+  }
+  
+  return { isValid: true };
+};
+
+// NEW: Get intelligent time suggestions for referee interfaces
+export const getTimeSuggestions = (currentMinute: number, currentExtraTime: number | undefined, half: number): string[] => {
+  const suggestions: string[] = [];
+  
+  // Add current time if we have it from backend
+  if (currentExtraTime && currentExtraTime > 0) {
+    suggestions.push(`${currentMinute}+${currentExtraTime}'`);
+  } else {
+    suggestions.push(`${currentMinute}'`);
+  }
+  
+  // Add suggestions for extra time if we're near half-time or full-time
+  if (half === 1 && currentMinute >= 44) {
+    // First half injury time suggestions
+    for (let extra = 1; extra <= 5; extra++) {
+      suggestions.push(`45+${extra}'`);
+    }
+  } else if (half === 2 && currentMinute >= 89) {
+    // Second half injury time suggestions
+    for (let extra = 1; extra <= 10; extra++) {
+      suggestions.push(`90+${extra}'`);
+    }
+  }
+  
+  // Add some common suggestions based on current time
+  if (!currentExtraTime) {
+    // Regular minute suggestions around current time
+    for (let i = Math.max(1, currentMinute - 2); i <= Math.min(120, currentMinute + 2); i++) {
+      if (!suggestions.includes(`${i}'`)) {
+        suggestions.push(`${i}'`);
+      }
+    }
+  }
+  
+  return suggestions.slice(0, 8); // Limit to 8 suggestions
 };
 
 // Format referee name in "Vezetéknév Keresztnév" format

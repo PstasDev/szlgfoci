@@ -44,6 +44,7 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import RefereeMatchTimer from '@/components/RefereeMatchTimer';
 import SecondYellowCardModal from '@/components/SecondYellowCardModal';
+import { refereeService } from '@/services/apiService';
 
 // API base URL helper
 const getApiBaseUrl = () => {
@@ -91,6 +92,7 @@ interface PendingEvent {
   type: 'goal' | 'yellow_card' | 'red_card' | 'substitution';
   team: 'team1' | 'team2';
   minute: number;
+  minute_extra_time: number;
   half: number;
 }
 
@@ -204,11 +206,24 @@ const apiService = {
     return response.json();
   },
 
-  async endHalf(matchId: string, minute?: number, half?: number) {
+  async endHalf(matchId: string, minute?: number, half?: number, extraTime?: number) {
     const apiBaseUrl = getApiBaseUrl();
-    const body = minute !== undefined && half !== undefined 
-      ? JSON.stringify({ minute, half })
-      : undefined;
+    let body = undefined;
+    
+    if (minute !== undefined && half !== undefined) {
+      const requestData: any = { minute, half };
+      
+      // Only include minute_extra_time if provided and > 0
+      if (extraTime && extraTime > 0) {
+        requestData.minute_extra_time = extraTime;
+        console.log(`⏰ End half including minute_extra_time: ${extraTime}`);
+      } else {
+        console.log(`⏰ End half without extra time (extraTime: ${extraTime})`);
+      }
+      
+      console.log(`⏰ End half request payload:`, requestData);
+      body = JSON.stringify(requestData);
+    }
     
     const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/end-half`, {
       method: 'POST',
@@ -219,11 +234,24 @@ const apiService = {
     return response.json();
   },
 
-  async endMatch(matchId: string, minute?: number, half?: number) {
+  async endMatch(matchId: string, minute?: number, half?: number, extraTime?: number) {
     const apiBaseUrl = getApiBaseUrl();
-    const body = minute !== undefined && half !== undefined 
-      ? JSON.stringify({ minute, half })
-      : undefined;
+    let body = undefined;
+    
+    if (minute !== undefined && half !== undefined) {
+      const requestData: any = { minute, half };
+      
+      // Only include minute_extra_time if provided and > 0
+      if (extraTime && extraTime > 0) {
+        requestData.minute_extra_time = extraTime;
+        console.log(`🏁 End match including minute_extra_time: ${extraTime}`);
+      } else {
+        console.log(`🏁 End match without extra time (extraTime: ${extraTime})`);
+      }
+      
+      console.log(`🏁 End match request payload:`, requestData);
+      body = JSON.stringify(requestData);
+    }
     
     const response = await this.makeAuthenticatedRequest(`${apiBaseUrl}/biro/matches/${matchId}/end-match`, {
       method: 'POST',
@@ -344,6 +372,7 @@ const LiveMatchPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmEndMatchOpen, setConfirmEndMatchOpen] = useState(false);
   const [currentMatchMinute, setCurrentMatchMinute] = useState<number>(1);
+  const [currentMatchExtraTime, setCurrentMatchExtraTime] = useState<number>(0);
   const [currentMatchHalf, setCurrentMatchHalf] = useState<number>(1);
   const [currentMatchStatus, setCurrentMatchStatus] = useState<string>('not_started');
   const [secondYellowCardModalOpen, setSecondYellowCardModalOpen] = useState(false);
@@ -443,14 +472,16 @@ const LiveMatchPage: React.FC = () => {
   const handleEventClick = (eventType: 'goal' | 'yellow_card' | 'red_card' | 'substitution', team: 'team1' | 'team2') => {
     if (!match) return;
     
-    // Use current minute from timer instead of fallback calculation
+    // Use current minute and extra time from timer
     const minute = currentMatchMinute;
+    const extraTime = currentMatchExtraTime;
     const half = currentMatchHalf;
     
     setPendingEvent({
       type: eventType,
       team,
       minute,
+      minute_extra_time: extraTime,
       half
     });
     setPlayerModalOpen(true);
@@ -484,14 +515,27 @@ const LiveMatchPage: React.FC = () => {
     
     setActionLoading('event');
     try {
+      const matchIdNum = parseInt(matchId, 10);
+      
       if (pendingEvent.type === 'goal') {
-        await apiService.addGoal(matchId, playerId, pendingEvent.minute, pendingEvent.half);
+        await refereeService.addQuickGoal(matchIdNum, {
+          player_id: playerId,
+          minute: pendingEvent.minute,
+          minute_extra_time: pendingEvent.minute_extra_time,
+          half: pendingEvent.half
+        });
       } else if (pendingEvent.type === 'substitution') {
         await apiService.addSubstitution(matchId, playerId, pendingEvent.minute, pendingEvent.half);
       } else {
         // Use forced card type if provided (for second yellow card scenarios), otherwise use the pending event type
         const cardType = forceCardType || (pendingEvent.type === 'yellow_card' ? 'yellow' : 'red');
-        await apiService.addCard(matchId, playerId, pendingEvent.minute, pendingEvent.half, cardType);
+        await refereeService.addQuickCard(matchIdNum, {
+          player_id: playerId,
+          minute: pendingEvent.minute,
+          minute_extra_time: pendingEvent.minute_extra_time,
+          half: pendingEvent.half,
+          card_type: cardType
+        });
       }
       
       await loadMatch(); // Refresh match data
@@ -548,7 +592,7 @@ const LiveMatchPage: React.FC = () => {
           }
           break;
         case 'end-half':
-          await apiService.endHalf(matchId, currentMatchMinute, currentMatchHalf);
+          await apiService.endHalf(matchId, currentMatchMinute, currentMatchHalf, currentMatchExtraTime);
           break;
         case 'start-second-half':
           await apiService.startSecondHalf(matchId);
@@ -570,7 +614,7 @@ const LiveMatchPage: React.FC = () => {
     setConfirmEndMatchOpen(false);
     
     try {
-      await apiService.endMatch(matchId, currentMatchMinute, currentMatchHalf);
+      await apiService.endMatch(matchId, currentMatchMinute, currentMatchHalf, currentMatchExtraTime);
       await loadMatch();
     } catch {
       setError('Nem sikerült befejezni a mérkőzést');
@@ -590,6 +634,12 @@ const LiveMatchPage: React.FC = () => {
 
   const handleCurrentMinuteChange = useCallback((minute: number, half: number) => {
     setCurrentMatchMinute(minute);
+    setCurrentMatchHalf(half);
+  }, []);
+
+  const handleTimingUpdate = useCallback((minute: number, extraTime: number, half: number) => {
+    setCurrentMatchMinute(minute);
+    setCurrentMatchExtraTime(extraTime);
     setCurrentMatchHalf(half);
   }, []);
 
@@ -772,6 +822,7 @@ const LiveMatchPage: React.FC = () => {
                   onExtraTimeAdded={handleExtraTimeAdded}
                   onCurrentMinuteChange={handleCurrentMinuteChange}
                   onStatusChange={handleStatusChange}
+                  onTimingUpdate={handleTimingUpdate}
                 />
               </Box>
 
@@ -1126,6 +1177,22 @@ const LiveMatchPage: React.FC = () => {
                       }
                     };
 
+                    // Helper function to format event time display
+                    const formatEventTimeDisplay = (event: any) => {
+                      // If formatted_time is available, use it (preferred)
+                      if (event.formatted_time) {
+                        return event.formatted_time;
+                      }
+                      
+                      // Fallback: construct from minute and minute_extra_time
+                      if (event.minute_extra_time && event.minute_extra_time > 0) {
+                        return `${event.minute}+${event.minute_extra_time}'`;
+                      }
+                      
+                      // Default: just the minute
+                      return `${event.minute}'`;
+                    };
+
                     return (
                       <Box 
                         key={index}
@@ -1185,7 +1252,7 @@ const LiveMatchPage: React.FC = () => {
                               color: getEventColor(event.event_type),
                               fontWeight: 'bold'
                             }}>
-                              {event.minute}&apos;
+                              {formatEventTimeDisplay(event)}
                             </Typography>
                             {event.half && (
                               <Typography variant="caption" sx={{ 
@@ -1225,7 +1292,9 @@ const LiveMatchPage: React.FC = () => {
                  pendingEvent.type === 'yellow_card' ? 'Sárga lap' : 
                  pendingEvent.type === 'red_card' ? 'Piros lap' : 
                  pendingEvent.type === 'substitution' ? 'Csere' : 
-                 pendingEvent.type} - {pendingEvent.minute}. perc
+                 pendingEvent.type} - {pendingEvent.minute_extra_time > 0 
+                   ? `${pendingEvent.minute}+${pendingEvent.minute_extra_time}` 
+                   : pendingEvent.minute}. perc
               </Typography>
               {(pendingEvent.type === 'yellow_card' || pendingEvent.type === 'red_card') && (
                 <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>

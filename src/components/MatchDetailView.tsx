@@ -269,7 +269,8 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                   match: event.match,
                   event_type: event.event_type || event.type as any || 'goal',
                   minute: event.minute,
-                  minute_extra_time: null, // Not available in legacy format
+                  minute_extra_time: event.minute_extra_time || null,
+                  formatted_time: event.formatted_time || (event.minute_extra_time ? `${event.minute}+${event.minute_extra_time}'` : `${event.minute}'`),
                   player: event.player ? { 
                     id: event.player, 
                     name: event.playerName || 'Unknown Player'

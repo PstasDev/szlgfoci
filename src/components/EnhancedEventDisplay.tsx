@@ -126,6 +126,12 @@ const EnhancedEventDisplay: React.FC<EnhancedEventDisplayProps> = ({
 
   // Get display time
   const getDisplayTime = () => {
+    // Prefer formatted_time from API if available
+    if (event.formatted_time) {
+      return event.formatted_time;
+    }
+    
+    // Fallback to calculating from minute and minute_extra_time
     const baseMinute = Math.max(1, event.minute); // Ensure minimum of 1 minute
     const extraTime = event.minute_extra_time;
     

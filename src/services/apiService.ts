@@ -29,7 +29,14 @@ import type {
   LiveMatchStatus,
   LiveMatch,
   LiveUpdatePayload,
-  SzankcioSchema
+  SzankcioSchema,
+  QuickGoalRequest,
+  QuickCardRequest,
+  GeneralEventRequest,
+  QuickGoalResponse,
+  QuickCardResponse,
+  GeneralEventResponse,
+  MatchRecordResponse
 } from '@/types/api';
 
 // Tournament endpoints
@@ -458,7 +465,9 @@ export const liveMatchService = {
               match_id: match.id || 0,
               status: currentMinute < 45 ? 'first_half' : currentMinute < 60 ? 'half_time' : 'second_half',
               current_minute: currentMinute,
-              extra_time_minutes: Math.max(0, currentMinute - 90),
+              current_extra_time: Math.max(0, currentMinute - 90) > 0 ? Math.max(0, currentMinute - 90) : undefined,
+              extra_time_minutes: Math.max(0, currentMinute - 90), // DEPRECATED but kept for compatibility
+              formatted_time: currentMinute > 90 ? `90+${currentMinute - 90}'` : currentMinute > 45 ? `${Math.min(currentMinute, 90)}'` : `${currentMinute}'`,
               last_updated: new Date().toISOString(),
               goals_team1: 0,
               goals_team2: 0,
@@ -526,7 +535,9 @@ export const liveMatchService = {
           match_id: match.id || 0,
           status: currentMinute < 45 ? 'first_half' : currentMinute < 60 ? 'half_time' : 'second_half',
           current_minute: currentMinute,
-          extra_time_minutes: Math.max(0, currentMinute - 90),
+          current_extra_time: Math.max(0, currentMinute - 90) > 0 ? Math.max(0, currentMinute - 90) : undefined,
+          extra_time_minutes: Math.max(0, currentMinute - 90), // DEPRECATED but kept for compatibility
+          formatted_time: currentMinute > 90 ? `90+${currentMinute - 90}'` : currentMinute > 45 ? `${Math.min(currentMinute, 90)}'` : `${currentMinute}'`,
           last_updated: new Date().toISOString(),
           goals_team1: 0,
           goals_team2: 0,
@@ -559,10 +570,10 @@ export const liveMatchService = {
     }
   },
 
-  async getMatchTiming(matchId: number): Promise<{ current_minute: number; extra_time: number; status: string }> {
+  async getMatchTiming(matchId: number): Promise<{ current_minute: number; current_extra_time?: number; status: string; formatted_time?: string }> {
     try {
       console.log(`⏱️ liveMatchService.getMatchTiming(${matchId}) called`);
-      const result = await api.get<{ current_minute: number; extra_time: number; status: string }>(`/matches/${matchId}/timing`);
+      const result = await api.get<{ current_minute: number; current_extra_time?: number; status: string; formatted_time?: string }>(`/matches/${matchId}/timing`);
       console.log(`⏱️ liveMatchService.getMatchTiming(${matchId}) success:`, result);
       return result;
     } catch (error) {
@@ -633,6 +644,157 @@ export const photoService = {
       return result;
     } catch (error) {
       console.error(`📸 photoService.uploadPhoto(${matchId}) failed:`, error);
+      throw error;
+    }
+  }
+};
+
+// NEW: Referee API service for enhanced event creation with extra time support
+export const refereeService = {
+  // Quick goal creation with extra time support
+  async addQuickGoal(matchId: number, data: QuickGoalRequest): Promise<QuickGoalResponse> {
+    try {
+      console.log(`⚽ refereeService.addQuickGoal(${matchId}) called with raw data:`, data);
+      
+      // Only include minute_extra_time if provided and > 0
+      const requestData: any = {
+        player_id: data.player_id,
+        minute: data.minute,
+        half: data.half
+      };
+      
+      if (data.minute_extra_time && data.minute_extra_time > 0) {
+        requestData.minute_extra_time = data.minute_extra_time;
+        console.log(`⚽ Including minute_extra_time: ${data.minute_extra_time}`);
+      } else {
+        console.log(`⚽ No extra time (minute_extra_time: ${data.minute_extra_time})`);
+      }
+      
+      console.log(`⚽ Final request payload:`, requestData);
+      
+      const result = await api.post<QuickGoalResponse>(`/biro/matches/${matchId}/quick-goal`, requestData);
+      console.log(`⚽ refereeService.addQuickGoal(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`⚽ refereeService.addQuickGoal(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  // Quick card creation with extra time support
+  async addQuickCard(matchId: number, data: QuickCardRequest): Promise<QuickCardResponse> {
+    try {
+      console.log(`🟨 refereeService.addQuickCard(${matchId}) called`, data);
+      
+      // Only include minute_extra_time if provided and > 0
+      const requestData: any = {
+        player_id: data.player_id,
+        minute: data.minute,
+        card_type: data.card_type,
+        half: data.half
+      };
+      
+      if (data.minute_extra_time && data.minute_extra_time > 0) {
+        requestData.minute_extra_time = data.minute_extra_time;
+      }
+      
+      const result = await api.post<QuickCardResponse>(`/biro/matches/${matchId}/quick-card`, requestData);
+      console.log(`🟨 refereeService.addQuickCard(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🟨 refereeService.addQuickCard(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  // General event creation with extra time support
+  async addEvent(matchId: number, data: GeneralEventRequest): Promise<GeneralEventResponse> {
+    try {
+      console.log(`📝 refereeService.addEvent(${matchId}) called`, data);
+      
+      // Only include minute_extra_time if provided and > 0
+      const requestData: any = {
+        event_type: data.event_type,
+        minute: data.minute,
+        half: data.half
+      };
+      
+      if (data.minute_extra_time && data.minute_extra_time > 0) {
+        requestData.minute_extra_time = data.minute_extra_time;
+      }
+      
+      if (data.player_id) {
+        requestData.player_id = data.player_id;
+      }
+      
+      const result = await api.post<GeneralEventResponse>(`/biro/matches/${matchId}/events`, requestData);
+      console.log(`📝 refereeService.addEvent(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`📝 refereeService.addEvent(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  // Update existing event with extra time support
+  async updateEvent(matchId: number, eventId: number, data: Partial<GeneralEventRequest>): Promise<GeneralEventResponse> {
+    try {
+      console.log(`✏️ refereeService.updateEvent(${matchId}, ${eventId}) called`, data);
+      
+      // Only include fields that are provided
+      const requestData: any = {};
+      
+      if (data.minute !== undefined) {
+        requestData.minute = data.minute;
+      }
+      
+      if (data.minute_extra_time !== undefined) {
+        requestData.minute_extra_time = data.minute_extra_time;
+      }
+      
+      if (data.event_type !== undefined) {
+        requestData.event_type = data.event_type;
+      }
+      
+      if (data.half !== undefined) {
+        requestData.half = data.half;
+      }
+      
+      if (data.player_id !== undefined) {
+        requestData.player_id = data.player_id;
+      }
+      
+      const result = await api.put<GeneralEventResponse>(`/biro/matches/${matchId}/events/${eventId}`, requestData);
+      console.log(`✏️ refereeService.updateEvent(${matchId}, ${eventId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`✏️ refereeService.updateEvent(${matchId}, ${eventId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  // Get match record (jegyzőkönyv) with enhanced time formatting
+  async getMatchRecord(matchId: number): Promise<MatchRecordResponse> {
+    try {
+      console.log(`📋 refereeService.getMatchRecord(${matchId}) called`);
+      const result = await api.get<MatchRecordResponse>(`/biro/matches/${matchId}/jegyzokonyv`);
+      console.log(`📋 refereeService.getMatchRecord(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`📋 refereeService.getMatchRecord(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  // Delete an event
+  async deleteEvent(matchId: number, eventId: number): Promise<{ message: string }> {
+    try {
+      console.log(`🗑️ refereeService.deleteEvent(${matchId}, ${eventId}) called`);
+      const result = await api.delete<{ message: string }>(`/biro/matches/${matchId}/events/${eventId}`);
+      console.log(`🗑️ refereeService.deleteEvent(${matchId}, ${eventId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🗑️ refereeService.deleteEvent(${matchId}, ${eventId}) failed:`, error);
       throw error;
     }
   }

@@ -30,6 +30,75 @@ const API_BASE_URL = getApiBaseUrl();
 // Export base so other modules can reuse it if needed
 export const baseURL = API_BASE_URL;
 
+// Enhanced authenticated request function similar to elo-jegyzokonyv
+const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}): Promise<Response> => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('jwt_token') : null;
+  
+  console.log('🔐 makeAuthenticatedRequest called for:', url);
+  console.log('🔑 Token status:', { 
+    hasToken: !!token, 
+    tokenLength: token?.length || 0,
+    tokenPreview: token ? `${token.substring(0, 20)}...` : null
+  });
+  
+  // Try with token first if available (more reliable in production)
+  if (token) {
+    console.log('🔑 Attempting request with JWT token');
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers
+      },
+      mode: 'cors'
+    });
+    
+    console.log('📊 JWT token response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
+    if (response.ok) {
+      console.log('✅ JWT token authentication successful');
+      return response;
+    } else {
+      console.log('⚠️ JWT token authentication failed, trying cookies fallback');
+      
+      // Log the error response for debugging
+      try {
+        const errorText = await response.clone().text();
+        console.log('❌ JWT error response:', errorText);
+      } catch {
+        console.log('❌ Could not read error response');
+      }
+    }
+  }
+  
+  // Fallback to cookies
+  console.log('🍪 Attempting request with cookies');
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...options.headers
+    },
+    credentials: 'include',
+    mode: 'cors'
+  });
+  
+  console.log('📊 Cookie response:', {
+    status: response.status,
+    statusText: response.statusText,
+    ok: response.ok
+  });
+  
+  return response;
+};
+
 export const api = {
   baseURL: API_BASE_URL,
 
@@ -37,13 +106,8 @@ export const api = {
     const url = `${API_BASE_URL}${endpoint}`;
     console.log(`🌐 API GET request to: ${url}`);
     
-    const response = await fetch(url, {
+    const response = await makeAuthenticatedRequest(url, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      mode: 'cors', // Enable CORS for cross-origin requests
       cache: 'no-store', // Always fetch fresh data
     });
 
@@ -62,13 +126,11 @@ export const api = {
   },
 
   async post<T>(endpoint: string, data?: unknown): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`🌐 API POST request to: ${url}`, data);
+    
+    const response = await makeAuthenticatedRequest(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      mode: 'cors', // Enable CORS for cross-origin requests
       body: data ? JSON.stringify(data) : undefined,
     });
 
@@ -83,13 +145,11 @@ export const api = {
   },
 
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`🌐 API PUT request to: ${url}`, data);
+    
+    const response = await makeAuthenticatedRequest(url, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      mode: 'cors', // Enable CORS for cross-origin requests
       body: data ? JSON.stringify(data) : undefined,
     });
 
@@ -104,13 +164,11 @@ export const api = {
   },
 
   async delete<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const url = `${API_BASE_URL}${endpoint}`;
+    console.log(`🌐 API DELETE request to: ${url}`);
+    
+    const response = await makeAuthenticatedRequest(url, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      mode: 'cors', // Enable CORS for cross-origin requests
     });
 
     if (!response.ok) {

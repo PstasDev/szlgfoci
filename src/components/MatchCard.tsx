@@ -16,7 +16,7 @@ import {
   LocationOn as LocationIcon,
   SportsSoccer
 } from '@mui/icons-material';
-import { Match, getTeamColor } from '@/utils/dataUtils';
+import { Match } from '@/utils/dataUtils';
 
 interface MatchCardProps {
   match: Match;
@@ -587,20 +587,39 @@ const MatchCard: React.FC<MatchCardProps> = ({
           <Typography variant="body2" sx={{ color: '#9aa0a6', mb: 2, fontWeight: 600 }}>
             Legutóbbi események:
           </Typography>
-          {match.events.slice(-3).reverse().map((event) => (
-            <Box key={event.id} sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="caption" sx={{ 
-                color: '#4285f4', 
-                fontWeight: 'bold',
-                minWidth: 30
-              }}>
-                {Math.max(1, event.minute)}&apos;
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#e8eaed' }}>
-                {event.type === 'goal' ? '⚽' : event.type === 'yellow_card' ? '🟨' : '🟥'} {event.player}
-              </Typography>
-            </Box>
-          ))}
+          {match.events.slice(-3).reverse().map((event) => {
+            // Helper function to format event time display
+            const formatEventTime = (event: any) => {
+              // If formatted_time is available, use it (preferred)
+              if (event.formatted_time) {
+                return event.formatted_time;
+              }
+              
+              // Fallback: construct from minute and minute_extra_time
+              const baseMinute = Math.max(1, event.minute);
+              if (event.minute_extra_time && event.minute_extra_time > 0) {
+                return `${baseMinute}+${event.minute_extra_time}'`;
+              }
+              
+              // Default: just the minute
+              return `${baseMinute}'`;
+            };
+
+            return (
+              <Box key={event.id} sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ 
+                  color: '#4285f4', 
+                  fontWeight: 'bold',
+                  minWidth: 30
+                }}>
+                  {formatEventTime(event)}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#e8eaed' }}>
+                  {event.type === 'goal' ? '⚽' : event.type === 'yellow_card' ? '🟨' : '🟥'} {event.player}
+                </Typography>
+              </Box>
+            );
+          })}
         </Box>
       )}
     </Paper>

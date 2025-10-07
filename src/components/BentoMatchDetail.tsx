@@ -452,6 +452,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                   event_type: eventData.event_type || eventData.type || 'goal',
                   minute: eventData.minute,
                   minute_extra_time: eventData.minute_extra_time || eventData.minuteExtraTime || null,
+                  formatted_time: eventData.formatted_time || (eventData.minute_extra_time ? `${eventData.minute}+${eventData.minute_extra_time}'` : `${eventData.minute}'`),
                   player: eventData.player ? { 
                     id: typeof eventData.player === 'object' ? eventData.player.id : eventData.player, 
                     name: typeof eventData.player === 'object' ? eventData.player.name : (eventData.playerName || 'Unknown Player')
@@ -542,7 +543,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                           color: getEventColor(enhancedEvent.event_type),
                           fontWeight: 'bold'
                         }}>
-                          {enhancedEvent.minute}&apos;
+                          {enhancedEvent.formatted_time || `${enhancedEvent.minute}'`}
                         </Typography>
                         {enhancedEvent.half && (
                           <Typography variant="caption" sx={{ 
