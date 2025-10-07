@@ -261,31 +261,44 @@ export const getMatchStatus = (match: ApiMatch): 'upcoming' | 'live' | 'finished
   // First check for events that indicate match status
   const events = match.events || [];
   
-  // If there's a match_end event, the match is finished (only check for match_end)
+  // If there's a match_end event, the match is finished
   const hasMatchEndEvent = events.some(e => e.event_type === 'match_end');
   
   if (hasMatchEndEvent) {
     return 'finished';
   }
   
-  // If there's a match_start event, the match has started
+  // If there's a match_start event and no match_end event, the match is live
   const hasMatchStartEvent = events.some(e => e.event_type === 'match_start');
+  
+  if (hasMatchStartEvent) {
+    return 'live';
+  }
   
   // Fallback to datetime-based logic
   const matchDate = new Date(match.datetime);
   const now = new Date();
-  const hoursDiff = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+  const minutesDiff = (matchDate.getTime() - now.getTime()) / (1000 * 60);
   
-  if (hasMatchStartEvent && hoursDiff < 2) {
-    // Match has started and is within reasonable time window
-    return 'live';
-  } else if (hoursDiff < -2) {
+  // If the match is more than 2 hours in the past and has no events, it's finished
+  if (minutesDiff < -120) {
     return 'finished';
-  } else if (hoursDiff < 2) {
-    return 'live';
-  } else {
+  }
+  
+  // If the match is in the future (even by 1 minute), it's upcoming
+  if (minutesDiff > 0) {
     return 'upcoming';
   }
+  
+  // If the match time has passed but it's within 2 hours and no events, 
+  // it could be live (started but no events recorded yet) or finished
+  // Since we have no events, assume it's live if it's recent (within 90 minutes)
+  if (minutesDiff >= -90) {
+    return 'live';
+  }
+  
+  // Otherwise, it's finished
+  return 'finished';
 };
 
 // Format time from datetime string
