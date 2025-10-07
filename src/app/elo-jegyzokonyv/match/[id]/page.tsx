@@ -823,6 +823,7 @@ const LiveMatchPage: React.FC = () => {
                   onCurrentMinuteChange={handleCurrentMinuteChange}
                   onStatusChange={handleStatusChange}
                   onTimingUpdate={handleTimingUpdate}
+                  onStartSecondHalf={() => handleMatchAction('start-second-half')}
                 />
               </Box>
 
@@ -884,7 +885,7 @@ const LiveMatchPage: React.FC = () => {
                 </Button>
               )}
               
-              {match.status === 'first_half' && (
+              {(match.status === 'first_half' || (match.status === 'extra_time' && currentMatchHalf === 1)) && (
                 <Button
                   variant="contained"
                   startIcon={<PauseIcon />}
@@ -899,22 +900,9 @@ const LiveMatchPage: React.FC = () => {
                 </Button>
               )}
 
-              {match.status === 'half_time' && (
-                <Button
-                  variant="contained"
-                  startIcon={<StartIcon />}
-                  onClick={() => handleMatchAction('start-second-half')}
-                  disabled={actionLoading === 'start-second-half'}
-                  sx={{
-                    backgroundColor: theme.palette.primary.main,
-                    '&:hover': { backgroundColor: theme.palette.primary.dark }
-                  }}
-                >
-                  Második félidő kezdése
-                </Button>
-              )}
+              {/* Start second half button is now handled by the timer component during half_time */}
               
-              {match.status === 'second_half' && (
+              {(match.status === 'second_half' || (match.status === 'extra_time' && currentMatchHalf === 2)) && (
                 <Button
                   variant="contained"
                   startIcon={<PauseIcon />}

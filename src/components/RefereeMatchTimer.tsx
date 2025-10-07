@@ -30,6 +30,7 @@ interface RefereeMatchTimerProps {
   onCurrentMinuteChange?: (minute: number, half: number) => void;
   onStatusChange?: (status: string) => void;
   onTimingUpdate?: (minute: number, extraTime: number, half: number) => void;
+  onStartSecondHalf?: () => void;
 }
 
 interface TimerState {
@@ -50,7 +51,8 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
   onExtraTimeAdded,
   onCurrentMinuteChange,
   onStatusChange,
-  onTimingUpdate
+  onTimingUpdate,
+  onStartSecondHalf
 }) => {
   const [timerState, setTimerState] = useState<TimerState>({
     currentMinute: 1, // Start at minute 1, never 0
@@ -71,18 +73,42 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
   const initializeTimer = useCallback(() => {
     console.log('🔄 RefereeMatchTimer: Starting initialization...');
     console.log('🔍 Available events:', events);
+    
+    // SAFEGUARD: If timer is currently running with a reasonable minute value,
+    // be very conservative about making changes that could cause resets
+    setTimerState(currentState => {
+      if (currentState.isRunning && currentState.currentMinute > 1) {
+        console.log('🛡️ Timer running - using conservative initialization', {
+          currentMinute: currentState.currentMinute,
+          status: currentState.status
+        });
+        // Only proceed with initialization if events changed significantly
+        if (!events || events.length === 0) {
+          console.log('🛡️ No events but timer running - preserving state');
+          return currentState;
+        }
+      }
+      return currentState; // Continue with normal initialization
+    });
 
     if (!events || events.length === 0) {
       console.log('⚠️ No events available');
-      setTimerState({
-        currentMinute: 1,
-        currentSecond: 0,
-        currentHalf: 1,
-        extraTimeMinutes: 0,
-        status: 'not_started',
-        isRunning: false,
-        matchStartTime: null,
-        halfStartTime: null,
+      // Only reset if we're not already in a running state
+      // Use functional update to get current state
+      setTimerState(currentState => {
+        if (currentState.status === 'not_started') {
+          return {
+            currentMinute: 1,
+            currentSecond: 0,
+            currentHalf: 1,
+            extraTimeMinutes: 0,
+            status: 'not_started',
+            isRunning: false,
+            matchStartTime: null,
+            halfStartTime: null,
+          };
+        }
+        return currentState; // Don't change if already running
       });
       return;
     }
@@ -129,21 +155,39 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
     // If match hasn't started
     if (!matchStartEvent || !matchStartEvent.exact_time) {
       console.log('⚠️ No match start event with exact_time');
-      setTimerState(newState);
+      // Only reset if we're truly not started - preserve running timer state
+      setTimerState(currentState => {
+        if (currentState.status === 'not_started' || !currentState.isRunning) {
+          return newState;
+        } else {
+          console.log('🛡️ Preserving running timer state despite missing match start event');
+          return currentState;
+        }
+      });
       return;
     }
 
     // If match has ended
     if (matchEndEvent) {
       console.log('⚠️ Match has ended');
-      newState = {
+      const endState: TimerState = {
         ...newState,
-        status: 'finished',
+        status: 'finished' as const,
         currentMinute: matchEndEvent.minute || 20,
         currentHalf: matchEndEvent.half || 2,
         isRunning: false
       };
-      setTimerState(newState);
+      // Use functional update to preserve any running timer state
+      setTimerState(currentState => {
+        // If timer is running, preserve current minute unless match definitely ended
+        if (currentState.isRunning && (matchEndEvent.minute || 20) < currentState.currentMinute) {
+          return {
+            ...endState,
+            currentMinute: currentState.currentMinute
+          };
+        }
+        return endState;
+      });
       return;
     }
 
@@ -193,13 +237,34 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
     };
 
     console.log('🔄 RefereeMatchTimer: Final timer state:', newState);
-    setTimerState(newState);
+    
+    // Use functional update to prevent timer jumps during state updates
+    setTimerState(currentState => {
+      // If current timer is running and we're updating match state info,
+      // preserve the current calculated minute to prevent 1:00 jumps
+      if (currentState.isRunning && 
+          (newState.status === 'first_half' || newState.status === 'second_half') &&
+          currentState.status === newState.status &&
+          currentState.currentHalf === newState.currentHalf) {
+        console.log('🛡️ Preserving running timer minute during state update:', {
+          preserving: currentState.currentMinute,
+          wouldReset: newState.currentMinute
+        });
+        return {
+          ...newState,
+          currentMinute: currentState.currentMinute,
+          currentSecond: currentState.currentSecond,
+          isRunning: currentState.isRunning
+        };
+      }
+      return newState;
+    });
     
     // Notify parent component of status change
     if (onStatusChange) {
       onStatusChange(newState.status);
     }
-  }, [events, onStatusChange]); // Removed status dependency
+  }, [events, onStatusChange]); // Removed unstable dependencies
 
   // Calculate current time
   const updateCurrentTime = useCallback(() => {
@@ -236,11 +301,27 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
       isRunning: timerState.isRunning
     });
 
-    setTimerState(prev => ({
-      ...prev,
-      currentMinute: displayMinute,
-      currentSecond: remainingSeconds
-    }));
+    // Prevent backwards time jumps by ensuring minute never goes below current
+    setTimerState(prev => {
+      // Sanity check: don't let timer go backwards in the same half
+      if (prev.currentHalf === timerState.currentHalf && displayMinute < prev.currentMinute) {
+        console.log('🛡️ Preventing backwards time jump:', {
+          current: prev.currentMinute,
+          calculated: displayMinute,
+          keeping: prev.currentMinute
+        });
+        return {
+          ...prev,
+          currentSecond: remainingSeconds // Still update seconds
+        };
+      }
+      
+      return {
+        ...prev,
+        currentMinute: displayMinute,
+        currentSecond: remainingSeconds
+      };
+    });
 
     // Notify parent component of minute change
     if (onCurrentMinuteChange) {
@@ -275,21 +356,42 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
     }
   }, [timerState.isRunning, updateCurrentTime]);
 
-  // Also reinitialize when events change (like ImprovedLiveMatchTimer)
+  // Only initialize on mount and when events array changes significantly
   useEffect(() => {
     initializeTimer();
-  }, [initializeTimer]);
+  }, [events, initializeTimer]);
 
-  // Additional effect to handle live updates (reinitialize periodically)
+  // Disabled aggressive periodic reinitialization to prevent timer resets
+  // The timer should be stable once initialized and rely on event changes
+  /*
   useEffect(() => {
     if (timerState.status === 'first_half' || timerState.status === 'second_half' || timerState.status === 'half_time') {
+      // Only check for new events that would fundamentally change the match state
+      // This prevents the constant reinitialization that causes the 1:00 bug
       const interval = setInterval(() => {
-        console.log('🔄 Periodic reinitialization for live updates');
-        initializeTimer();
-      }, 5000); // Reinitialize every 5 seconds to catch new events
+        if (!events || events.length === 0) return;
+        
+        // Check for critical state-changing events only
+        const halfTimeEvent = events.find(e => e.event_type === 'half_time');
+        const secondHalfStartEvent = events.find(e => e.half === 2 && e.minute > 10);
+        const matchEndEvent = events.find(e => e.event_type === 'match_end' || e.event_type === 'full_time');
+        
+        // Only reinitialize if match status should change
+        if (matchEndEvent && timerState.status !== 'finished') {
+          console.log('🔄 Match ended, updating state');
+          initializeTimer();
+        } else if (halfTimeEvent && !secondHalfStartEvent && timerState.status !== 'half_time') {
+          console.log('🔄 Half time detected, updating state');
+          initializeTimer();
+        } else if (secondHalfStartEvent && timerState.status !== 'second_half') {
+          console.log('🔄 Second half started, updating state');
+          initializeTimer();
+        }
+      }, 15000); // Check less frequently - every 15 seconds
       return () => clearInterval(interval);
     }
-  }, [timerState.status, initializeTimer]);
+  }, [timerState.status, events, initializeTimer]);
+  */
 
   const handleAddExtraTime = () => {
     const minutes = parseInt(extraTimeInput);
@@ -371,33 +473,39 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
           sx={{ fontWeight: 600 }}
         />
 
-        {/* Minute Counter or Half-Time Indicator */}
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1,
-          px: 2,
-          py: 1,
-          backgroundColor: timerState.status === 'half_time' ? 'warning.main' : 'action.hover',
-          borderRadius: 2,
-          color: timerState.status === 'half_time' ? 'warning.contrastText' : 'inherit'
-        }}>
-          {timerState.status === 'half_time' ? (
-            <>
-              <PauseIcon sx={{ fontSize: 20 }} />
-              <Typography variant="h6" fontWeight="bold">
-                HT
-              </Typography>
-            </>
-          ) : (
-            <>
-              <TimerIcon sx={{ fontSize: 20 }} />
-              <Typography variant="h6" fontWeight="bold">
-                {getDisplayMinute()}&apos;
-              </Typography>
-            </>
-          )}
-        </Box>
+        {/* Minute Counter or Start Second Half Button */}
+        {timerState.status === 'half_time' ? (
+          <Button
+            variant="contained"
+            startIcon={<PlayIcon />}
+            onClick={onStartSecondHalf}
+            disabled={!onStartSecondHalf}
+            sx={{
+              backgroundColor: 'primary.main',
+              '&:hover': { backgroundColor: 'primary.dark' },
+              fontWeight: 'bold',
+              py: 1.5,
+              px: 3
+            }}
+          >
+            2. félidő kezdése
+          </Button>
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            px: 2,
+            py: 1,
+            backgroundColor: 'action.hover',
+            borderRadius: 2
+          }}>
+            <TimerIcon sx={{ fontSize: 20 }} />
+            <Typography variant="h6" fontWeight="bold">
+              {getDisplayMinute()}&apos;
+            </Typography>
+          </Box>
+        )}
 
         {/* Precise Timer (Seconds) - Hidden during half-time */}
         {timerState.isRunning && timerState.status !== 'half_time' && (
