@@ -261,11 +261,10 @@ export const getMatchStatus = (match: ApiMatch): 'upcoming' | 'live' | 'finished
   // First check for events that indicate match status
   const events = match.events || [];
   
-  // If there's a full_time or match_end event, the match is finished
-  const hasFullTimeEvent = events.some(e => e.event_type === 'full_time');
+  // If there's a match_end event, the match is finished (only check for match_end)
   const hasMatchEndEvent = events.some(e => e.event_type === 'match_end');
   
-  if (hasFullTimeEvent || hasMatchEndEvent) {
+  if (hasMatchEndEvent) {
     return 'finished';
   }
   

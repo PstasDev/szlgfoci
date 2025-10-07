@@ -414,15 +414,15 @@ export const liveMatchService = {
       // Use the matches endpoint and filter for live matches
       const allMatches = await api.get<ApiMatch[]>('/matches');
       
+      // Import getMatchStatus from dataUtils for proper status checking
+      const { getMatchStatus, getTeamDisplayName } = await import('@/utils/dataUtils');
+      
       // Filter for live matches and convert to LiveMatch format
       const liveMatches: LiveMatch[] = allMatches
         .filter(match => {
-          // A match is considered live if it's between start and end time
-          const now = new Date();
-          const matchStart = new Date(`${match.datetime}`);
-          const matchEnd = new Date(matchStart.getTime() + (2 * 60 * 60 * 1000)); // 2 hours duration
-          
-          return now >= matchStart && now <= matchEnd;
+          // Use the proper match status logic that checks for events
+          const status = getMatchStatus(match);
+          return status === 'live';
         })
         .map(match => {
           // Calculate current minute from match start
@@ -442,8 +442,8 @@ export const liveMatchService = {
             venue: 'Helyszín',
             referee: match.referee?.id || null,
             round_obj: match.round_obj?.id || 0,
-            homeTeam: match.team1?.name || match.team1?.tagozat || 'Hazai csapat',
-            awayTeam: match.team2?.name || match.team2?.tagozat || 'Vendég csapat',
+            homeTeam: getTeamDisplayName(match.team1 || null),
+            awayTeam: getTeamDisplayName(match.team2 || null),
             homeTeamId: match.team1?.id || 0,
             awayTeamId: match.team2?.id || 0,
             homeScore: null,
@@ -495,6 +495,9 @@ export const liveMatchService = {
       // Use the matches endpoint to get specific match
       const match = await api.get<ApiMatch>(`/matches/${matchId}`);
       
+      // Import helper functions
+      const { getTeamDisplayName } = await import('@/utils/dataUtils');
+      
       // Calculate current minute from match start
       const now = new Date();
       const matchStart = new Date(`${match.datetime}`);
@@ -512,8 +515,8 @@ export const liveMatchService = {
         venue: 'Helyszín',
         referee: match.referee?.id || null,
         round_obj: match.round_obj?.id || 0,
-        homeTeam: match.team1?.name || match.team1?.tagozat || 'Hazai csapat',
-        awayTeam: match.team2?.name || match.team2?.tagozat || 'Vendég csapat',
+        homeTeam: getTeamDisplayName(match.team1 || null),
+        awayTeam: getTeamDisplayName(match.team2 || null),
         homeTeamId: match.team1?.id || 0,
         awayTeamId: match.team2?.id || 0,
         homeScore: null,
