@@ -42,9 +42,9 @@ const GoalScorersList: React.FC = () => {
   };
 
   // Click handlers
-  const handlePlayerClick = (_player: Player) => {
-    // For now, just navigate to players page - could be enhanced to show player details
-    router.push('/jatekosok');
+  const handlePlayerClick = (player: Player) => {
+    // Navigate to individual player page
+    router.push(`/jatekosok/${player.id}`);
   };
 
   const handleTeamClick = (teamName: string) => {
