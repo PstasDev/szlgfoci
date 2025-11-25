@@ -169,6 +169,7 @@ export interface ApiMatch {
   referee?: Profile | null;
   events?: EventSchema[];
   photos?: PhotoSchema[]; // NEW: Photo gallery support
+  status?: 'active' | 'cancelled_new_date' | 'cancelled_no_date' | null; // NEW: Match cancellation status
 }
 
 export interface Match {
@@ -200,6 +201,8 @@ export interface Match {
   refereeObj?: Profile | null;
   // Original datetime for more accurate sorting
   originalDateTime?: string;
+  // NEW: Match cancellation status
+  cancellationStatus?: 'active' | 'cancelled_new_date' | 'cancelled_no_date' | null;
 }
 
 export interface EventSchema {
@@ -352,6 +355,19 @@ export interface LiveMatchStatus {
   goals_team2: number;
   is_live: boolean;
   is_finished: boolean;
+}
+
+// NEW: Match status choice for UI selection
+export interface MatchStatusChoice {
+  value: 'active' | 'cancelled_new_date' | 'cancelled_no_date';
+  label: string;
+}
+
+// NEW: Match status update request
+export interface MatchStatusUpdateRequest {
+  status: 'active' | 'cancelled_new_date' | 'cancelled_no_date';
+  datetime?: string;
+  referee_id?: number;
 }
 
 // NEW: Enhanced Live Match with real-time data

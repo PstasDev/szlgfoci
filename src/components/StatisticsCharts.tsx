@@ -112,13 +112,16 @@ const StatisticsCharts: React.FC = () => {
     return { labels, series };
   }, [standings]);
 
-  // Matches status chart
+  // Matches status chart - exclude cancelled matches from statistics
   const matchStatusData = useMemo(() => {
     if (!matches.length) return { labels: [], series: [] };
 
-    const finished = matches.filter(m => m.status === 'finished').length;
-    const upcoming = matches.filter(m => m.status === 'upcoming').length;
-    const live = matches.filter(m => m.status === 'live').length;
+    // Filter out cancelled matches from statistics
+    const activeMatches = matches.filter(m => !isMatchCancelled(m));
+    
+    const finished = activeMatches.filter(m => m.status === 'finished').length;
+    const upcoming = activeMatches.filter(m => m.status === 'upcoming').length;
+    const live = activeMatches.filter(m => m.status === 'live').length;
 
     return {
       labels: ['Befejezett', 'Élő', 'Következő'],

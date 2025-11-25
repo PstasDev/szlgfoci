@@ -20,7 +20,7 @@ import {
   Rectangle as CardIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { getTeamColor, Match, MatchEvent } from '@/utils/dataUtils';
+import { getTeamColor, Match, MatchEvent, isMatchCancelled, getStatusBadgeProps } from '@/utils/dataUtils';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useOptimizedTournamentData } from '@/contexts/OptimizedTournamentDataContext';
 import { useOptimizedLiveMatches } from '@/hooks/useOptimizedLiveMatches';
@@ -35,16 +35,23 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
   match: Match, 
   isLive?: boolean,
   onClick: () => void 
-}) => (
+}) => {
+  // Get cancellation status badge if applicable
+  const statusBadge = getStatusBadgeProps(match.cancellationStatus);
+  // Never show live indicator for cancelled matches
+  const showLiveIndicator = isLive && !isMatchCancelled(match);
+  
+  return (
   <Card 
     variant="outlined" 
     sx={{ 
       mb: 1.5,
       border: '1px solid',
-      borderColor: isLive ? 'success.main' : 'divider',
-      backgroundColor: isLive ? 'rgba(76, 175, 80, 0.08)' : 'background.paper',
+      borderColor: showLiveIndicator ? 'success.main' : 'divider',
+      backgroundColor: showLiveIndicator ? 'rgba(76, 175, 80, 0.08)' : 'background.paper',
       borderRadius: 2,
       cursor: 'pointer',
+      opacity: isMatchCancelled(match) ? 0.7 : 1,
       '&:hover': {
         boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
         transform: 'translateY(-1px)',
@@ -53,7 +60,7 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
     }}
     onClick={onClick}
   >
-    {isLive && (
+    {showLiveIndicator && (
       <Box sx={{ 
         height: 2, 
         backgroundColor: 'success.main',
@@ -68,8 +75,16 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
           {match.round}
         </Typography>
         
-        {/* Live indicator */}
-        {isLive && (
+        {/* Status badges - cancellation takes priority over live */}
+        {statusBadge ? (
+          <Chip 
+            label={statusBadge.text}
+            size="small" 
+            color={statusBadge.color}
+            variant="filled"
+            sx={{ fontSize: '0.7rem', height: 20 }}
+          />
+        ) : showLiveIndicator ? (
           <Chip 
             label="ÉLŐ" 
             size="small" 
@@ -77,7 +92,7 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
             variant="filled"
             sx={{ fontSize: '0.7rem', height: 20 }}
           />
-        )}
+        ) : null}
         
         {/* Venue */}
         <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
@@ -163,7 +178,8 @@ const MatchCard = memo(({ match, isLive = false, onClick }: {
       )}
     </CardContent>
   </Card>
-));
+);
+});
 
 MatchCard.displayName = 'MatchCard';
 

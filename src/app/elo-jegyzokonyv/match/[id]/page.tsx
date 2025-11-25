@@ -389,15 +389,31 @@ const LiveMatchPage: React.FC = () => {
     try {
       setError('');
       const matchData = await apiService.getMatch(matchId);
+      
+      // Defensive check: if match has no events, it's not actually started
+      // Note: matchData.status is cancellation status (active/cancelled_new_date/cancelled_no_date)
+      // Match progress is determined by events, not the status field
+      if (matchData.events && matchData.events.length === 0) {
+        console.log('⚠️ Match has no events - treating as not started');
+        // Don't modify matchData.status as it's for cancellation tracking
+      }
+      
       setMatch(matchData);
       
-      // Get current minute if match is active
-      if (matchData.status !== 'not_started' && matchData.status !== 'finished') {
-        try {
-          const minuteData = await apiService.getCurrentMinute(matchId);
-          setCurrentMatchMinute(minuteData.current_minute);
-        } catch {
-          // Ignore error for current minute
+      // Get current minute only if match has events (has been started)
+      if (matchData.events && matchData.events.length > 0) {
+        const hasMatchStartEvent = matchData.events.some(e => e.event_type === 'match_start');
+        const hasMatchEndEvent = matchData.events.some(e => 
+          e.event_type === 'match_end' || e.event_type === 'full_time'
+        );
+        
+        if (hasMatchStartEvent && !hasMatchEndEvent) {
+          try {
+            const minuteData = await apiService.getCurrentMinute(matchId);
+            setCurrentMatchMinute(minuteData.current_minute);
+          } catch {
+            // Ignore error for current minute
+          }
         }
       }
     } catch (error) {
@@ -427,8 +443,14 @@ const LiveMatchPage: React.FC = () => {
   // Auto-refresh match data every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      if (match && match.status !== 'finished') {
-        loadMatch();
+      // Don't auto-refresh if match has ended (has match_end or full_time event)
+      if (match && match.events) {
+        const hasMatchEndEvent = match.events.some(e => 
+          e.event_type === 'match_end' || e.event_type === 'full_time'
+        );
+        if (!hasMatchEndEvent) {
+          loadMatch();
+        }
       }
     }, 30000);
 
@@ -780,7 +802,7 @@ const LiveMatchPage: React.FC = () => {
             <RefreshIcon />
           </IconButton>
           {/* Undo Controls */}
-          {match && match.events.length > 0 && match.status !== 'finished' && (
+          {match && match.events.length > 0 && currentMatchStatus !== 'finished' && (
             <>
               <IconButton 
                 color="inherit" 
@@ -870,7 +892,7 @@ const LiveMatchPage: React.FC = () => {
             </Typography>
             
             <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
-              {match.status === 'not_started' && (
+              {currentMatchStatus === 'not_started' && (
                 <Button
                   variant="contained"
                   startIcon={<StartIcon />}
@@ -885,7 +907,7 @@ const LiveMatchPage: React.FC = () => {
                 </Button>
               )}
               
-              {(match.status === 'first_half' || (match.status === 'extra_time' && currentMatchHalf === 1)) && (
+              {(currentMatchStatus === 'first_half' || (currentMatchStatus === 'extra_time' && currentMatchHalf === 1)) && (
                 <Button
                   variant="contained"
                   startIcon={<PauseIcon />}
@@ -902,7 +924,7 @@ const LiveMatchPage: React.FC = () => {
 
               {/* Start second half button is now handled by the timer component during half_time */}
               
-              {(match.status === 'second_half' || (match.status === 'extra_time' && currentMatchHalf === 2)) && (
+              {(currentMatchStatus === 'second_half' || (currentMatchStatus === 'extra_time' && currentMatchHalf === 2)) && (
                 <Button
                   variant="contained"
                   startIcon={<PauseIcon />}
@@ -917,7 +939,7 @@ const LiveMatchPage: React.FC = () => {
                 </Button>
               )}
               
-              {match.status !== 'not_started' && match.status !== 'finished' && (
+              {currentMatchStatus !== 'not_started' && currentMatchStatus !== 'finished' && (
                 <Button
                   variant="contained"
                   startIcon={<StopIcon />}
@@ -936,7 +958,8 @@ const LiveMatchPage: React.FC = () => {
         </Card>
 
         {/* Event Recording */}
-        {match.status !== 'not_started' && match.status !== 'finished' && currentMatchStatus !== 'half_time' && (
+        {/* Show event buttons only when match is actually running (not during half_time or before start) */}
+        {currentMatchStatus !== 'not_started' && currentMatchStatus !== 'finished' && currentMatchStatus !== 'half_time' && (
           <Stack direction="row" spacing={2}>
             {/* Team 1 Events */}
             <Box sx={{ flex: 1 }}>
@@ -1217,7 +1240,7 @@ const LiveMatchPage: React.FC = () => {
                           </Box>
                           <Stack direction="row" spacing={1} alignItems="center">
                             {/* Undo button for individual events */}
-                            {match.status !== 'finished' && ['goal', 'yellow_card', 'red_card'].includes(event.event_type) && (
+                            {currentMatchStatus !== 'finished' && ['goal', 'yellow_card', 'red_card'].includes(event.event_type) && (
                               <IconButton
                                 size="small"
                                 onClick={(e) => {

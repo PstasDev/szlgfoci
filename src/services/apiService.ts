@@ -36,7 +36,9 @@ import type {
   QuickGoalResponse,
   QuickCardResponse,
   GeneralEventResponse,
-  MatchRecordResponse
+  MatchRecordResponse,
+  MatchStatusChoice,
+  MatchStatusUpdateRequest
 } from '@/types/api';
 
 // Tournament endpoints
@@ -296,6 +298,63 @@ export const matchService = {
 
   async getRedCards(matchId: number): Promise<MatchEvent[]> {
     return api.get<MatchEvent[]>(`/matches/${matchId}/red_cards`);
+  },
+
+  // NEW: Get match status choices
+  async getStatusChoices(): Promise<{ choices: MatchStatusChoice[] }> {
+    try {
+      console.log('🔥 matchService.getStatusChoices() called');
+      const result = await api.get<{ choices: MatchStatusChoice[] }>('/match-status-choices');
+      console.log('🔥 matchService.getStatusChoices() success:', result);
+      return result;
+    } catch (error) {
+      console.error('🔥 matchService.getStatusChoices() failed:', error);
+      throw error;
+    }
+  },
+
+  // NEW: Update match status (admin)
+  async updateStatus(matchId: number, data: MatchStatusUpdateRequest, token: string): Promise<ApiMatch> {
+    try {
+      console.log(`🔥 matchService.updateStatus(${matchId}) called with:`, data);
+      const result = await api.put<ApiMatch>(
+        `/admin/matches/${matchId}`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      console.log(`🔥 matchService.updateStatus(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔥 matchService.updateStatus(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
+  // NEW: Update match status (referee/biro)
+  async updateStatusReferee(matchId: number, data: MatchStatusUpdateRequest, token: string): Promise<ApiMatch> {
+    try {
+      console.log(`🔥 matchService.updateStatusReferee(${matchId}) called with:`, data);
+      const result = await api.put<ApiMatch>(
+        `/biro/matches/${matchId}`,
+        data,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      console.log(`🔥 matchService.updateStatusReferee(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔥 matchService.updateStatusReferee(${matchId}) failed:`, error);
+      throw error;
+    }
   }
 };
 

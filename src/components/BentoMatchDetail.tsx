@@ -9,14 +9,17 @@ import {
   Stack,
   Divider,
   Badge,
+  Alert,
 } from '@mui/material';
 import TeamLogo from './TeamLogo';
 import {
   Person as RefereeIcon,
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
+  Warning as WarningIcon,
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
-import { Match, getTeamColor, getTeamColorLight, formatRefereeName } from '@/utils/dataUtils';
+import { Match, getTeamColor, getTeamColorLight, formatRefereeName, getStatusDescription, isMatchCancelled } from '@/utils/dataUtils';
 import ImprovedLiveMatchTimer from './ImprovedLiveMatchTimer';
 import type { EnhancedEventSchema } from '@/types/api';
 
@@ -28,6 +31,9 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
   // Use team objects from match data (includes colors from backend)
   const homeTeam = match.homeTeamObj;
   const awayTeam = match.awayTeamObj;
+
+  // Get status description for cancelled matches
+  const statusDescription = getStatusDescription(match.cancellationStatus);
 
   // Sort events by minute
   const sortedEvents = [...match.events].sort((a, b) => a.minute - b.minute);
@@ -52,6 +58,26 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
       width: '100%',
       overflow: 'hidden'
     }}>
+      {/* Cancellation Alert */}
+      {statusDescription && (
+        <Alert 
+          severity={match.cancellationStatus === 'cancelled_no_date' ? 'error' : 'warning'}
+          icon={match.cancellationStatus === 'cancelled_no_date' ? <CancelIcon /> : <WarningIcon />}
+          sx={{
+            '& .MuiAlert-message': {
+              width: '100%'
+            }
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+            {match.cancellationStatus === 'cancelled_no_date' ? '✗ Meccs törölve' : '⚠ Meccs elhalasztva'}
+          </Typography>
+          <Typography variant="body2">
+            {statusDescription}
+          </Typography>
+        </Alert>
+      )}
+
       {/* Match Header Card */}
       <Paper 
         elevation={2} 
@@ -60,7 +86,8 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
           background: `linear-gradient(135deg, ${getTeamColorLight(homeTeam)} 0%, ${getTeamColorLight(awayTeam)} 100%)`,
           border: '1px solid #404040',
           borderRadius: '16px',
-          width: '100%'
+          width: '100%',
+          opacity: isMatchCancelled(match) ? 0.7 : 1,
         }}
       >
         <Box sx={{ 
@@ -80,7 +107,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
           }}>
             {match.round}
           </Typography>
-          {match.status === 'live' && (
+          {match.status === 'live' && !isMatchCancelled(match) && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Box sx={{ 
                 width: 8, 

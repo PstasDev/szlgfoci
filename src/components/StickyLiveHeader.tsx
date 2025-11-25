@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import useLiveMatchPolling from '@/hooks/useLiveMatchPolling';
 import TeamLogo from './TeamLogo';
+import { isMatchCancelled } from '@/utils/dataUtils';
 import type { LiveMatch, Match } from '@/types/api';
 
 interface StickyLiveHeaderProps {
@@ -38,8 +39,14 @@ const StickyLiveHeader: React.FC<StickyLiveHeaderProps> = ({ className }) => {
     autoStart: true
   });
 
+  // Filter out cancelled matches - they can NEVER be live
+  const activeLiveMatches = liveMatches.filter(match => {
+    const matchData = { ...match, status: 'live' as const } as Match;
+    return !isMatchCancelled(matchData);
+  });
+
   // Don't render if no live matches
-  if (!liveMatches || liveMatches.length === 0) {
+  if (!activeLiveMatches || activeLiveMatches.length === 0) {
     return null;
   }
 
@@ -198,7 +205,7 @@ const StickyLiveHeader: React.FC<StickyLiveHeaderProps> = ({ className }) => {
               </Box>
               
               <Chip
-                label={`${liveMatches.length} meccs`}
+                label={`${activeLiveMatches.length} meccs`}
                 size="small"
                 sx={{
                   backgroundColor: 'success.main',
@@ -210,14 +217,14 @@ const StickyLiveHeader: React.FC<StickyLiveHeaderProps> = ({ className }) => {
             </Box>
 
             {/* First live match (always visible) */}
-            {liveMatches.length > 0 && (
+            {activeLiveMatches.length > 0 && (
               <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', mx: 2 }}>
-                <MatchItem match={liveMatches[0]} />
+                <MatchItem match={activeLiveMatches[0]} />
               </Box>
             )}
 
             {/* Expand/Collapse button */}
-            {liveMatches.length > 1 && (
+            {activeLiveMatches.length > 1 && (
               <IconButton
                 onClick={() => setExpanded(!expanded)}
                 sx={{ 
@@ -235,7 +242,7 @@ const StickyLiveHeader: React.FC<StickyLiveHeaderProps> = ({ className }) => {
           </Box>
 
           {/* Expanded matches */}
-          <Collapse in={expanded && liveMatches.length > 1}>
+          <Collapse in={expanded && activeLiveMatches.length > 1}>
             <Box sx={{ 
               px: { xs: 2, md: 3 }, 
               pb: 2,
@@ -248,7 +255,7 @@ const StickyLiveHeader: React.FC<StickyLiveHeaderProps> = ({ className }) => {
                 flexWrap="wrap"
                 useFlexGap
               >
-                {liveMatches.slice(1).map((match) => (
+                {activeLiveMatches.slice(1).map((match) => (
                   <MatchItem key={match.id} match={match} />
                 ))}
               </Stack>

@@ -20,7 +20,7 @@ import {
   Schedule as ClockIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material';
-import { Match } from '@/utils/dataUtils';
+import { Match, isMatchCancelled, getStatusBadgeProps, getCancelledMatchesForHomepage } from '@/utils/dataUtils';
 import { LiveMatch } from '@/types/api';
 import { getErrorInfo, isEmptyDataScenario } from '@/utils/errorUtils';
 import { useTournamentData } from '@/contexts/TournamentDataContext';
@@ -94,17 +94,24 @@ const LiveMatches: React.FC = () => {
     );
   }
 
-  const MatchCard = ({ match, isLive = false }: { match: Match, isLive?: boolean }) => (
+  const MatchCard = ({ match, isLive = false }: { match: Match, isLive?: boolean }) => {
+    // Get cancellation status badge if applicable
+    const statusBadge = getStatusBadgeProps(match.cancellationStatus);
+    // Never show live indicator for cancelled matches
+    const showLiveIndicator = isLive && !isMatchCancelled(match);
+    
+    return (
     <Card 
       variant="outlined" 
       sx={{ 
         mb: 1.5,
-        border: isLive ? '2px solid' : '1px solid',
-        borderColor: isLive ? 'success.main' : 'divider',
-        backgroundColor: isLive ? 'rgba(76, 175, 80, 0.05)' : 'background.paper',
+        border: showLiveIndicator ? '2px solid' : '1px solid',
+        borderColor: showLiveIndicator ? 'success.main' : 'divider',
+        backgroundColor: showLiveIndicator ? 'rgba(76, 175, 80, 0.05)' : 'background.paper',
         borderRadius: 2,
         cursor: 'pointer',
         position: 'relative',
+        opacity: isMatchCancelled(match) ? 0.7 : 1,
         '&:hover': {
           boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
           transform: 'translateY(-1px)',
@@ -114,8 +121,24 @@ const LiveMatches: React.FC = () => {
       onClick={() => router.push(`/merkozesek/${match.id}`)}
     >      
       <CardContent sx={{ p: 2 }}>
-        {/* Live badge */}
-        {isLive && (
+        {/* Status badges - cancellation takes priority over live */}
+        {statusBadge ? (
+          <Box sx={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            backgroundColor: statusBadge.color === 'warning' ? 'warning.main' : 'error.main',
+            color: 'white',
+            px: 1,
+            py: 0.25,
+            borderRadius: '8px',
+            fontSize: '0.7rem',
+            fontWeight: 'bold',
+            zIndex: 1
+          }}>
+            {statusBadge.text}
+          </Box>
+        ) : showLiveIndicator ? (
           <Box sx={{
             position: 'absolute',
             top: 8,
@@ -141,7 +164,7 @@ const LiveMatches: React.FC = () => {
             }} />
             ÉLŐ
           </Box>
-        )}
+        ) : null}
 
         {/* Teams and Score */}
         <Box sx={{ 
@@ -394,6 +417,7 @@ const LiveMatches: React.FC = () => {
       </CardContent>
     </Card>
   );
+  };
 
   return (
     <Stack spacing={3} direction={{ xs: 'column', md: 'row' }}>

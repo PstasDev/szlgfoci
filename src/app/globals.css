@@ -10,6 +10,10 @@
   --error: #ea4335; /* Clean red */
   --warning: #ff9800; /* Clean amber */
   
+  /* Match status colors */
+  --status-postponed: #fd7e14; /* Orange for postponed matches */
+  --status-cancelled: #dc3545; /* Red for cancelled matches */
+  
   /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -96,3 +100,80 @@ html {
   scrollbar-width: thin;
   scrollbar-color: var(--primary) var(--surface);
 }
+
+/* ==============================================================================
+   MATCH STATUS STYLES
+   ============================================================================== */
+
+/* Status badge styling */
+.match-status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: bold;
+  display: inline-block;
+}
+
+.match-status-postponed {
+  background-color: var(--status-postponed);
+  color: white;
+  box-shadow: 0 2px 4px rgba(253, 126, 20, 0.3);
+}
+
+.match-status-cancelled {
+  background-color: var(--status-cancelled);
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+/* Match card status styling */
+.match-card.match-postponed {
+  opacity: 0.8;
+  border-left: 4px solid var(--status-postponed);
+}
+
+.match-card.match-cancelled {
+  opacity: 0.7;
+  border-left: 4px solid var(--status-cancelled);
+}
+
+/* Alert box styling for status */
+.status-alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin: 12px 0;
+}
+
+.status-alert.warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  color: #856404;
+}
+
+.status-alert.error {
+  background-color: #f8d7da;
+  border: 1px solid #dc3545;
+  color: #721c24;
+}
+
+.status-alert strong {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* Dark mode alert adjustments */
+@media (prefers-color-scheme: dark) {
+  .status-alert.warning {
+    background-color: rgba(255, 193, 7, 0.15);
+    border-color: var(--status-postponed);
+    color: #ffc107;
+  }
+  
+  .status-alert.error {
+    background-color: rgba(220, 53, 69, 0.15);
+    border-color: var(--status-cancelled);
+    color: #ff6b6b;
+  }
+}
+

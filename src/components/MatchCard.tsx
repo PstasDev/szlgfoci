@@ -16,7 +16,7 @@ import {
   LocationOn as LocationIcon,
   SportsSoccer
 } from '@mui/icons-material';
-import { Match } from '@/utils/dataUtils';
+import { Match, getStatusBadgeProps, isMatchCancelled, getMatchStatusClassName } from '@/utils/dataUtils';
 import { getTeamClassDisplayName } from '@/utils/dataUtils';
 
 interface MatchCardProps {
@@ -42,6 +42,29 @@ const MatchCard: React.FC<MatchCardProps> = ({
     }
   };
 
+  // Render status badge if match is cancelled/postponed
+  const renderStatusBadge = () => {
+    const statusBadge = getStatusBadgeProps(match.cancellationStatus);
+    if (!statusBadge) return null;
+
+    return (
+      <Chip
+        label={statusBadge.text}
+        size="small"
+        sx={{
+          backgroundColor: statusBadge.color === 'warning' ? '#fd7e14' : '#dc3545',
+          color: 'white',
+          fontWeight: 'bold',
+          fontSize: '0.7rem',
+          height: 22,
+          boxShadow: statusBadge.color === 'warning' 
+            ? '0 2px 4px rgba(253, 126, 20, 0.3)' 
+            : '0 2px 4px rgba(220, 53, 69, 0.3)'
+        }}
+      />
+    );
+  };
+
   // Mini variant for sidebars and small spaces
   if (variant === 'mini') {
     return (
@@ -57,9 +80,20 @@ const MatchCard: React.FC<MatchCardProps> = ({
           '&:hover': clickable ? {
             backgroundColor: '#363636',
           } : {},
+          opacity: isMatchCancelled(match) ? 0.7 : 1,
+          borderLeft: isMatchCancelled(match) ? 
+            (match.cancellationStatus === 'cancelled_no_date' ? '4px solid #dc3545' : '4px solid #fd7e14') :
+            undefined,
         }}
         onClick={handleMatchClick}
       >
+        {/* Status Badge */}
+        {renderStatusBadge() && (
+          <Box sx={{ mb: 1 }}>
+            {renderStatusBadge()}
+          </Box>
+        )}
+        
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
           {/* Teams */}
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -126,7 +160,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   {match.awayScore}
                 </Typography>
               </Box>
-            ) : match.status === 'live' ? (
+            ) : match.status === 'live' && !isMatchCancelled(match) ? (
               <Box>
                 <Chip 
                   label="ÉLŐ" 
@@ -171,9 +205,20 @@ const MatchCard: React.FC<MatchCardProps> = ({
             backgroundColor: '#363636',
             border: '1px solid #4285f4',
           } : {},
+          opacity: isMatchCancelled(match) ? 0.7 : 1,
+          borderLeft: isMatchCancelled(match) ? 
+            (match.cancellationStatus === 'cancelled_no_date' ? '4px solid #dc3545' : '4px solid #fd7e14') :
+            undefined,
         }}
         onClick={handleMatchClick}
       >
+        {/* Status Badge */}
+        {renderStatusBadge() && (
+          <Box sx={{ mb: 2 }}>
+            {renderStatusBadge()}
+          </Box>
+        )}
+
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Teams */}
           <Box sx={{ flex: 1 }}>
@@ -213,7 +258,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                   {match.awayScore}
                 </Typography>
               </Box>
-            ) : match.status === 'live' ? (
+            ) : match.status === 'live' && !isMatchCancelled(match) ? (
               <Box sx={{ mb: 1 }}>
                 <Chip 
                   label="ÉLŐ" 
@@ -290,6 +335,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
           transform: 'translateY(-2px)',
           boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
         } : {},
+        opacity: isMatchCancelled(match) ? 0.7 : 1,
+        borderLeft: isMatchCancelled(match) ? 
+          (match.cancellationStatus === 'cancelled_no_date' ? '4px solid #dc3545' : '4px solid #fd7e14') :
+          undefined,
       }}
       onClick={handleMatchClick}
     >
@@ -299,7 +348,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
         backgroundColor: '#1e1e1e',
         borderBottom: '1px solid #404040'
       }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
           {showRound && (
             <Typography variant="caption" sx={{ 
               color: '#9aa0a6', 
@@ -311,7 +360,10 @@ const MatchCard: React.FC<MatchCardProps> = ({
             </Typography>
           )}
           
-          {match.status === 'live' && (
+          {/* Status Badge */}
+          {renderStatusBadge()}
+          
+          {match.status === 'live' && !isMatchCancelled(match) && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{ 
                 width: 8, 
@@ -333,7 +385,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
             </Box>
           )}
           
-          {match.status === 'finished' && (
+          {match.status === 'finished' && !isMatchCancelled(match) && (
             <Typography variant="caption" sx={{ 
               color: '#9aa0a6',
               backgroundColor: '#404040',
@@ -347,7 +399,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
             </Typography>
           )}
           
-          {match.status === 'upcoming' && (
+          {match.status === 'upcoming' && !isMatchCancelled(match) && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <TimeIcon sx={{ fontSize: 16, color: '#9aa0a6' }} />
               <Typography variant="caption" sx={{ color: '#9aa0a6' }}>
@@ -412,7 +464,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 variant="h4" 
                 fontWeight="bold" 
                 sx={{ 
-                  color: match.status === 'live' ? '#4caf50' : '#e8eaed',
+                  color: (match.status === 'live' && !isMatchCancelled(match)) ? '#4caf50' : '#e8eaed',
                   minWidth: '30px',
                   textAlign: 'center'
                 }}
@@ -458,7 +510,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
                 variant="h4" 
                 fontWeight="bold" 
                 sx={{ 
-                  color: match.status === 'live' ? '#4caf50' : '#e8eaed',
+                  color: (match.status === 'live' && !isMatchCancelled(match)) ? '#4caf50' : '#e8eaed',
                   minWidth: '30px',
                   textAlign: 'center'
                 }}

@@ -92,24 +92,23 @@ const RefereeMatchTimer: React.FC<RefereeMatchTimerProps> = ({
     });
 
     if (!events || events.length === 0) {
-      console.log('⚠️ No events available');
-      // Only reset if we're not already in a running state
-      // Use functional update to get current state
-      setTimerState(currentState => {
-        if (currentState.status === 'not_started') {
-          return {
-            currentMinute: 1,
-            currentSecond: 0,
-            currentHalf: 1,
-            extraTimeMinutes: 0,
-            status: 'not_started',
-            isRunning: false,
-            matchStartTime: null,
-            halfStartTime: null,
-          };
-        }
-        return currentState; // Don't change if already running
-      });
+      console.log('⚠️ No events available - match not started');
+      // Always set to not_started state when there are no events
+      const notStartedState: TimerState = {
+        currentMinute: 1,
+        currentSecond: 0,
+        currentHalf: 1,
+        extraTimeMinutes: 0,
+        status: 'not_started',
+        isRunning: false,
+        matchStartTime: null,
+        halfStartTime: null,
+      };
+      setTimerState(notStartedState);
+      // Notify parent of the correct status
+      if (onStatusChange) {
+        onStatusChange('not_started');
+      }
       return;
     }
 

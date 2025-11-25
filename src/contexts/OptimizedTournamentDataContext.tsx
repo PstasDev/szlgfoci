@@ -144,29 +144,19 @@ export function OptimizedTournamentDataProvider({ children }: OptimizedTournamen
         if (force || needsRefresh('announcements')) {
           try {
             const announcementsData = await announcementService.getActive();
-            const formattedAnnouncements = await Promise.all(
-              announcementsData.map(async (announcement) => {
-                if (announcement.author?.user) {
-                  try {
-                    // Ensure user ID is a number, not an object
-                    const userId = typeof announcement.author.user === 'number' 
-                      ? announcement.author.user 
-                      : (announcement.author.user as any).id || announcement.author.user;
-                    
-                    if (typeof userId !== 'number') {
-                      console.warn(`⚠️ Invalid user ID type for announcement ${announcement.id}:`, typeof userId, userId);
-                      return announcement;
-                    }
-                    
-                    const userData = await userService.getById(userId);
-                    return { ...announcement, author: { ...announcement.author, user_details: userData } };
-                  } catch {
-                    return announcement;
-                  }
-                }
-                return announcement;
-              })
-            );
+            
+            // Filter only active announcements - user details already populated in response
+            const formattedAnnouncements = announcementsData
+              .filter((a: any) => a.active === true)
+              .map((announcement: any) => ({
+                ...announcement,
+                author: announcement.author ? {
+                  ...announcement.author,
+                  // API returns user as object, not ID
+                  user_details: announcement.author.user || null
+                } : null
+              }));
+            
             setAnnouncements(formattedAnnouncements);
             setDataFreshness(prev => ({ ...prev, announcements: Date.now() }));
           } catch (err) {
@@ -272,32 +262,21 @@ export function OptimizedTournamentDataProvider({ children }: OptimizedTournamen
               break;
               
             case 'announcements':
-              const formattedAnnouncements = await Promise.all(
-                result.value.map(async (announcement: any) => {
-                  if (announcement.author?.user) {
-                    try {
-                      // Ensure user ID is a number, not an object
-                      const userId = typeof announcement.author.user === 'number' 
-                        ? announcement.author.user 
-                        : (announcement.author.user as any).id || announcement.author.user;
-                      
-                      if (typeof userId !== 'number') {
-                        console.warn(`⚠️ Invalid user ID type for announcement ${announcement.id}:`, typeof userId, userId);
-                        return announcement;
-                      }
-                      
-                      const userData = await userService.getById(userId);
-                      return { ...announcement, author: { ...announcement.author, user_details: userData } };
-                    } catch {
-                      return announcement;
-                    }
-                  }
-                  return announcement;
-                })
-              );
+              // Filter only active announcements - user details already in response
+              const formattedAnnouncements = result.value
+                .filter((a: any) => a.active === true)
+                .map((announcement: any) => ({
+                  ...announcement,
+                  author: announcement.author ? {
+                    ...announcement.author,
+                    // API returns user as object, not ID
+                    user_details: announcement.author.user || null
+                  } : null
+                }));
+              
               setAnnouncements(formattedAnnouncements);
               setDataFreshness(prev => ({ ...prev, announcements: now }));
-              console.log(`✅ Updated ${formattedAnnouncements.length} announcements`);
+              console.log(`✅ Updated ${formattedAnnouncements.length} active announcements`);
               break;
           }
         } else {

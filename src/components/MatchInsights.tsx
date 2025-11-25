@@ -23,7 +23,7 @@ import {
   TrendingUp as TrendIcon,
   Sports as SportIcon,
 } from '@mui/icons-material';
-import { Match } from '@/utils/dataUtils';
+import { Match, isMatchCancelled } from '@/utils/dataUtils';
 
 interface MatchInsightsProps {
   matches: Match[];
@@ -34,9 +34,12 @@ const MatchInsights: React.FC<MatchInsightsProps> = ({ matches }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   const insights = useMemo(() => {
-    const liveMatches = matches.filter(match => match.status === 'live');
-    const upcomingMatches = matches.filter(match => match.status === 'upcoming');
-    const finishedMatches = matches.filter(match => match.status === 'finished');
+    // Filter out cancelled matches from all statistics
+    const activeMatches = matches.filter(match => !isMatchCancelled(match));
+    
+    const liveMatches = activeMatches.filter(match => match.status === 'live');
+    const upcomingMatches = activeMatches.filter(match => match.status === 'upcoming');
+    const finishedMatches = activeMatches.filter(match => match.status === 'finished');
 
     // Calculate total goals
     const totalGoals = finishedMatches.reduce((sum, match) => {
@@ -65,20 +68,20 @@ const MatchInsights: React.FC<MatchInsightsProps> = ({ matches }) => {
 
     // Get unique teams
     const teams = new Set();
-    matches.forEach(match => {
+    activeMatches.forEach(match => {
       teams.add(match.homeTeam);
       teams.add(match.awayTeam);
     });
 
-    // Get today's matches
+    // Get today's matches (only non-cancelled)
     const today = new Date().toDateString();
-    const todayMatches = matches.filter(match => {
+    const todayMatches = activeMatches.filter(match => {
       const matchDate = new Date(match.date + ' ' + match.time);
       return matchDate.toDateString() === today;
     });
 
     return {
-      total: matches.length,
+      total: activeMatches.length,
       live: liveMatches.length,
       upcoming: upcomingMatches.length,
       finished: finishedMatches.length,

@@ -1,24 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Paper,
   Typography,
   Button,
   Stack,
-  Chip
+  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Alert,
+  SelectChangeEvent
 } from '@mui/material';
 import {
   Add as AddIcon,
   Timer as TimerIcon,
   SportsScore as GoalIcon,
-  Warning as CardIcon
+  Warning as CardIcon,
+  EventNote as EventNoteIcon
 } from '@mui/icons-material';
 import EnhancedEventForm from './EnhancedEventForm';
 import TimeInput from './TimeInput';
 import { formatEventTime } from '@/utils/dataUtils';
-import type { Player, Team, MatchEvent } from '@/types/api';
+import { matchService } from '@/services/apiService';
+import type { Player, Team, MatchEvent, MatchStatusChoice } from '@/types/api';
 
 interface EnhancedRefereeControlsProps {
   matchId: number;
@@ -31,6 +39,9 @@ interface EnhancedRefereeControlsProps {
   half?: number;
   onEventAdded: () => void;
   onMatchTimeUpdate?: (minute: number, extraTime?: number | null, half?: number) => void;
+  onMatchStatusUpdate?: () => void; // NEW: Callback when match status is updated
+  currentStatus?: 'active' | 'cancelled_new_date' | 'cancelled_no_date' | null; // NEW: Current match status
+  authToken?: string; // NEW: Auth token for status updates
 }
 
 const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
@@ -43,13 +54,43 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
   currentExtraTime,
   half = 1,
   onEventAdded,
-  onMatchTimeUpdate
+  onMatchTimeUpdate,
+  onMatchStatusUpdate,
+  currentStatus = 'active',
+  authToken
 }) => {
   const [eventFormOpen, setEventFormOpen] = useState(false);
   const [selectedEventType, setSelectedEventType] = useState<'goal' | 'yellow_card' | 'red_card' | 'general' | null>(null);
   const [displayMinute, setDisplayMinute] = useState(currentMinute);
   const [displayExtraTime, setDisplayExtraTime] = useState<number | null>(null);
   const [displayHalf, setDisplayHalf] = useState(half);
+
+  // NEW: Status management state
+  const [matchStatus, setMatchStatus] = useState<string>(currentStatus || 'active');
+  const [statusChoices, setStatusChoices] = useState<MatchStatusChoice[]>([]);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [statusUpdateError, setStatusUpdateError] = useState<string | null>(null);
+  const [statusUpdateSuccess, setStatusUpdateSuccess] = useState<string | null>(null);
+
+  // Load status choices on mount
+  useEffect(() => {
+    const loadStatusChoices = async () => {
+      try {
+        const response = await matchService.getStatusChoices();
+        setStatusChoices(response.choices || []);
+      } catch (error) {
+        console.error('Failed to load status choices:', error);
+      }
+    };
+    loadStatusChoices();
+  }, []);
+
+  // Update local status when prop changes
+  useEffect(() => {
+    if (currentStatus) {
+      setMatchStatus(currentStatus);
+    }
+  }, [currentStatus]);
 
   const openEventForm = (eventType: 'goal' | 'yellow_card' | 'red_card' | 'general' | null = null) => {
     setSelectedEventType(eventType);
@@ -76,6 +117,49 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
     }
   };
 
+  // NEW: Handle match status update
+  const handleStatusChange = (event: SelectChangeEvent<string>) => {
+    setMatchStatus(event.target.value);
+  };
+
+  const handleStatusUpdate = async () => {
+    if (!authToken) {
+      setStatusUpdateError('Nincs érvényes bejelentkezés. Kérjük, jelentkezzen be újra.');
+      return;
+    }
+
+    setStatusUpdateLoading(true);
+    setStatusUpdateError(null);
+    setStatusUpdateSuccess(null);
+
+    try {
+      await matchService.updateStatusReferee(
+        matchId,
+        { status: matchStatus as 'active' | 'cancelled_new_date' | 'cancelled_no_date' },
+        authToken
+      );
+      
+      setStatusUpdateSuccess('Mérkőzés státusza sikeresen frissítve!');
+      
+      if (onMatchStatusUpdate) {
+        onMatchStatusUpdate();
+      }
+    } catch (error: any) {
+      console.error('Failed to update match status:', error);
+      setStatusUpdateError(
+        error.message || 'Hiba történt a státusz frissítése során. Kérjük, próbálja újra.'
+      );
+    } finally {
+      setStatusUpdateLoading(false);
+    }
+  };
+
+  // Get Hungarian label for status
+  const getStatusLabel = (status: string): string => {
+    const choice = statusChoices.find(c => c.value === status);
+    return choice?.label || status;
+  };
+
   // Get recent events for context
   const recentEvents = events
     .slice(-5)
@@ -87,6 +171,82 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
 
   return (
     <Box sx={{ p: 2 }}>
+      {/* Match Status Management */}
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          p: 2, 
+          mb: 2, 
+          backgroundColor: '#1e1e1e',
+          border: '1px solid #404040'
+        }}
+      >
+        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <EventNoteIcon />
+          Mérkőzés Státusza
+        </Typography>
+
+        {/* Status Update Success/Error Messages */}
+        {statusUpdateSuccess && (
+          <Alert severity="success" onClose={() => setStatusUpdateSuccess(null)} sx={{ mb: 2 }}>
+            {statusUpdateSuccess}
+          </Alert>
+        )}
+        
+        {statusUpdateError && (
+          <Alert severity="error" onClose={() => setStatusUpdateError(null)} sx={{ mb: 2 }}>
+            {statusUpdateError}
+          </Alert>
+        )}
+
+        {/* Status Selector */}
+        <FormControl fullWidth sx={{ mb: 2 }}>
+          <InputLabel id="match-status-label">Mérkőzés Státusza</InputLabel>
+          <Select
+            labelId="match-status-label"
+            id="match-status"
+            value={matchStatus}
+            label="Mérkőzés Státusza"
+            onChange={handleStatusChange}
+            disabled={statusUpdateLoading}
+          >
+            {statusChoices.map((choice) => (
+              <MenuItem key={choice.value} value={choice.value}>
+                {choice.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        {/* Update Button */}
+        <Button
+          variant="contained"
+          onClick={handleStatusUpdate}
+          disabled={statusUpdateLoading || matchStatus === currentStatus}
+          fullWidth
+          sx={{ mb: 1 }}
+        >
+          {statusUpdateLoading ? 'Frissítés...' : 'Státusz Frissítése'}
+        </Button>
+
+        {/* Current Status Display */}
+        {matchStatus !== 'active' && (
+          <Alert 
+            severity={matchStatus === 'cancelled_no_date' ? 'error' : 'warning'}
+            sx={{ mt: 2 }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+              {matchStatus === 'cancelled_new_date' && '⚠ Ez a mérkőzés elhalasztásra került'}
+              {matchStatus === 'cancelled_no_date' && '✗ Ez a mérkőzés törölve lett'}
+            </Typography>
+            <Typography variant="caption">
+              {matchStatus === 'cancelled_new_date' && 'Az új időpont hamarosan közzétételre kerül.'}
+              {matchStatus === 'cancelled_no_date' && 'Ez a mérkőzés véglegesen lemondásra került.'}
+            </Typography>
+          </Alert>
+        )}
+      </Paper>
+
       {/* Current Match Time */}
       <Paper 
         elevation={2} 

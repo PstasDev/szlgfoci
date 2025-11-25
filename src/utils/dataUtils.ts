@@ -252,7 +252,9 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     // Include full referee profile
     refereeObj: match.referee,
     // Store original datetime for better sorting
-    originalDateTime: match.datetime
+    originalDateTime: match.datetime,
+    // NEW: Include cancellation status
+    cancellationStatus: match.status || 'active'
   };
 };
 
@@ -329,8 +331,9 @@ export const formatDate = (dateString: string): string => {
 };
 
 // Filter matches by status - now using pre-determined status
+// CRITICAL: Cancelled matches can NEVER be live
 export const getLiveMatches = (matches: Match[]): Match[] => {
-  return matches.filter(match => match.status === 'live');
+  return matches.filter(match => match.status === 'live' && !isMatchCancelled(match));
 };
 
 export const getUpcomingMatches = (matches: Match[], limit: number = 5): Match[] => {
@@ -418,6 +421,14 @@ export const getRecentMatches = (matches: Match[], limit: number = 5): Match[] =
   return matches
     .filter(match => match.status === 'finished')
     .sort((a, b) => {
+      // Prefer original datetime for more accurate sorting
+      if (a.originalDateTime && b.originalDateTime) {
+        const dateTimeA = new Date(a.originalDateTime);
+        const dateTimeB = new Date(b.originalDateTime);
+        return dateTimeB.getTime() - dateTimeA.getTime();
+      }
+      
+      // Fallback to parsing from formatted date and time
       const dateTimeA = parseMatchDateTime(a.date, a.time);
       const dateTimeB = parseMatchDateTime(b.date, b.time);
       // Sort by most recent first (descending order)
@@ -910,3 +921,137 @@ export const formatRefereeName = (referee: any): string => {
   
   return `Bíró #${referee.id || 'Unknown'}`;
 };
+
+// ==============================================================================
+// MATCH STATUS UTILITIES
+// ==============================================================================
+
+// Hungarian translations for match cancellation statuses
+export const statusTranslations: Record<string, string> = {
+  active: 'Aktív',
+  cancelled_new_date: 'Elhalasztva',
+  cancelled_no_date: 'Törölve',
+};
+
+// Detailed status descriptions
+export const statusDescriptions: Record<string, string> = {
+  cancelled_new_date: 'Ez a mérkőzés elhalasztásra került. Az új időpont hamarosan közzétételre kerül.',
+  cancelled_no_date: 'Ez a mérkőzés véglegesen lemondásra került.',
+};
+
+// Get status translation for display
+export const getStatusTranslation = (status: string | null | undefined): string => {
+  if (!status || status === 'active') {
+    return statusTranslations.active;
+  }
+  return statusTranslations[status] || status;
+};
+
+// Get status description for detailed views
+export const getStatusDescription = (status: string | null | undefined): string | null => {
+  if (!status || status === 'active') {
+    return null;
+  }
+  return statusDescriptions[status] || null;
+};
+
+// Check if match is cancelled (either type)
+export const isMatchCancelled = (match: Match): boolean => {
+  return match.cancellationStatus === 'cancelled_new_date' || 
+         match.cancellationStatus === 'cancelled_no_date';
+};
+
+// Check if match is cancelled with new date pending
+export const isMatchPostponed = (match: Match): boolean => {
+  return match.cancellationStatus === 'cancelled_new_date';
+};
+
+// Check if match is cancelled permanently
+export const isMatchPermanentlyCancelled = (match: Match): boolean => {
+  return match.cancellationStatus === 'cancelled_no_date';
+};
+
+// Get status badge props for UI components
+export interface StatusBadgeProps {
+  text: string;
+  color: 'warning' | 'error' | 'info';
+  icon: string;
+  className: string;
+}
+
+export const getStatusBadgeProps = (status: string | null | undefined): StatusBadgeProps | null => {
+  if (!status || status === 'active') {
+    return null; // No badge for active matches
+  }
+  
+  if (status === 'cancelled_new_date') {
+    return {
+      text: '⚠ Elhalasztva',
+      color: 'warning',
+      icon: '⚠',
+      className: 'match-status-postponed'
+    };
+  }
+  
+  if (status === 'cancelled_no_date') {
+    return {
+      text: '✗ Törölve',
+      color: 'error',
+      icon: '✗',
+      className: 'match-status-cancelled'
+    };
+  }
+  
+  return null;
+};
+
+// Get CSS class for match card styling based on status
+export const getMatchStatusClassName = (match: Match): string => {
+  if (isMatchPermanentlyCancelled(match)) {
+    return 'match-cancelled';
+  }
+  if (isMatchPostponed(match)) {
+    return 'match-postponed';
+  }
+  return '';
+};
+
+// Filter active (non-cancelled) matches
+export const filterActiveMatches = (matches: Match[]): Match[] => {
+  return matches.filter(match => !isMatchCancelled(match));
+};
+
+// Filter cancelled matches
+export const filterCancelledMatches = (matches: Match[]): Match[] => {
+  return matches.filter(match => isMatchCancelled(match));
+};
+
+// Filter postponed matches (cancelled with new date)
+export const filterPostponedMatches = (matches: Match[]): Match[] => {
+  return matches.filter(match => isMatchPostponed(match));
+};
+
+// Filter permanently cancelled matches
+export const filterPermanentlyCancelledMatches = (matches: Match[]): Match[] => {
+  return matches.filter(match => isMatchPermanentlyCancelled(match));
+};
+
+// Get cancelled matches for homepage display (both past and future)
+export const getCancelledMatchesForHomepage = (matches: Match[], limit: number = 3): Match[] => {
+  return matches
+    .filter(match => isMatchCancelled(match))
+    .sort((a, b) => {
+      // Sort by date, most recent/upcoming first
+      if (a.originalDateTime && b.originalDateTime) {
+        const dateTimeA = new Date(a.originalDateTime);
+        const dateTimeB = new Date(b.originalDateTime);
+        return dateTimeB.getTime() - dateTimeA.getTime();
+      }
+      
+      const dateTimeA = parseMatchDateTime(a.date, a.time);
+      const dateTimeB = parseMatchDateTime(b.date, b.time);
+      return dateTimeB.getTime() - dateTimeA.getTime();
+    })
+    .slice(0, limit);
+};
+

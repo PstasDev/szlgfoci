@@ -37,7 +37,7 @@ import {
   Stadium as VenueIcon,
   Flag as RoundIcon,
 } from '@mui/icons-material';
-import { Match } from '@/utils/dataUtils';
+import { Match, isMatchCancelled, getStatusBadgeProps, getStatusTranslation } from '@/utils/dataUtils';
 import TeamLogo from './TeamLogo';
 import { getTeamClassDisplayName } from '@/utils/dataUtils';
 
@@ -135,8 +135,15 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
     }
   };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
+  const getStatusLabel = (match: Match) => {
+    // Check if match is cancelled and show cancellation status
+    const statusBadge = getStatusBadgeProps(match.cancellationStatus);
+    if (statusBadge) {
+      return getStatusTranslation(match.cancellationStatus);
+    }
+    
+    // Otherwise show normal status
+    switch (match.status) {
       case 'live':
         return 'Élő';
       case 'upcoming':
@@ -144,12 +151,19 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
       case 'finished':
         return 'Befejezett';
       default:
-        return status;
+        return match.status;
     }
   };
 
-  const getStatusColor = (status: string): 'error' | 'primary' | 'success' | 'default' => {
-    switch (status) {
+  const getStatusColor = (match: Match): 'error' | 'primary' | 'success' | 'default' | 'warning' => {
+    // Check if match is cancelled and show appropriate color
+    const statusBadge = getStatusBadgeProps(match.cancellationStatus);
+    if (statusBadge) {
+      return statusBadge.color;
+    }
+    
+    // Otherwise show normal status color
+    switch (match.status) {
       case 'live':
         return 'error';
       case 'upcoming':
@@ -178,15 +192,17 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
 
   const renderScore = (match: Match) => {
     // Show score for finished or live matches, even if both scores are 0
+    // But don't show live color for cancelled matches
     if (match.status === 'finished' || match.status === 'live') {
       const homeScore = match.homeScore ?? 0;
       const awayScore = match.awayScore ?? 0;
+      const isLiveAndNotCancelled = match.status === 'live' && !isMatchCancelled(match);
       return (
         <Typography
           variant="h6"
           sx={{
             fontWeight: 'bold',
-            color: match.status === 'live' ? '#ff4444' : '#e8eaed',
+            color: isLiveAndNotCancelled ? '#ff4444' : '#e8eaed',
             fontSize: { xs: '1rem', sm: '1.25rem' }
           }}
         >
@@ -216,6 +232,7 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
         borderRadius: 2,
         overflow: 'hidden',
         cursor: 'pointer',
+        opacity: isMatchCancelled(match) ? 0.7 : 1,
         transition: 'all 0.2s ease',
         '&:hover': {
           backgroundColor: '#3a3a3a',
@@ -231,8 +248,8 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
         <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
           <Chip
             icon={getStatusIcon(match.status)}
-            label={getStatusLabel(match.status)}
-            color={getStatusColor(match.status)}
+            label={getStatusLabel(match)}
+            color={getStatusColor(match)}
             size="small"
             variant="filled"
             sx={{ fontWeight: 600 }}
@@ -470,6 +487,7 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
               <React.Fragment key={match.id}>
                 <TableRow 
                   sx={{ 
+                    opacity: isMatchCancelled(match) ? 0.7 : 1,
                     '&:hover': { 
                       backgroundColor: '#3a3a3a',
                       '& .MuiTableCell-root': {
@@ -494,8 +512,8 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
                     <Stack spacing={1}>
                       <Chip
                         icon={getStatusIcon(match.status)}
-                        label={getStatusLabel(match.status)}
-                        color={getStatusColor(match.status)}
+                        label={getStatusLabel(match)}
+                        color={getStatusColor(match)}
                         size="small"
                         variant="filled"
                         sx={{ fontWeight: 600, width: 'fit-content' }}

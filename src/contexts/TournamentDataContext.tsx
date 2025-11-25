@@ -92,49 +92,20 @@ export function TournamentDataProvider({ children }: TournamentDataProviderProps
           const announcementsData = await announcementService.getActive();
           console.log('📢 TournamentDataContext - Raw announcements data:', announcementsData);
           
-          // Process announcements and fetch user data for authors
-          const formattedAnnouncements = await Promise.all(
-            announcementsData.map(async (announcement) => {
-              if (announcement.author && announcement.author.user) {
-                try {
-                  // Debug logging to understand the data structure
-                  console.log('🔍 Announcement author data:', {
-                    announcement_id: announcement.id,
-                    author: announcement.author,
-                    user_field: announcement.author.user,
-                    user_type: typeof announcement.author.user
-                  });
-
-                  // Ensure user ID is a number, not an object
-                  const userId = typeof announcement.author.user === 'number' 
-                    ? announcement.author.user 
-                    : (announcement.author.user as any).id || announcement.author.user;
-                  
-                  if (typeof userId !== 'number') {
-                    console.warn(`⚠️ Invalid user ID type for announcement ${announcement.id}:`, typeof userId, userId);
-                    return announcement;
-                  }
-                  
-                  console.log(`✅ Fetching user data for ID: ${userId}`);
-                  const userData = await userService.getById(userId);
-                  return {
-                    ...announcement,
-                    author: {
-                      ...announcement.author,
-                      user_details: userData
-                    }
-                  };
-                } catch (error) {
-                  console.warn(`⚠️ Failed to fetch user ${announcement.author.user} for announcement ${announcement.id}:`, error);
-                  return announcement;
-                }
-              }
-              return announcement;
-            })
-          );
+          // Filter only active announcements - user details are already populated in the response
+          const formattedAnnouncements = announcementsData
+            .filter((a: any) => a.active === true)
+            .map((announcement: any) => ({
+              ...announcement,
+              author: announcement.author ? {
+                ...announcement.author,
+                // API already returns user as a populated object, not just an ID
+                user_details: announcement.author.user || null
+              } : null
+            }));
           
           setAnnouncements(formattedAnnouncements);
-          console.log(`📢 Fetched ${formattedAnnouncements.length} announcements (pre-tournament)`);
+          console.log(`📢 Fetched ${formattedAnnouncements.length} active announcements (pre-tournament)`);
           console.log('📢 Formatted announcements (pre-tournament):', formattedAnnouncements);
         } catch (err) {
           console.warn('⚠️ Failed to fetch announcements:', err);
@@ -211,27 +182,16 @@ export function TournamentDataProvider({ children }: TournamentDataProviderProps
         return convertTopScorerSchemaToTopScorer(scorer, teamName);
       });
       
-      // Process announcements and fetch user data for authors
-      const formattedAnnouncements = await Promise.all(
-        processedAnnouncements.map(async (announcement) => {
-          if (announcement.author && announcement.author.user) {
-            try {
-              const userData = await userService.getById(announcement.author.user);
-              return {
-                ...announcement,
-                author: {
-                  ...announcement.author,
-                  user_details: userData
-                }
-              };
-            } catch (error) {
-              console.warn(`⚠️ Failed to fetch user ${announcement.author.user} for announcement ${announcement.id}:`, error);
-              return announcement; // Return announcement without user details if fetch fails
-            }
-          }
-          return announcement;
-        })
-      );
+      // Filter only active announcements - user details are already in the response
+      const formattedAnnouncements = processedAnnouncements
+        .filter((a: any) => a.active === true)
+        .map((announcement: any) => ({
+          ...announcement,
+          author: announcement.author ? {
+            ...announcement.author,
+            user_details: announcement.author.user || null
+          } : null
+        }));
       
       setMatches(formattedMatches);
       setTeams(processedTeams);
@@ -239,7 +199,7 @@ export function TournamentDataProvider({ children }: TournamentDataProviderProps
       setTopScorers(formattedTopScorers);
       setAnnouncements(formattedAnnouncements);
       
-      console.log(`📢 Fetched ${formattedAnnouncements.length} announcements (tournament started)`);
+      console.log(`📢 Fetched ${formattedAnnouncements.length} active announcements (tournament started)`);
       console.log('📢 Formatted announcements (tournament started):', formattedAnnouncements);
       
       // Update cache
