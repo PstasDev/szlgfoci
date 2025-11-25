@@ -5,6 +5,7 @@ import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useTournamentData } from '@/contexts/TournamentDataContext';
+import { isMatchCancelled } from '@/utils/dataUtils';
 
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), {
