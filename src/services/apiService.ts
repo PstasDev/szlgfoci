@@ -731,6 +731,36 @@ export const refereeService = {
     }
   },
 
+  // Quick own goal creation with extra time support
+  async addQuickOwnGoal(matchId: number, data: QuickOwnGoalRequest): Promise<QuickGoalResponse> {
+    try {
+      console.log(`🔴 refereeService.addQuickOwnGoal(${matchId}) called with raw data:`, data);
+      
+      // Only include minute_extra_time if provided and > 0
+      const requestData: any = {
+        player_id: data.player_id,
+        minute: data.minute,
+        half: data.half
+      };
+      
+      if (data.minute_extra_time && data.minute_extra_time > 0) {
+        requestData.minute_extra_time = data.minute_extra_time;
+        console.log(`🔴 Including minute_extra_time: ${data.minute_extra_time}`);
+      } else {
+        console.log(`🔴 No extra time (minute_extra_time: ${data.minute_extra_time})`);
+      }
+      
+      console.log(`🔴 Final request payload:`, requestData);
+      
+      const result = await api.post<QuickGoalResponse>(`/biro/matches/${matchId}/quick-own-goal`, requestData);
+      console.log(`🔴 refereeService.addQuickOwnGoal(${matchId}) success:`, result);
+      return result;
+    } catch (error) {
+      console.error(`🔴 refereeService.addQuickOwnGoal(${matchId}) failed:`, error);
+      throw error;
+    }
+  },
+
   // Quick card creation with extra time support
   async addQuickCard(matchId: number, data: QuickCardRequest): Promise<QuickCardResponse> {
     try {

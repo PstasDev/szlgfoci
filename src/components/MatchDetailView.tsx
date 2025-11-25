@@ -334,7 +334,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                   color: getTeamColor(homeTeam),
                   mb: 1
                 }}>
-                  {match.events.filter(e => e.type === 'goal' && e.team === 'home').length}
+                  {match.homeScore ?? match.events.filter(e => e.type === 'goal' && e.team === 'home').length}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
                   Gólok
@@ -359,7 +359,7 @@ const MatchDetailView: React.FC<MatchDetailViewProps> = ({ match }) => {
                   color: getTeamColor(awayTeam),
                   mb: 1
                 }}>
-                  {match.events.filter(e => e.type === 'goal' && e.team === 'away').length}
+                  {match.awayScore ?? match.events.filter(e => e.type === 'goal' && e.team === 'away').length}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
                   Gólok

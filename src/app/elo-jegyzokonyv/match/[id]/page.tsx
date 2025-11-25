@@ -89,7 +89,7 @@ interface MatchStatus {
 }
 
 interface PendingEvent {
-  type: 'goal' | 'yellow_card' | 'red_card' | 'substitution';
+  type: 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'substitution';
   team: 'team1' | 'team2';
   minute: number;
   minute_extra_time: number;
@@ -491,7 +491,7 @@ const LiveMatchPage: React.FC = () => {
     return getPlayerYellowCardCount(playerId) === 1;
   };
 
-  const handleEventClick = (eventType: 'goal' | 'yellow_card' | 'red_card' | 'substitution', team: 'team1' | 'team2') => {
+  const handleEventClick = (eventType: 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'substitution', team: 'team1' | 'team2') => {
     if (!match) return;
     
     // Use current minute and extra time from timer
@@ -541,6 +541,13 @@ const LiveMatchPage: React.FC = () => {
       
       if (pendingEvent.type === 'goal') {
         await refereeService.addQuickGoal(matchIdNum, {
+          player_id: playerId,
+          minute: pendingEvent.minute,
+          minute_extra_time: pendingEvent.minute_extra_time,
+          half: pendingEvent.half
+        });
+      } else if (pendingEvent.type === 'own_goal') {
+        await refereeService.addQuickOwnGoal(matchIdNum, {
           player_id: playerId,
           minute: pendingEvent.minute,
           minute_extra_time: pendingEvent.minute_extra_time,
@@ -1019,17 +1026,15 @@ const LiveMatchPage: React.FC = () => {
                     <Button
                       fullWidth
                       variant="contained"
-                      startIcon={<SubstitutionIcon />}
-                      onClick={() => handleEventClick('substitution', 'team1')}
-                      disabled={true}
+                      startIcon={<GoalIcon />}
+                      onClick={() => handleEventClick('own_goal', 'team1')}
                       sx={{
-                        backgroundColor: '#03a9f4',
-                        '&:hover': { backgroundColor: '#0288d1' },
-                        '&:disabled': { backgroundColor: '#666', color: '#999' },
+                        backgroundColor: '#cc5346',
+                        '&:hover': { backgroundColor: '#f05959' },
                         py: 1.5
                       }}
                     >
-                      CSERE
+                      ÖNGÓL
                     </Button>
                   </Stack>
                 </CardContent>
@@ -1094,17 +1099,15 @@ const LiveMatchPage: React.FC = () => {
                     <Button
                       fullWidth
                       variant="contained"
-                      startIcon={<SubstitutionIcon />}
-                      onClick={() => handleEventClick('substitution', 'team2')}
-                      disabled={true}
+                      startIcon={<GoalIcon />}
+                      onClick={() => handleEventClick('own_goal', 'team2')}
                       sx={{
-                        backgroundColor: '#03a9f4',
-                        '&:hover': { backgroundColor: '#0288d1' },
-                        '&:disabled': { backgroundColor: '#666', color: '#999' },
+                        backgroundColor: '#cc5346',
+                        '&:hover': { backgroundColor: '#f05959' },
                         py: 1.5
                       }}
                     >
-                      CSERE
+                      ÖNGÓL
                     </Button>
                   </Stack>
                 </CardContent>
@@ -1124,16 +1127,16 @@ const LiveMatchPage: React.FC = () => {
               <Stack spacing={1} sx={{ maxHeight: 300, overflow: 'auto' }}>
                 {match.events
                   .filter(event => [
-                    'goal', 
-                    'yellow_card', 
-                    'red_card', 
-                    'match_start', 
-                    'half_time', 
+                    'goal',
+                    'own_goal',
+                    'yellow_card',
+                    'red_card',
+                    'match_start',
+                    'half_time',
                     'second_half_start',
                     'full_time', 
                     'match_end',
-                    'extra_time',
-                    'substitution'
+                    'extra_time'
                   ].includes(event.event_type))
                   .reverse()
                   .slice(0, 10)
@@ -1141,6 +1144,7 @@ const LiveMatchPage: React.FC = () => {
                     const getEventColor = (eventType: string) => {
                       switch (eventType) {
                         case 'goal': return '#10b981';
+                        case 'own_goal': return '#cc5346';
                         case 'yellow_card': return '#f59e0b';
                         case 'red_card': return '#ef4444';
                         case 'match_start': return '#4caf50';
@@ -1157,6 +1161,7 @@ const LiveMatchPage: React.FC = () => {
                     const getEventLabel = (eventType: string, event: any) => {
                       switch (eventType) {
                         case 'goal': return 'GÓL';
+                        case 'own_goal': return 'ÖNGÓL';
                         case 'yellow_card': return 'SÁRGA LAP';
                         case 'red_card': return 'PIROS LAP';
                         case 'match_start': 
@@ -1167,7 +1172,6 @@ const LiveMatchPage: React.FC = () => {
                         case 'full_time': return 'VÉGSŐ SÍPSZÓ';
                         case 'match_end': return 'MECCS VÉGE';
                         case 'extra_time': return 'HOSSZABBÍTÁS';
-                        case 'substitution': return 'CSERE';
                         default: return eventType.toUpperCase();
                       }
                     };
@@ -1175,6 +1179,7 @@ const LiveMatchPage: React.FC = () => {
                     const getEventIcon = (eventType: string) => {
                       switch (eventType) {
                         case 'goal': return <GoalIcon sx={{ color: getEventColor(eventType), fontSize: 20 }} />;
+                        case 'own_goal': return <span style={{ fontSize: '16px' }}>🔴</span>;
                         case 'yellow_card': return <YellowCardIcon sx={{ color: getEventColor(eventType), fontSize: 20 }} />;
                         case 'red_card': return <RedCardIcon sx={{ color: getEventColor(eventType), fontSize: 20 }} />;
                         case 'match_start': return <span style={{ fontSize: '16px' }}>🚀</span>;
@@ -1183,7 +1188,6 @@ const LiveMatchPage: React.FC = () => {
                         case 'full_time': 
                         case 'match_end': return <span style={{ fontSize: '16px' }}>🏁</span>;
                         case 'extra_time': return <span style={{ fontSize: '16px' }}>⏱️</span>;
-                        case 'substitution': return <span style={{ fontSize: '16px' }}>🔄</span>;
                         default: return <span style={{ fontSize: '16px' }}>⚽</span>;
                       }
                     };
@@ -1300,6 +1304,7 @@ const LiveMatchPage: React.FC = () => {
             <Box>
               <Typography variant="body2" color="text.secondary">
                 {pendingEvent.type === 'goal' ? 'Gól' : 
+                 pendingEvent.type === 'own_goal' ? 'Öngól' : 
                  pendingEvent.type === 'yellow_card' ? 'Sárga lap' : 
                  pendingEvent.type === 'red_card' ? 'Piros lap' : 
                  pendingEvent.type === 'substitution' ? 'Csere' : 

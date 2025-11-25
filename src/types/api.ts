@@ -220,7 +220,7 @@ export interface MatchEvent {
   id: number;
   match: number;
   player: number;
-  event_type: 'goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time';
+  event_type: 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time';
   minute: number;
   minute_extra_time?: number | null; // Support for extra time display (e.g., 3 for "45+3")
   formatted_time?: string; // Human-readable time format (e.g., "45+3'")
@@ -566,7 +566,7 @@ export interface EnhancedEventSchema {
   id: number;
   player?: Player | null;
   match?: number | null;
-  event_type: 'match_start' | 'goal' | 'yellow_card' | 'red_card' | 'half_time' | 'full_time' | 'extra_time' | 'match_end';
+  event_type: 'match_start' | 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'half_time' | 'full_time' | 'extra_time' | 'match_end';
   half: number;
   minute: number;
   minute_extra_time?: number | null;
@@ -601,6 +601,13 @@ export interface OptimizedQueryParams {
 
 // NEW: Referee quick event request types
 export interface QuickGoalRequest {
+  player_id: number;
+  minute: number;
+  minute_extra_time?: number | null; // Optional extra time support
+  half: number;
+}
+
+export interface QuickOwnGoalRequest {
   player_id: number;
   minute: number;
   minute_extra_time?: number | null; // Optional extra time support

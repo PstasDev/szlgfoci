@@ -170,13 +170,14 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
   // Calculate scores from events if available
   const events = match.events || [];
   const goalEvents = events.filter(event => event.event_type === 'goal');
+  const ownGoalEvents = events.filter(event => event.event_type === 'own_goal');
   
   // Calculate scores based on goals
   let homeScore = null;
   let awayScore = null;
   
-  if (goalEvents.length > 0) {
-    // Count goals for each team
+  if (goalEvents.length > 0 || ownGoalEvents.length > 0) {
+    // Count regular goals for each team
     const homeGoals = goalEvents.filter(goal => {
       // Check if the goal player belongs to home team
       if (homeTeam?.players && goal.player) {
@@ -193,8 +194,25 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
       return false;
     }).length;
     
-    homeScore = homeGoals;
-    awayScore = awayGoals;
+    // Count own goals - they count for the opponent team
+    const homeOwnGoals = ownGoalEvents.filter(ownGoal => {
+      // Own goal by home team counts for away team
+      if (homeTeam?.players && ownGoal.player) {
+        return homeTeam.players.some(player => player.id === ownGoal.player?.id);
+      }
+      return false;
+    }).length;
+    
+    const awayOwnGoals = ownGoalEvents.filter(ownGoal => {
+      // Own goal by away team counts for home team
+      if (awayTeam?.players && ownGoal.player) {
+        return awayTeam.players.some(player => player.id === ownGoal.player?.id);
+      }
+      return false;
+    }).length;
+    
+    homeScore = homeGoals + awayOwnGoals;
+    awayScore = awayGoals + homeOwnGoals;
   }
 
   // Format events for display (preserve exact_time for live timers)
@@ -202,13 +220,13 @@ export const formatMatch = (match: ApiMatch, teams: Team[] = []): Match => {
     id: event.id || Math.random(),
     match: match.id || 0,
     player: event.player?.id || 0,
-    event_type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time',
+    event_type: event.event_type as 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'match_start' | 'half_time' | 'full_time' | 'match_end' | 'extra_time',
     minute: event.minute,
     minute_extra_time: event.minute_extra_time || null, // Preserve minute_extra_time from API
     formatted_time: event.formatted_time || formatEventTime(event.minute, event.minute_extra_time), // Use API formatted_time or generate it
     playerName: event.player?.name || 'Unknown Player',
     team: event.player && homeTeam?.players?.some(p => p.id === event.player?.id) ? 'home' as const : 'away' as const,
-    type: event.event_type as 'goal' | 'yellow_card' | 'red_card' | 'substitution',
+    type: event.event_type as 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'substitution',
     // Preserve timing data for live timers
     exact_time: (event as any).exact_time || null,
     half: (event as any).half || 1,

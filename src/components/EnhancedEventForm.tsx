@@ -21,7 +21,7 @@ import {
 import { Add as AddIcon, Save as SaveIcon } from '@mui/icons-material';
 import TimeInput from './TimeInput';
 import { refereeService } from '@/services/apiService';
-import type { QuickGoalRequest, QuickCardRequest, GeneralEventRequest, Player, Team } from '@/types/api';
+import type { QuickGoalRequest, QuickOwnGoalRequest, QuickCardRequest, GeneralEventRequest, Player, Team } from '@/types/api';
 
 interface EnhancedEventFormProps {
   open: boolean;
@@ -34,11 +34,12 @@ interface EnhancedEventFormProps {
   currentMinute?: number;
   currentExtraTime?: number; // NEW: Current extra time from backend
   half?: number;
-  eventType?: 'goal' | 'yellow_card' | 'red_card' | 'general' | null;
+  eventType?: 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'general' | null;
 }
 
 const EVENT_TYPES = [
   { value: 'goal', label: '⚽ Goal', color: '#4caf50' },
+  { value: 'own_goal', label: '🔴 Own Goal (Öngól)', color: '#cc5346' },
   { value: 'yellow_card', label: '🟨 Yellow Card', color: '#ff9800' },
   { value: 'red_card', label: '🟥 Red Card', color: '#f44336' },
   { value: 'match_start', label: '🏁 Match Start', color: '#2196f3' },
@@ -105,7 +106,7 @@ const EnhancedEventForm: React.FC<EnhancedEventFormProps> = ({
 
     try {
       // Validate required fields
-      if (['goal', 'yellow_card', 'red_card'].includes(selectedEventType) && !selectedPlayer) {
+      if (['goal', 'own_goal', 'yellow_card', 'red_card'].includes(selectedEventType) && !selectedPlayer) {
         throw new Error('Player is required for this event type');
       }
 
@@ -119,6 +120,15 @@ const EnhancedEventForm: React.FC<EnhancedEventFormProps> = ({
         };
 
         await refereeService.addQuickGoal(matchId, goalData);
+      } else if (selectedEventType === 'own_goal') {
+        const ownGoalData: QuickOwnGoalRequest = {
+          player_id: selectedPlayer!.id!,
+          minute,
+          minute_extra_time: extraTime,
+          half: selectedHalf
+        };
+
+        await refereeService.addQuickOwnGoal(matchId, ownGoalData);
       } else if (selectedEventType === 'yellow_card' || selectedEventType === 'red_card') {
         const cardData: QuickCardRequest = {
           player_id: selectedPlayer!.id!,
@@ -152,7 +162,7 @@ const EnhancedEventForm: React.FC<EnhancedEventFormProps> = ({
     }
   };
 
-  const needsPlayer = ['goal', 'yellow_card', 'red_card'].includes(selectedEventType);
+  const needsPlayer = ['goal', 'own_goal', 'yellow_card', 'red_card'].includes(selectedEventType);
   const selectedEventInfo = EVENT_TYPES.find(et => et.value === selectedEventType);
 
   return (

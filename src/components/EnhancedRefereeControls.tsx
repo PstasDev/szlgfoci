@@ -60,7 +60,7 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
   authToken
 }) => {
   const [eventFormOpen, setEventFormOpen] = useState(false);
-  const [selectedEventType, setSelectedEventType] = useState<'goal' | 'yellow_card' | 'red_card' | 'general' | null>(null);
+  const [selectedEventType, setSelectedEventType] = useState<'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'general' | null>(null);
   const [displayMinute, setDisplayMinute] = useState(currentMinute);
   const [displayExtraTime, setDisplayExtraTime] = useState<number | null>(null);
   const [displayHalf, setDisplayHalf] = useState(half);
@@ -92,7 +92,7 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
     }
   }, [currentStatus]);
 
-  const openEventForm = (eventType: 'goal' | 'yellow_card' | 'red_card' | 'general' | null = null) => {
+  const openEventForm = (eventType: 'goal' | 'own_goal' | 'yellow_card' | 'red_card' | 'general' | null = null) => {
     setSelectedEventType(eventType);
     setEventFormOpen(true);
   };
@@ -344,6 +344,18 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
           
           <Button
             variant="contained"
+            startIcon={<GoalIcon />}
+            onClick={() => openEventForm('own_goal')}
+            sx={{ 
+              backgroundColor: '#cc5346',
+              '&:hover': { backgroundColor: '#f05959' }
+            }}
+          >
+            Öngól
+          </Button>
+          
+          <Button
+            variant="contained"
             startIcon={<CardIcon />}
             onClick={() => openEventForm('yellow_card')}
             sx={{ 
@@ -414,6 +426,7 @@ const EnhancedRefereeControls: React.FC<EnhancedRefereeControlsProps> = ({
                   />
                   <Typography variant="body2">
                     {event.event_type === 'goal' && '⚽'}
+                    {event.event_type === 'own_goal' && '🔴'}
                     {event.event_type === 'yellow_card' && '🟨'}
                     {event.event_type === 'red_card' && '🟥'}
                     {event.event_type === 'match_start' && '🏁'}

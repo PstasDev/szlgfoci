@@ -492,6 +492,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 const getEventColor = (eventType: string) => {
                   switch (eventType) {
                     case 'goal': return '#10b981';
+                    case 'own_goal': return '#cc5346';
                     case 'yellow_card': return '#f59e0b';
                     case 'red_card': return '#ef4444';
                     case 'match_start': return '#4caf50';
@@ -508,6 +509,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                 const getEventLabel = (eventType: string, event: any) => {
                   switch (eventType) {
                     case 'goal': return 'GÓL';
+                    case 'own_goal': return 'ÖNGÓL';
                     case 'yellow_card': return 'SÁRGA LAP';
                     case 'red_card': return 'PIROS LAP';
                     case 'match_start': 
@@ -633,7 +635,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                   mb: 1,
                   fontSize: { xs: '3rem', sm: '4rem' }
                 }}>
-                  {match.events.filter(e => e.type === 'goal' && e.team === 'home').length}
+                  {match.homeScore ?? match.events.filter(e => e.type === 'goal' && e.team === 'home').length}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
                   Gólok
@@ -676,7 +678,7 @@ const BentoMatchDetail: React.FC<BentoMatchDetailProps> = ({ match }) => {
                   mb: 1,
                   fontSize: { xs: '3rem', sm: '4rem' }
                 }}>
-                  {match.events.filter(e => e.type === 'goal' && e.team === 'away').length}
+                  {match.awayScore ?? match.events.filter(e => e.type === 'goal' && e.team === 'away').length}
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#9aa0a6', fontWeight: 500 }}>
                   Gólok
