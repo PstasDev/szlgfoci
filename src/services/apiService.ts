@@ -319,13 +319,7 @@ export const matchService = {
       console.log(`🔥 matchService.updateStatus(${matchId}) called with:`, data);
       const result = await api.put<ApiMatch>(
         `/admin/matches/${matchId}`,
-        data,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        data
       );
       console.log(`🔥 matchService.updateStatus(${matchId}) success:`, result);
       return result;
@@ -341,13 +335,7 @@ export const matchService = {
       console.log(`🔥 matchService.updateStatusReferee(${matchId}) called with:`, data);
       const result = await api.put<ApiMatch>(
         `/biro/matches/${matchId}`,
-        data,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+        data
       );
       console.log(`🔥 matchService.updateStatusReferee(${matchId}) success:`, result);
       return result;
