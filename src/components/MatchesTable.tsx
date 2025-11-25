@@ -159,7 +159,8 @@ const MatchesTable: React.FC<MatchesTableProps> = ({ matches }) => {
     // Check if match is cancelled and show appropriate color
     const statusBadge = getStatusBadgeProps(match.cancellationStatus);
     if (statusBadge) {
-      return statusBadge.color;
+      // Map 'info' to 'primary' as Chip doesn't support 'info' color
+      return statusBadge.color === 'info' ? 'primary' : statusBadge.color;
     }
     
     // Otherwise show normal status color
