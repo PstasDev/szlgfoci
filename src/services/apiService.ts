@@ -31,6 +31,7 @@ import type {
   LiveUpdatePayload,
   SzankcioSchema,
   QuickGoalRequest,
+  QuickOwnGoalRequest,
   QuickCardRequest,
   GeneralEventRequest,
   QuickGoalResponse,
