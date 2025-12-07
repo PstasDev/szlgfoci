@@ -22,7 +22,7 @@
     "@tsparticles/slim": "^3.9.1",
     "apexcharts": "^5.3.5",
     "framer-motion": "^12.23.22",
-    "next": "15.5.2",
+    "next": "15.5.7",
     "react": "19.1.0",
     "react-apexcharts": "^1.7.0",
     "react-dom": "19.1.0",
